@@ -21,7 +21,7 @@
     <string name="ui_29cc79599c5c">Modifier le PIN de l’application</string>
     <string name="ui_c2d7f7559f21">Guide d’installation</string>
     <string name="ui_cd24acb10110">Informations sur le développeur</string>
-    <string name="ui_9eb289360bce">Informations sur le développeur et l’application (v1.0.0)</string>
+    <string name="ui_9eb289360bce">Informations sur le développeur et l’application (v1.1.0)</string>
     <string name="ui_5bf826c5e57c">Fermer</string>
     <string name="ui_51ae4e30735b">Bouclier de sécurité du téléphone</string>
     <string name="ui_6239de7ab740">La protection est active et surveille l’appareil</string>
@@ -139,7 +139,7 @@
     <string name="ui_a5b4472cdfcd">Enregistrer les paramètres</string>
     <string name="ui_bde567ded26b">À propos de l’application et du développeur</string>
     <string name="ui_4194b339b21b">Application de protection du téléphone et détecteur d’intrus</string>
-    <string name="ui_ed3327bec79e">Version : 1.0.0 (dernière version)</string>
+    <string name="ui_ed3327bec79e">Version : 1.1.0 (dernière version)</string>
     <string name="ui_235dd7facf19">Résoudre le problème d’autorisation Device Admin (Android 13 et versions supérieures) :</string>
     <string name="ui_c03a47548c0a">Si vous voyez le message «App was denied access» en essayant d’activer Device Admin :&#10;</string>
     <string name="ui_08eecf918378">1. Ouvrez les Paramètres de votre téléphone (Settings) ⬅️ Applications (Apps).&#10;</string>
@@ -268,4 +268,8 @@
     <string name="ui_state_failed">Échec</string>
     <string name="ui_state_deferred">Différé</string>
     <string name="ui_privacy_policy">Politique de confidentialité</string>
+    <string name="ui_privacy_disclosure_title">Avant d’accorder les autorisations</string>
+    <string name="ui_privacy_disclosure_body">Phone Fortress utilise la caméra, la localisation et les notifications lorsque la protection est activée. Après une tentative de déverrouillage incorrecte, l’application peut prendre une photo, déterminer la position de l’appareil et enregistrer le résultat localement. La photo et la position peuvent être jointes à un e-mail envoyé à l’adresse choisie. Ces données ne sont pas envoyées au serveur du développeur. Utilisez l’application sur votre appareil ou avec l’accord de son propriétaire. Vous pouvez refuser les autorisations ou arrêter la protection à tout moment.</string>
+    <string name="ui_privacy_disclosure_accept">J’ai compris et je souhaite continuer</string>
+    <string name="ui_privacy_disclosure_not_now">Pas maintenant</string>
 </resources>

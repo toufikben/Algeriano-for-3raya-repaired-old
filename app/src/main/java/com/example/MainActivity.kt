@@ -240,6 +240,8 @@ fun SecurityMainScreen(
     var showAppPasswordGuide by remember { mutableStateOf(false) }
     var showPinManagement by remember { mutableStateOf(false) }
     var showLanguagePicker by remember { mutableStateOf(false) }
+    val securityPrefs = remember { SecurityPrefs.getInstance(context) }
+    var showPrivacyDisclosure by remember { mutableStateOf(!securityPrefs.privacyDisclosureAccepted) }
 
     // Lifecycle observer to refresh statuses when returning from system settings
     val lifecycleOwner = LocalLifecycleOwner.current
@@ -262,8 +264,7 @@ fun SecurityMainScreen(
         viewModel.refreshStatuses()
     }
 
-    // Check permissions on start
-    LaunchedEffect(Unit) {
+    fun requestRequiredPermissions() {
         val permissions = mutableListOf(
             Manifest.permission.CAMERA,
             Manifest.permission.ACCESS_FINE_LOCATION,
@@ -275,11 +276,40 @@ fun SecurityMainScreen(
         permissionLauncher.launch(permissions.toTypedArray())
     }
 
+    // Check permissions on start
+    LaunchedEffect(Unit) {
+        if (!securityPrefs.privacyDisclosureAccepted) {
+            showPrivacyDisclosure = true
+        }
+    }
+
     LaunchedEffect(uiState.bannerMessage) {
         uiState.bannerMessage?.let { message ->
             snackbarHostState.showSnackbar(message)
             viewModel.dismissBanner()
         }
+    }
+
+    if (showPrivacyDisclosure) {
+        AlertDialog(
+            onDismissRequest = { showPrivacyDisclosure = false },
+            title = { Text(tr(com.example.R.string.ui_privacy_disclosure_title)) },
+            text = { Text(tr(com.example.R.string.ui_privacy_disclosure_body)) },
+            confirmButton = {
+                TextButton(onClick = {
+                    securityPrefs.privacyDisclosureAccepted = true
+                    showPrivacyDisclosure = false
+                    requestRequiredPermissions()
+                }) {
+                    Text(tr(com.example.R.string.ui_privacy_disclosure_accept))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showPrivacyDisclosure = false }) {
+                    Text(tr(com.example.R.string.ui_privacy_disclosure_not_now))
+                }
+            }
+        )
     }
 
     Scaffold(
@@ -379,7 +409,13 @@ fun SecurityMainScreen(
             if (!uiState.isAdminActive) {
                 item {
                     AdminWarningBanner(
-                        onActivateAdmin = onRequestAdmin
+                        onActivateAdmin = {
+                            if (!securityPrefs.privacyDisclosureAccepted) {
+                                showPrivacyDisclosure = true
+                            } else {
+                                onRequestAdmin()
+                            }
+                        }
                     )
                 }
             }
@@ -410,7 +446,9 @@ fun SecurityMainScreen(
                     isDeviceAdminActive = uiState.isAdminActive,
                     isTesting = uiState.isTesting,
                     onToggleTracking = { enabled ->
-                        if (enabled && !uiState.isAdminActive) {
+                        if (enabled && !securityPrefs.privacyDisclosureAccepted) {
+                            showPrivacyDisclosure = true
+                        } else if (enabled && !uiState.isAdminActive) {
                             onRequestAdmin()
                         } else {
                             viewModel.toggleTracking(enabled)
@@ -459,20 +497,36 @@ fun SecurityMainScreen(
                     hasLocationPermission = uiState.hasLocationPermission,
                     hasNotificationPermission = uiState.hasNotificationPermission,
                     isBatteryOptimizationIgnored = uiState.isBatteryOptimizationIgnored,
-                    onRequestAdmin = onRequestAdmin,
+                    onRequestAdmin = {
+                        if (!securityPrefs.privacyDisclosureAccepted) {
+                            showPrivacyDisclosure = true
+                        } else {
+                            onRequestAdmin()
+                        }
+                    },
                     onRequestCamera = {
-                        permissionLauncher.launch(arrayOf(Manifest.permission.CAMERA))
+                        if (!securityPrefs.privacyDisclosureAccepted) {
+                            showPrivacyDisclosure = true
+                        } else {
+                            permissionLauncher.launch(arrayOf(Manifest.permission.CAMERA))
+                        }
                     },
                     onRequestLocation = {
-                        permissionLauncher.launch(
-                            arrayOf(
-                                Manifest.permission.ACCESS_FINE_LOCATION,
-                                Manifest.permission.ACCESS_COARSE_LOCATION
+                        if (!securityPrefs.privacyDisclosureAccepted) {
+                            showPrivacyDisclosure = true
+                        } else {
+                            permissionLauncher.launch(
+                                arrayOf(
+                                    Manifest.permission.ACCESS_FINE_LOCATION,
+                                    Manifest.permission.ACCESS_COARSE_LOCATION
+                                )
                             )
-                        )
+                        }
                     },
                     onRequestNotifications = {
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                        if (!securityPrefs.privacyDisclosureAccepted) {
+                            showPrivacyDisclosure = true
+                        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                             permissionLauncher.launch(arrayOf(Manifest.permission.POST_NOTIFICATIONS))
                         }
                     },

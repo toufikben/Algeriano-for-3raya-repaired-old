@@ -101,6 +101,7 @@ class SecurityPrefs private constructor(private val context: Context) {
         private const val KEY_EMAIL = "key_email"
         private const val KEY_PASSWORD = "key_password"
         private const val KEY_TRACKING_ENABLED = "key_tracking_enabled"
+        private const val KEY_PRIVACY_DISCLOSURE_ACCEPTED = "key_privacy_disclosure_accepted"
         private const val KEY_TOTAL_ATTEMPTS = "key_total_attempts"
         private const val KEY_LAST_ATTEMPT_TIME = "key_last_attempt_time"
         private const val KEY_LAST_ATTEMPT_LOCATION = "key_last_attempt_location"
@@ -150,6 +151,11 @@ class SecurityPrefs private constructor(private val context: Context) {
     var email: String
         get() = readSecret(KEY_EMAIL)
         set(value) = writeSecret(KEY_EMAIL, value.trim())
+
+    /** Records that the in-app data disclosure was shown and accepted. */
+    var privacyDisclosureAccepted: Boolean
+        get() = prefs.getBoolean(KEY_PRIVACY_DISCLOSURE_ACCEPTED, false)
+        set(value) = prefs.edit().putBoolean(KEY_PRIVACY_DISCLOSURE_ACCEPTED, value).apply()
 
     var password: String
         get() = readSecret(KEY_PASSWORD)
