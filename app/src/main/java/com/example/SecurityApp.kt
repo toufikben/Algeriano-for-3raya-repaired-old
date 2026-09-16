@@ -22,6 +22,10 @@ class SecurityApp : Application() {
     companion object {
         const val CHANNEL_ID_SERVICE = "security_service_channel"
         const val CHANNEL_ID_ALERTS = "security_alerts_channel"
+
+        fun refreshNotificationChannels(context: Context) {
+            (context.applicationContext as? SecurityApp)?.refreshLocalizedNotificationChannels()
+        }
     }
 
     override fun attachBaseContext(base: Context) {
@@ -37,6 +41,11 @@ class SecurityApp : Application() {
         super.onCreate()
         createNotificationChannels()
         schedulePhotoCleanup()
+    }
+
+    /** Re-applies localized channel labels after the user changes language. */
+    fun refreshLocalizedNotificationChannels() {
+        createNotificationChannels(localizedContext())
     }
 
     private fun schedulePhotoCleanup() {
@@ -58,24 +67,37 @@ class SecurityApp : Application() {
     }
 
     private fun createNotificationChannels() {
+        createNotificationChannels(localizedContext())
+    }
+
+    private fun localizedContext(): Context {
+        val language = LanguageStore(this).get()
+        val locale = Locale.forLanguageTag(language.code)
+        val configuration = Configuration(resources.configuration).apply {
+            setLocale(locale)
+        }
+        return createConfigurationContext(configuration)
+    }
+
+    private fun createNotificationChannels(context: Context) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val manager = getSystemService(NotificationManager::class.java)
 
             val serviceChannel = NotificationChannel(
                 CHANNEL_ID_SERVICE,
-                getString(R.string.notification_channel_name),
+                context.getString(R.string.notification_channel_name),
                 NotificationManager.IMPORTANCE_LOW
             ).apply {
-                description = getString(R.string.notification_channel_desc)
+                description = context.getString(R.string.notification_channel_desc)
                 setShowBadge(false)
             }
 
             val alertsChannel = NotificationChannel(
                 CHANNEL_ID_ALERTS,
-                getString(com.example.R.string.ui_ba80f4ab2a31),
+                context.getString(com.example.R.string.ui_ba80f4ab2a31),
                 NotificationManager.IMPORTANCE_HIGH
             ).apply {
-                description = getString(com.example.R.string.ui_3b035380cc10)
+                description = context.getString(com.example.R.string.ui_3b035380cc10)
                 enableVibration(true)
                 setShowBadge(true)
             }

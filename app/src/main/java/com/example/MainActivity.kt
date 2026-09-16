@@ -145,6 +145,7 @@ class MainActivity : ComponentActivity() {
                             onLanguageChanged = { language ->
                                 languageStore.set(language)
                                 applyLanguage(language)
+                                SecurityApp.refreshNotificationChannels(this@MainActivity)
                                 selectedLanguage = language
                                 recreate()
                             }

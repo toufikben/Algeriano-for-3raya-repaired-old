@@ -12,9 +12,11 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -68,7 +70,8 @@ fun DeveloperInfoDialog(
         Card(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(4.dp)
+                .widthIn(max = 420.dp)
+                .padding(horizontal = 12.dp, vertical = 24.dp)
                 .testTag("developer_info_dialog"),
             shape = RoundedCornerShape(24.dp),
             colors = CardDefaults.cardColors(containerColor = CyberNavySurface),
@@ -77,8 +80,9 @@ fun DeveloperInfoDialog(
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
+                    .heightIn(max = 680.dp)
                     .verticalScroll(rememberScrollState())
-                    .padding(20.dp),
+                    .padding(18.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 // Header Bar
@@ -219,7 +223,9 @@ fun DeveloperInfoDialog(
                                 // Ignore
                             }
                         },
-                        modifier = Modifier.fillMaxWidth(),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .heightIn(min = 48.dp),
                         shape = RoundedCornerShape(8.dp),
                         colors = ButtonDefaults.buttonColors(
                             containerColor = Color(0xFFF59E0B),
@@ -270,9 +276,13 @@ fun DeveloperInfoDialog(
 
                     Spacer(modifier = Modifier.height(10.dp))
 
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
+                    Column(
+                        verticalArrangement = Arrangement.spacedBy(4.dp),
                         modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(10.dp))
+                            .background(Color(0xFF0F172A).copy(alpha = 0.45f))
+                            .padding(10.dp)
                             .clickable {
                                 val emailIntent = Intent(Intent.ACTION_SENDTO).apply {
                                     data = Uri.parse("mailto:$devEmail")
@@ -285,26 +295,28 @@ fun DeveloperInfoDialog(
                                 }
                             }
                     ) {
-                        Icon(
-                            imageVector = Icons.Filled.Email,
-                            contentDescription = null,
-                            tint = EmeraldActive,
-                            modifier = Modifier.size(18.dp)
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(
-                            text = context.getString(com.example.R.string.ui_76a2cd4d2144),
-                            modifier = Modifier.weight(1f),
-                            fontWeight = FontWeight.SemiBold,
-                            color = Color(0xFFE2E8F0),
-                            fontSize = 13.sp
-                        )
-                        Spacer(modifier = Modifier.width(6.dp))
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                imageVector = Icons.Filled.Email,
+                                contentDescription = null,
+                                tint = EmeraldActive,
+                                modifier = Modifier.size(18.dp)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = context.getString(com.example.R.string.ui_76a2cd4d2144),
+                                fontWeight = FontWeight.SemiBold,
+                                color = Color(0xFFE2E8F0),
+                                fontSize = 13.sp
+                            )
+                        }
                         Text(
                             text = devEmail,
+                            modifier = Modifier.fillMaxWidth(),
                             fontWeight = FontWeight.Medium,
                             color = CyanAccent,
-                            fontSize = 13.sp
+                            fontSize = 12.sp,
+                            softWrap = true
                         )
                     }
                 }
@@ -320,7 +332,9 @@ fun DeveloperInfoDialog(
                             // Ignore if no browser is available.
                         }
                     },
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .heightIn(min = 48.dp),
                     shape = RoundedCornerShape(8.dp),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = CyanAccent,
@@ -403,7 +417,9 @@ fun DeveloperInfoDialog(
 
                 Button(
                     onClick = onDismiss,
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .heightIn(min = 48.dp),
                     shape = RoundedCornerShape(12.dp),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = CyanAccent,
