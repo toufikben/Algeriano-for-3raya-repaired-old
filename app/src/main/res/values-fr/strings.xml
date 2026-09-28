@@ -268,10 +268,6 @@
     <string name="ui_unexpected_event">FAILED_FINAL : erreur inattendue lors du traitement de l’événement : %1$s</string>
     <string name="ui_recovered_events">%1$d alertes en attente récupérées ; consultez le journal des tentatives</string>
     <string name="ui_map_query_label">Lieu de la tentative de déverrouillage</string>
-    <string name="ui_countdown_diagnostics_title">Diagnostic du minuteur de protection</string>
-    <string name="ui_countdown_diagnostics_description">Derniers événements du minuteur et du démarrage du service. Le PIN et les e-mails ne sont pas enregistrés.</string>
-    <string name="ui_countdown_diagnostics_empty">Aucun événement de diagnostic enregistré.</string>
-    <string name="ui_copy_diagnostics">Copier le diagnostic complet</string>
     <string name="ui_detailed_states">Détails</string>
     <string name="ui_state_photo">Photo</string>
     <string name="ui_state_location">Localisation</string>

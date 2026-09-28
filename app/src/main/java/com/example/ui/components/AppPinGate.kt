@@ -18,6 +18,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -33,6 +34,9 @@ import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.compose.ui.platform.LocalContext
 import com.example.data.SecurityPrefs
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 @Composable
 fun AppPinGate(
@@ -48,6 +52,7 @@ fun AppPinGate(
     var blockedRemainingSeconds by remember { mutableLongStateOf(0L) }
     val lifecycleOwner = LocalLifecycleOwner.current
     val context = LocalContext.current
+    val scope = rememberCoroutineScope()
 
     DisposableEffect(lifecycleOwner, unlocked) {
         val observer = LifecycleEventObserver { _, event ->
@@ -127,41 +132,60 @@ fun AppPinGate(
         confirmButton = {
             Button(
                 onClick = {
+                    // FIX: double-tap guard; isProcessing now spans the
+                    // background PBKDF2 work instead of being cleared
+                    // synchronously, so the "checking" state actually renders.
                     if (isBlocked || isProcessing) return@Button
-                    isProcessing = true
-                    try {
-                        if (setupMode) {
-                            when {
-                                !pin.matches(Regex("\\d{6,8}")) -> error = context.getString(com.example.R.string.ui_8dd08f154388)
-                                pin != confirmation -> error = context.getString(com.example.R.string.ui_1b0457e70ea6)
-                                !prefs.setAppPin(pin) -> error = context.getString(com.example.R.string.ui_b385e9df7099)
-                                else -> {
-                                    prefs.resetPinFailures()
-                                    unlocked = true
-                                    pin = ""
-                                    confirmation = ""
+                    if (setupMode) {
+                        when {
+                            !pin.matches(Regex("\\d{6,8}")) -> error = context.getString(com.example.R.string.ui_8dd08f154388)
+                            pin != confirmation -> error = context.getString(com.example.R.string.ui_1b0457e70ea6)
+                            else -> {
+                                isProcessing = true
+                                val pinToSet = pin
+                                scope.launch {
+                                    // FIX: setAppPin runs PBKDF2 with 120k
+                                    // iterations; keep it off the main thread.
+                                    val saved = withContext(Dispatchers.Default) { prefs.setAppPin(pinToSet) }
+                                    isProcessing = false
+                                    if (!saved) {
+                                        error = context.getString(com.example.R.string.ui_b385e9df7099)
+                                    } else {
+                                        prefs.resetPinFailures()
+                                        unlocked = true
+                                        pin = ""
+                                        confirmation = ""
+                                    }
                                 }
                             }
-                        } else if (!pin.matches(Regex("\\d{6,8}"))) {
-                            // FIX: short/invalid format must not count toward
-                            // lockout — previously 4-digit typos locked the user.
-                            pin = ""
-                            error = context.getString(com.example.R.string.ui_8dd08f154388)
-                        } else if (prefs.verifyAppPin(pin)) {
-                            unlocked = true
-                            pin = ""
-                            prefs.resetPinFailures()
-                        } else {
-                            pin = ""
-                            error = context.getString(com.example.R.string.ui_c33e81392abf)
-                            val persistedBlockedUntil = prefs.registerPinFailure()
-                            if (persistedBlockedUntil > 0L) {
-                                blockedUntil = persistedBlockedUntil
-                                error = context.getString(com.example.R.string.ui_9816b280d8ee)
+                        }
+                    } else if (!pin.matches(Regex("\\d{6,8}"))) {
+                        // FIX: short/invalid format must not count toward
+                        // lockout — previously 4-digit typos locked the user.
+                        pin = ""
+                        error = context.getString(com.example.R.string.ui_8dd08f154388)
+                    } else {
+                        isProcessing = true
+                        val pinToVerify = pin
+                        scope.launch {
+                            // FIX: verifyAppPin runs PBKDF2 with 120k
+                            // iterations; keep it off the main thread.
+                            val ok = withContext(Dispatchers.Default) { prefs.verifyAppPin(pinToVerify) }
+                            isProcessing = false
+                            if (ok) {
+                                unlocked = true
+                                pin = ""
+                                prefs.resetPinFailures()
+                            } else {
+                                pin = ""
+                                error = context.getString(com.example.R.string.ui_c33e81392abf)
+                                val persistedBlockedUntil = prefs.registerPinFailure()
+                                if (persistedBlockedUntil > 0L) {
+                                    blockedUntil = persistedBlockedUntil
+                                    error = context.getString(com.example.R.string.ui_9816b280d8ee)
+                                }
                             }
                         }
-                    } finally {
-                        isProcessing = false
                     }
                 },
                 enabled = !isBlocked && !isProcessing,

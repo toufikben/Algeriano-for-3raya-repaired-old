@@ -220,6 +220,15 @@
     <string name="ui_pin_checking">جارٍ التحقق…</string>
     <string name="ui_pin_current_rule">PIN الحالي: من 6 إلى 8 أرقام</string>
     <string name="ui_pin_new_rule">PIN الجديد: من 6 إلى 8 أرقام</string>
+    <string name="ui_pin_reset_title">استعادة الوصول إلى PIN</string>
+    <string name="ui_pin_reset_desc">لتعيين PIN جديد دون مسح بيانات التطبيق، أدخل كلمة مرور تطبيق Gmail المحفوظة (المستخدمة في إرسال تنبيهات الاقتحام).</string>
+    <string name="ui_pin_reset_password_label">كلمة مرور تطبيق Gmail</string>
+    <string name="ui_pin_reset_password_required">أدخل كلمة مرور التطبيق للتحقق</string>
+    <string name="ui_pin_reset_password_wrong">كلمة مرور التطبيق غير صحيحة</string>
+    <string name="ui_pin_reset_failed_generic">تعذّر تحديث PIN، حاول مجدداً</string>
+    <string name="ui_pin_reset_submit">تحقّق وعيّن PIN جديد</string>
+    <string name="ui_pin_reset_back">رجوع</string>
+    <string name="ui_pin_reset_no_password">لم يتم حفظ كلمة مرور تطبيق Gmail في الإعدادات، لذلك لا تتوفر إعادة تعيين داخل التطبيق. الخيار الوحيد هو فتح إعدادات النظام ومسح بيانات التطبيق، وسيحذف ذلك PIN والسجلات والإعدادات.</string>
     <string name="ui_d4a1d92f7a68">نظام التتبع والحماية نَشِط</string>
     <string name="ui_edb2324aba4d">نظام التتبع والحماية مُتَوقّف</string>
     <string name="ui_3d9e78dd04a7">زر تشغيل وإيقاف الحماية</string>
@@ -268,10 +277,6 @@
     <string name="ui_unexpected_event">FAILED_FINAL: فشل غير متوقع أثناء معالجة الحدث: %1$s</string>
     <string name="ui_recovered_events">تمت استعادة %1$d منبهات معلقة؛ راجع سجل المحاولات</string>
     <string name="ui_map_query_label">موقع محاولة فتح الهاتف</string>
-    <string name="ui_countdown_diagnostics_title">تشخيص مؤقت الحماية</string>
-    <string name="ui_countdown_diagnostics_description">آخر الأحداث المسجلة للمؤقت ومحاولات تشغيل الخدمة. لا يتم تسجيل PIN أو بيانات البريد.</string>
-    <string name="ui_countdown_diagnostics_empty">لا توجد أحداث مسجلة بعد.</string>
-    <string name="ui_copy_diagnostics">نسخ التشخيص الكامل</string>
     <string name="ui_detailed_states">التفاصيل</string>
     <string name="ui_state_photo">الصورة</string>
     <string name="ui_state_location">الموقع</string>

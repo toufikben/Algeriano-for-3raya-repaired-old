@@ -18,11 +18,6 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.slideInVertically
-import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -30,7 +25,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -41,8 +35,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.AdminPanelSettings
-import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.HelpOutline
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Key
@@ -51,10 +43,7 @@ import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Security
 import androidx.compose.material.icons.filled.Shield
 import androidx.compose.material.icons.filled.Warning
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.AlertDialog
@@ -64,7 +53,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBarDefaults
@@ -408,7 +396,7 @@ fun SecurityMainScreen(
         ) {
             // Warning banner if Device Admin is not enabled
             if (!uiState.isAdminActive) {
-                item {
+                item(key = "admin_warning_banner") {
                     AdminWarningBanner(
                         onActivateAdmin = {
                             if (!securityPrefs.privacyDisclosureAccepted) {
@@ -422,14 +410,14 @@ fun SecurityMainScreen(
             }
 
             // Top Hero Illustration
-            item {
+            item(key = "security_hero") {
                 SecurityHeroHeader(
                     isTrackingEnabled = uiState.isTrackingEnabled,
-                    attemptsCount = uiState.logs.size
+                    attemptsCount = uiState.totalAttempts
                 )
             }
 
-            item {
+            item(key = "security_status_card") {
                 SecurityStatusCard(
                     isTrackingEnabled = uiState.isTrackingEnabled,
                     isAdminActive = uiState.isAdminActive,
@@ -441,7 +429,7 @@ fun SecurityMainScreen(
             }
 
             // 1. Protection Switch & Live Toggle
-            item {
+            item(key = "protection_toggle_card") {
                 ProtectionToggleCard(
                     isTrackingEnabled = uiState.isTrackingEnabled,
                     isDeviceAdminActive = uiState.isAdminActive,
@@ -462,7 +450,7 @@ fun SecurityMainScreen(
             }
 
             // 2. Countdown fallback protection
-            item {
+            item(key = "countdown_card") {
                 CountdownCard(
                     isTrackingEnabled = uiState.isTrackingEnabled,
                     countdownEnabled = uiState.countdownEnabled,
@@ -477,7 +465,7 @@ fun SecurityMainScreen(
             }
 
             // 3. Email & App Password Configuration
-            item {
+            item(key = "credentials_card") {
                 CredentialsCard(
                     email = uiState.email,
                     password = uiState.password,
@@ -492,7 +480,7 @@ fun SecurityMainScreen(
             }
 
             // 3. System Permissions Status Card
-            item {
+            item(key = "permissions_status_card") {
                 PermissionsStatusCard(
                     isAdminActive = uiState.isAdminActive,
                     hasCameraPermission = uiState.hasCameraPermission,
@@ -537,7 +525,7 @@ fun SecurityMainScreen(
             }
 
             // 4. Intruder Logs & History Card
-            item {
+            item(key = "intruder_logs_card") {
                 IntruderLogsCard(
                     logs = uiState.logs,
                     onClearLogs = viewModel::clearLogs
@@ -545,7 +533,7 @@ fun SecurityMainScreen(
             }
 
             // Bottom Developer Info trigger button
-            item {
+            item(key = "footer_developer_button_item") {
                 Box(
                     contentAlignment = Alignment.Center,
                     modifier = Modifier

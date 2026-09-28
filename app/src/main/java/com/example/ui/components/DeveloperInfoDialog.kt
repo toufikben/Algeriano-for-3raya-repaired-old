@@ -63,7 +63,7 @@ fun DeveloperInfoDialog(
     onDismiss: () -> Unit
 ) {
     val context = LocalContext.current
-    val devEmail = "www.toufik.bendjeddah@gmail.com"
+    val devEmail = "toufik.bendjeddah@gmail.com"
     val privacyPolicyUrl = "https://raw.githubusercontent.com/toufikben/Algeriano-for-3raya-repaired/main/privacy-policy.html"
 
     Dialog(onDismissRequest = onDismiss) {

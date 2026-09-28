@@ -16,3 +16,6 @@
 local.properties
 .env
 debug.keystore
+# Never commit signing keys (e.g. rootDir/my-upload-key.jks)
+*.jks
+*.keystore

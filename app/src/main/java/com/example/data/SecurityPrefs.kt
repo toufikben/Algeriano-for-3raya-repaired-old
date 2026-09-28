@@ -9,7 +9,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import org.json.JSONArray
-import org.json.JSONObject
 import java.io.File
 import java.security.SecureRandom
 import java.security.spec.KeySpec
@@ -67,13 +66,6 @@ data class SecurityEvent(
     val emailState: SecurityEventComponentState = SecurityEventComponentState.NOT_REQUESTED
 )
 
-data class CountdownDiagnosticEvent(
-    val timestamp: Long,
-    val stage: String,
-    val status: String,
-    val detail: String
-)
-
 class SecurityPrefs private constructor(private val context: Context) {
 
     private val prefs: SharedPreferences =
@@ -115,14 +107,12 @@ class SecurityPrefs private constructor(private val context: Context) {
         private const val KEY_PIN_FAILED_ATTEMPTS = "key_pin_failed_attempts"
         private const val KEY_PIN_BLOCKED_UNTIL = "key_pin_blocked_until"
         private const val KEY_PIN_BLOCKED_UNTIL_REALTIME = "key_pin_blocked_until_realtime"
-        private const val KEY_COUNTDOWN_DIAGNOSTICS_JSON = "key_countdown_diagnostics_json"
         private const val KEY_SECURITY_EVENTS_JSON = "key_security_events_json"
         private const val KEYSTORE_ALIAS = "intruder_security_credentials"
         private const val ENCRYPTED_PREFIX = "v1:"
         private const val GCM_TAG_LENGTH_BITS = 128
         private const val GCM_IV_LENGTH_BYTES = 12
         private const val MAX_SECURITY_EVENTS = 100
-        private const val MAX_COUNTDOWN_DIAGNOSTICS = 40
         private const val EVENT_LEASE_TIMEOUT_MILLIS = 2 * 60 * 1000L
         private const val MAX_EVENT_RECOVERY_ATTEMPTS = 2
         private const val MAX_SEND_ATTEMPTS = 3
@@ -808,39 +798,6 @@ class SecurityPrefs private constructor(private val context: Context) {
             .putInt(KEY_COUNTDOWN_RETRY_COUNT, 0)
             .putString(KEY_COUNTDOWN_EVENT_ID, "")
             .apply()
-    }
-
-    @Synchronized
-    fun recordCountdownDiagnostic(
-        stage: String,
-        status: String,
-        detail: String,
-        timestamp: Long = System.currentTimeMillis()
-    ) {
-        // Diagnostic tracing was useful during device testing, but is not
-        // part of the production store build. Keep this compatibility method
-        // because background components call it, without persisting internal
-        // service, camera, PIN, or SMTP execution details.
-    }
-
-    fun getCountdownDiagnostics(): List<CountdownDiagnosticEvent> {
-        val json = prefs.getString(KEY_COUNTDOWN_DIAGNOSTICS_JSON, "[]") ?: "[]"
-        return try {
-            val array = JSONArray(json)
-            (0 until array.length()).mapNotNull { index ->
-                array.optJSONObject(index)?.let { item ->
-                    CountdownDiagnosticEvent(
-                        timestamp = item.optLong("timestamp", 0L),
-                        stage = item.optString("stage"),
-                        status = item.optString("status"),
-                        detail = item.optString("detail")
-                    )
-                }
-            }.takeLast(MAX_COUNTDOWN_DIAGNOSTICS).reversed()
-        } catch (e: Exception) {
-            Log.e("SecurityPrefs", "Unable to read countdown diagnostics", e)
-            emptyList()
-        }
     }
 
     @Synchronized

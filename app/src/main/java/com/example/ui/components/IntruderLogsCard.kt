@@ -1,5 +1,6 @@
 package com.example.ui.components
 
+import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
@@ -186,7 +187,11 @@ fun IntruderLogsCard(
                                     context.startActivity(intent)
                                 } catch (e: Exception) {
                                     val webUri = "https://www.google.com/maps?q=$lat,$lng"
-                                    context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(webUri)))
+                                    try {
+                                        context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(webUri)))
+                                    } catch (e2: ActivityNotFoundException) {
+                                        // No maps app and no browser available: ignore silently.
+                                    }
                                 }
                             }
                         )
@@ -304,7 +309,7 @@ private fun IntruderLogItem(
     onPhotoClick: (String) -> Unit,
     onOpenMap: (Double, Double) -> Unit
 ) {
-    val dateFormat = remember { SimpleDateFormat("yyyy/MM/dd - hh:mm a", Locale("ar")) }
+    val dateFormat = remember { SimpleDateFormat("yyyy/MM/dd - hh:mm a", Locale.getDefault()) }
     val formattedTime = remember(log.timestamp) { dateFormat.format(Date(log.timestamp)) }
     val hasPhoto = !log.photoPath.isNullOrEmpty() && File(log.photoPath).exists()
 

@@ -292,11 +292,6 @@ class SecurityEventWorker(
                 imageFile = imageFile,
                 eventId = event.id
             )
-            prefs.recordCountdownDiagnostic(
-                "email",
-                if (sendResult.isSuccess) "success" else "failed",
-                sendResult.errorMessage ?: "smtp_ok"
-            )
             prefs.updateEmailState(
                 event.id,
                 if (sendResult.isSuccess) SecurityEventComponentState.SUCCEEDED else SecurityEventComponentState.FAILED

@@ -2,6 +2,7 @@ package com.example.util
 
 import android.content.Context
 import android.graphics.BitmapFactory
+import android.util.Log
 import com.example.R
 
 import java.io.File
@@ -22,6 +23,8 @@ import javax.mail.internet.MimeMultipart
 import javax.mail.MessagingException
 
 object EmailSender {
+
+    private const val TAG = "EmailSender"
 
     data class SendResult(
         val isSuccess: Boolean,
@@ -66,7 +69,12 @@ object EmailSender {
                 put("mail.smtp.starttls.required", "true")
                 put("mail.smtp.ssl.protocols", "TLSv1.2 TLSv1.3")
                 put("mail.smtp.ssl.checkserveridentity", "true")
-                put("mail.smtp.ssl.trust", "smtp.gmail.com")
+                // FIX: removed mail.smtp.ssl.trust — that property installs a
+                // trust-all manager and disables chain verification, letting a
+                // MITM with a self-signed cert steal the Gmail app password.
+                // Without it, JavaMail (com.sun.mail android-mail 1.6.7) uses
+                // the default TrustManagers, so the STARTTLS certificate is
+                // validated against the system trust store and the hostname.
                 put("mail.smtp.connectiontimeout", "15000")
                 put("mail.smtp.timeout", "15000")
             }
@@ -141,13 +149,13 @@ object EmailSender {
                 }
             }
         } catch (e: AuthenticationFailedException) {
-            System.err.println("EmailSender: SMTP authentication failed")
+            Log.w(TAG, "EmailSender: SMTP authentication failed", e)
             SendResult(false, context.getString(R.string.ui_464e2cc141b1), retryable = false)
         } catch (e: MessagingException) {
             val detail = smtpDiagnostic(e)
             val authenticationFailure = detail.contains("535") ||
                 detail.contains("534") || detail.contains("5.7.8")
-            System.err.println("EmailSender: SMTP messaging failure ${e.javaClass.simpleName}: $detail")
+            Log.w(TAG, "EmailSender: SMTP messaging failure ${e.javaClass.simpleName}: $detail")
             SendResult(
                 false,
                 context.getString(R.string.ui_smtp_error_detail, e.javaClass.simpleName, detail),
@@ -155,7 +163,7 @@ object EmailSender {
             )
         } catch (e: Exception) {
             val detail = smtpDiagnostic(e)
-            System.err.println("EmailSender: SMTP send failed: ${e.javaClass.simpleName}: $detail")
+            Log.e(TAG, "EmailSender: SMTP send failed: ${e.javaClass.simpleName}: $detail", e)
             SendResult(
                 false,
                 context.getString(R.string.ui_smtp_error_detail, e.javaClass.simpleName, detail),
@@ -188,7 +196,22 @@ object EmailSender {
                 val head = ByteArray(2)
                 val tail = ByteArray(2)
                 if (input.read(head) != 2) return false
-                input.skip(file.length().coerceAtLeast(2L) - 4L)
+                // FIX: input.skip() may return fewer bytes than requested, so
+                // a single call can leave the stream short of the last two
+                // bytes and reject a valid JPEG non-retryably. Loop until the
+                // whole gap is consumed, falling back to chunked reads when
+                // skip makes no progress.
+                var remaining = (file.length() - 4L).coerceAtLeast(0L)
+                val chunk = ByteArray(8192)
+                while (remaining > 0L) {
+                    var advanced = input.skip(remaining)
+                    if (advanced <= 0L) {
+                        val read = input.read(chunk, 0, minOf(chunk.size.toLong(), remaining).toInt())
+                        if (read == -1) return false
+                        advanced = read.toLong()
+                    }
+                    remaining -= advanced
+                }
                 if (input.read(tail) != 2) return false
                 (head[0].toInt() and 0xFF) == 0xFF &&
                     (head[1].toInt() and 0xFF) == 0xD8 &&

@@ -94,7 +94,6 @@ class CameraForegroundService : Service() {
     override fun onCreate() {
         super.onCreate()
         val prefs = SecurityPrefs.getInstance(applicationContext)
-        prefs.recordCountdownDiagnostic("service", "created", "foreground_service_on_create")
         prefs.recoverStaleSecurityEvents()
         startBackgroundThread()
     }
@@ -103,9 +102,6 @@ class CameraForegroundService : Service() {
         val action = intent?.action ?: ACTION_CAPTURE_AND_SEND
         foregroundNeedsCamera = action != ACTION_SEND_PENDING
         Log.d(TAG, "onStartCommand action: $action")
-        SecurityPrefs.getInstance(applicationContext).recordCountdownDiagnostic(
-            "service", "command_received", "action=$action"
-        )
 
         if (action == ACTION_STOP_MONITORING) {
             // FIX: alert ids vary across ALERT_NOTIFICATION_ID..(+SPAN), so
@@ -123,9 +119,6 @@ class CameraForegroundService : Service() {
 
         if (action == ACTION_ARM_COUNTDOWN) {
             if (!foregroundTypeStarted && !promoteToForeground(buildForegroundNotification())) {
-                SecurityPrefs.getInstance(applicationContext).recordCountdownDiagnostic(
-                    "service", "failed", "countdown_arm_foreground_failed"
-                )
                 stopSelf(startId)
                 return START_NOT_STICKY
             }
@@ -139,11 +132,6 @@ class CameraForegroundService : Service() {
         if (!foregroundTypeStarted && (foregroundNeedsCamera || !foregroundStarted)) {
             if (!promoteToForeground(buildForegroundNotification())) {
                 val prefs = SecurityPrefs.getInstance(applicationContext)
-                prefs.recordCountdownDiagnostic(
-                    "service",
-                    "failed",
-                    "promote_to_foreground_failed"
-                )
                 if (action == ACTION_COUNTDOWN_EXPIRED) {
                     prefs.countdownCapturePending = true
                     CaptureRetryWorker.enqueue(applicationContext, replaceExisting = true)
@@ -160,18 +148,10 @@ class CameraForegroundService : Service() {
                 stopSelf(startId)
                 return START_NOT_STICKY
             }
-            SecurityPrefs.getInstance(applicationContext).recordCountdownDiagnostic(
-                "service",
-                "ready",
-                "foreground_service_started"
-            )
             foregroundStarted = true
         }
 
         if (action == ACTION_START_MONITORING) {
-            SecurityPrefs.getInstance(applicationContext).recordCountdownDiagnostic(
-                "service", "armed", "protection_foreground_service_ready"
-            )
             return START_STICKY
         }
 
@@ -299,9 +279,6 @@ class CameraForegroundService : Service() {
         // event stuck IN_PROGRESS (invisible to getPendingSecurityEvents) until
         // a lease sweep; now it stays PENDING/DEFERRED for the distributor.
         if (!captureInProgress.compareAndSet(false, true)) {
-            prefs.recordCountdownDiagnostic(
-                "capture", "ignored", "already_in_progress,event=${eventId ?: "none"}"
-            )
             Log.w(TAG, "Capture already in progress; leaving event unclaimed for retry")
             // Do not downgrade SEND_PENDING/FAILED_RETRYABLE and do not spawn
             // unbounded waiter coroutines. Countdown retry is scheduled once.
@@ -316,10 +293,6 @@ class CameraForegroundService : Service() {
             return
         }
 
-        prefs.recordCountdownDiagnostic(
-            "capture", "started", "test=$isTest,countdown=$isCountdownCapture,event=${eventId ?: "none"}"
-        )
-
         if (!isTest && eventId != null && !sendOnly) {
             prefs.markCapturePending(eventId)
         }
@@ -332,7 +305,6 @@ class CameraForegroundService : Service() {
         val capturedCountdownEndTime = if (isCountdownCapture) prefs.countdownEndTime else 0L
         if (autoRestartCountdown) {
             CountdownScheduler.start(applicationContext, prefs.countdownDurationMillis)
-            prefs.recordCountdownDiagnostic("capture", "success", "auto_restart_scheduled_before_capture")
             Log.d(TAG, "Countdown completed; next cycle scheduled before capture")
         }
 
@@ -361,10 +333,7 @@ class CameraForegroundService : Service() {
                             try {
                                 captureImageSilently()
                             } catch (error: Exception) {
-                                prefs.recordCountdownDiagnostic(
-                                    "camera", "failed",
-                                    "isolated:${error.javaClass.simpleName}:${error.message}"
-                                )
+                                Log.w(TAG, "Camera capture failed in isolation", error)
                                 null
                             }
                         }
@@ -381,10 +350,7 @@ class CameraForegroundService : Service() {
                                 fetchCurrentLocation()
                             }
                         } catch (error: Exception) {
-                            prefs.recordCountdownDiagnostic(
-                                "location", "failed",
-                                "isolated:${error.javaClass.simpleName}:${error.message}"
-                            )
+                            Log.w(TAG, "Location fetch failed in isolation", error)
                             null
                         }
                     }
@@ -481,11 +447,6 @@ class CameraForegroundService : Service() {
 
                     emailSuccess = sendResult.isSuccess
                     emailRetryable = sendResult.retryable
-                    prefs.recordCountdownDiagnostic(
-                        "email",
-                        if (emailSuccess) "success" else "failed",
-                        sendResult.errorMessage ?: "smtp_ok"
-                    )
                     if (!isTest && eventId != null) {
                         prefs.updateEmailState(
                             eventId,
@@ -542,15 +503,6 @@ class CameraForegroundService : Service() {
                 )
                 prefs.addLog(log)
                 logSaved = true
-                // FIX(diagnostics): the success path previously logged nothing
-                // except when clearing a non-restart countdown, so screenshots
-                // showed service start/destroy with no capture/email stage in
-                // between. Always record the outcome incl. the email result.
-                prefs.recordCountdownDiagnostic(
-                    "capture",
-                    if (emailSuccess) "success" else "partial",
-                    "photo=$photoCaptured,location=$locationCaptured,email=$emailSuccess"
-                )
 
                 // 5. Show alert notification
                 showAlertNotification(
@@ -565,15 +517,9 @@ class CameraForegroundService : Service() {
                     prefs.countdownEndTime == capturedCountdownEndTime
                 ) {
                     prefs.clearCountdown()
-                    prefs.recordCountdownDiagnostic("capture", "completed", "countdown_cleared_after_capture")
                 }
             } catch (e: Exception) {
                 Log.e(TAG, "Error in processIntruderCapture", e)
-                prefs.recordCountdownDiagnostic(
-                    "capture",
-                    "failed",
-                    "${e.javaClass.simpleName}:${e.message}"
-                )
                 if (!isTest && eventId != null) {
                     prefs.completeSecurityEvent(eventId, SecurityEventStatus.FAILED_FINAL)
                     if (!logSaved) {
@@ -616,7 +562,6 @@ class CameraForegroundService : Service() {
                     runCatching { wakeLock.release() }
                 }
                 if (!isServicePersistent()) {
-                    prefs.recordCountdownDiagnostic("service", "stopping", "no_active_tracking_or_countdown")
                     stopForeground(false)
                     stopSelf()
                 }
@@ -631,7 +576,6 @@ class CameraForegroundService : Service() {
         // (min of epoch vs elapsedRealtime) so a wall-clock jump cannot freeze
         // the pre-armed watchdog. AlarmManager RTC scheduling is untouched.
         val remaining = prefs.countdownRemainingMillis()
-        prefs.recordCountdownDiagnostic("service", "armed", "countdown_remaining_ms=$remaining")
         countdownArmJob = serviceScope.launch {
             delay(remaining)
             val currentPrefs = SecurityPrefs.getInstance(applicationContext)
@@ -640,7 +584,6 @@ class CameraForegroundService : Service() {
             if (currentPrefs.countdownEventId.isBlank()) {
                 currentPrefs.countdownEventId = currentPrefs.enqueueSecurityEvent().id
             }
-            currentPrefs.recordCountdownDiagnostic("expired", "service", "pre_armed_service_expiration")
             processIntruderCapture(false, true, currentPrefs.countdownEventId)
         }
     }
@@ -655,24 +598,11 @@ class CameraForegroundService : Service() {
     }
 
     private suspend fun captureImageSilently(): File? {
-        val keyguardLocked = (getSystemService(Context.KEYGUARD_SERVICE) as? android.app.KeyguardManager)
-            ?.isKeyguardLocked == true
-        SecurityPrefs.getInstance(applicationContext).recordCountdownDiagnostic(
-            "camera", "requested", "keyguard_locked=$keyguardLocked"
-        )
         repeat(2) { attempt ->
             val file = captureImageSilentlyOnce()
-            if (file != null) {
-                SecurityPrefs.getInstance(applicationContext).recordCountdownDiagnostic(
-                    "camera", "ready", "attempt=${attempt + 1},keyguard_locked=$keyguardLocked"
-                )
-                return file
-            }
+            if (file != null) return file
             if (attempt == 0) kotlinx.coroutines.delay(700L)
         }
-        SecurityPrefs.getInstance(applicationContext).recordCountdownDiagnostic(
-            "camera", "failed", "attempts=2,keyguard_locked=$keyguardLocked"
-        )
         return null
     }
 
@@ -1016,9 +946,6 @@ class CameraForegroundService : Service() {
         ) != PackageManager.PERMISSION_GRANTED
         ) {
             Log.w(TAG, "Notification permission not granted; skipping alert notification")
-            SecurityPrefs.getInstance(applicationContext).recordCountdownDiagnostic(
-                "notification", "skipped", "post_notifications_permission_missing"
-            )
             return
         }
 
@@ -1027,14 +954,8 @@ class CameraForegroundService : Service() {
                 ALERT_NOTIFICATION_ID + (System.currentTimeMillis() % ALERT_NOTIFICATION_ID_SPAN.toLong()).toInt(),
                 notification
             )
-            SecurityPrefs.getInstance(applicationContext).recordCountdownDiagnostic(
-                "notification", "sent", "photo=$photoCaptured,location=$locationAvailable,email=$emailSent"
-            )
         } catch (e: Exception) {
             Log.e(TAG, "Error posting alert notification", e)
-            SecurityPrefs.getInstance(applicationContext).recordCountdownDiagnostic(
-                "notification", "failed", "${e.javaClass.simpleName}:${e.message}"
-            )
         }
     }
 
@@ -1083,15 +1004,9 @@ class CameraForegroundService : Service() {
 
     override fun onDestroy() {
         val prefs = SecurityPrefs.getInstance(applicationContext)
-        prefs.recordCountdownDiagnostic(
-            "service",
-            "destroyed",
-            "tracking=${prefs.isTrackingEnabled},countdown=${prefs.countdownEnabled},pending=${prefs.countdownCapturePending}"
-        )
         // A normal user stop clears countdownEnabled first. This recovery path
         // is therefore reserved for unexpected service destruction.
         if (prefs.isTrackingEnabled && prefs.countdownEnabled) {
-            prefs.recordCountdownDiagnostic("reschedule", "requested", "service_destroyed")
             CountdownScheduler.rescheduleFromPrefs(applicationContext)
         }
         serviceScope.cancel()

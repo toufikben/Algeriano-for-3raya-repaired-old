@@ -30,7 +30,7 @@ jobs:
         with:
           java-version: ${{ env.JDK_VERSION }}
           distribution: temurin
-          cache: gradle
+        # Gradle caching is handled by gradle/actions/setup-gradle below (single cache owner).
 
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
@@ -60,12 +60,20 @@ jobs:
           KEYSTORE_PATH="$RUNNER_TEMP/phone-fortress-release.jks"
           printf '%s' "$KEYSTORE_BASE64" | base64 --decode > "$KEYSTORE_PATH"
           chmod 600 "$KEYSTORE_PATH"
+          # Use GITHUB_ENV heredoc delimiters so passwords with special characters
+          # ($, quotes, spaces, ...) are written to the environment verbatim.
           {
             echo "KEYSTORE_PATH=$KEYSTORE_PATH"
             # The Gradle script uses STORE_PASSWORD for the keystore password.
-            echo "STORE_PASSWORD=$KEYSTORE_PASSWORD"
-            echo "KEY_ALIAS=$KEY_ALIAS"
-            echo "KEY_PASSWORD=$KEY_PASSWORD"
+            echo "STORE_PASSWORD<<EOF_STORE_PASSWORD"
+            printf '%s\n' "$KEYSTORE_PASSWORD"
+            echo "EOF_STORE_PASSWORD"
+            echo "KEY_ALIAS<<EOF_KEY_ALIAS"
+            printf '%s\n' "$KEY_ALIAS"
+            echo "EOF_KEY_ALIAS"
+            echo "KEY_PASSWORD<<EOF_KEY_PASSWORD"
+            printf '%s\n' "$KEY_PASSWORD"
+            echo "EOF_KEY_PASSWORD"
           } >> "$GITHUB_ENV"
 
       - name: Run unit tests
@@ -87,6 +95,7 @@ jobs:
           set -euo pipefail
           BUILD_TOOLS_VERSION="$(ls -1 "$ANDROID_HOME/build-tools" | sort -V | tail -n 1)"
           APKSIGNER="$ANDROID_HOME/build-tools/$BUILD_TOOLS_VERSION/apksigner"
+          AAPT2="$ANDROID_HOME/build-tools/$BUILD_TOOLS_VERSION/aapt2"
           APK="app/build/outputs/apk/release/app-release.apk"
           AAB="app/build/outputs/bundle/release/app-release.aab"
 
@@ -94,6 +103,14 @@ jobs:
           unzip -t "$AAB" >/dev/null
           test -s "$APK"
           test -s "$AAB"
+
+          # Real package-identity check: extract the package id from the APK and compare it.
+          ACTUAL_PACKAGE="$("$AAPT2" dump badging "$APK" | sed -n "s/^package: name='\([^']*\)'.*/\1/p" | head -n 1)"
+          echo "Detected APK package: $ACTUAL_PACKAGE"
+          if [ "$ACTUAL_PACKAGE" != "$EXPECTED_PACKAGE" ]; then
+            echo "::error::APK package identity mismatch: expected '$EXPECTED_PACKAGE', got '$ACTUAL_PACKAGE'" >&2
+            exit 1
+          fi
 
           echo "APK SHA-256:"
           sha256sum "$APK"

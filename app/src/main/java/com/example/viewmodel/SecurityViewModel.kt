@@ -24,6 +24,7 @@ import com.example.receiver.MyDeviceAdminReceiver
 import com.example.service.CameraForegroundService
 import com.example.worker.SecurityEventDistributor
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -45,6 +46,7 @@ data class SecurityUiState(
     val hasNotificationPermission: Boolean = true,
     val isBatteryOptimizationIgnored: Boolean = false,
     val logs: List<IntruderLog> = emptyList(),
+    val totalAttempts: Int = 0,
     val isTesting: Boolean = false,
     val saveFeedback: Boolean = false,
     val bannerMessage: String? = null,
@@ -71,6 +73,7 @@ class SecurityViewModel(application: Application) : AndroidViewModel(application
             hasPassword = prefs.password.isNotEmpty(),
             isTrackingEnabled = prefs.isTrackingEnabled,
             logs = prefs.getLogs(),
+            totalAttempts = prefs.totalAttempts,
             countdownEnabled = prefs.countdownEnabled,
             countdownEndTime = prefs.countdownEndTime,
             countdownDurationMillis = prefs.countdownDurationMillis,
@@ -79,6 +82,9 @@ class SecurityViewModel(application: Application) : AndroidViewModel(application
         )
     )
     val uiState: StateFlow<SecurityUiState> = _uiState.asStateFlow()
+
+    /** Live-remaining ticker; only alive while a countdown is enabled. */
+    private var countdownTickerJob: Job? = null
 
     init {
         val recoveredEvents = prefs.recoverStaleSecurityEvents()
@@ -96,23 +102,45 @@ class SecurityViewModel(application: Application) : AndroidViewModel(application
         }
         viewModelScope.launch {
             prefs.logsFlow.collect { logList ->
-                _uiState.update { it.copy(logs = logList) }
-            }
-        }
-        viewModelScope.launch {
-            while (isActive) {
-                delay(1000)
+                // addLog/clearLogs mutate totalAttempts and publish logsFlow
+                // together, so refreshing both here keeps the hero counter
+                // exact instead of frozen at the 50-log display cap.
                 _uiState.update {
-                    it.copy(
-                        countdownEnabled = prefs.countdownEnabled,
-                        countdownEndTime = prefs.countdownEndTime,
-                        countdownRemainingMillis = remainingCountdownMillis(),
-                        countdownAutoRestart = prefs.countdownAutoRestart
-                    )
+                    it.copy(logs = logList, totalAttempts = prefs.totalAttempts)
                 }
             }
         }
+        syncCountdownTicker()
         refreshStatuses()
+    }
+
+    /**
+     * Binds the 1-second countdown ticker to [SecurityPrefs.countdownEnabled]:
+     * no coroutine keeps spinning once the countdown is off, and the loop also
+     * self-terminates if the countdown is cleared by a background component.
+     */
+    private fun syncCountdownTicker() {
+        val shouldRun = prefs.countdownEnabled
+        if (shouldRun && countdownTickerJob?.isActive != true) {
+            countdownTickerJob = viewModelScope.launch {
+                while (isActive) {
+                    delay(1000)
+                    val enabled = prefs.countdownEnabled
+                    _uiState.update {
+                        it.copy(
+                            countdownEnabled = enabled,
+                            countdownEndTime = if (enabled) prefs.countdownEndTime else 0L,
+                            countdownRemainingMillis = remainingCountdownMillis(),
+                            countdownAutoRestart = prefs.countdownAutoRestart
+                        )
+                    }
+                    if (!enabled) return@launch
+                }
+            }
+        } else if (!shouldRun) {
+            countdownTickerJob?.cancel()
+            countdownTickerJob = null
+        }
     }
 
     private fun remainingCountdownMillis(): Long {
@@ -134,11 +162,6 @@ class SecurityViewModel(application: Application) : AndroidViewModel(application
             } else {
                 context.startService(serviceIntent)
             }
-            prefs.recordCountdownDiagnostic("service_arm", "requested", "activity_resumed")
-        }.onFailure { error ->
-            prefs.recordCountdownDiagnostic(
-                "service_arm", "failed", "resume:${error.javaClass.simpleName}:${error.message}"
-            )
         }
         CountdownScheduler.rescheduleFromPrefs(context)
         SecurityEventDistributor.dispatchPendingFromVisibleContext(context)
@@ -274,11 +297,6 @@ class SecurityViewModel(application: Application) : AndroidViewModel(application
                 } else {
                     context.startService(serviceIntent)
                 }
-                prefs.recordCountdownDiagnostic("service_arm", "requested", "tracking_enabled")
-            }.onFailure { error ->
-                prefs.recordCountdownDiagnostic(
-                    "service_arm", "failed", "tracking:${error.javaClass.simpleName}:${error.message}"
-                )
             }
             SecurityEventDistributor.dispatchPendingFromVisibleContext(context)
         } else {
@@ -335,7 +353,6 @@ class SecurityViewModel(application: Application) : AndroidViewModel(application
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as? android.app.AlarmManager
             if (alarmManager != null && !alarmManager.canScheduleExactAlarms()) {
-                prefs.recordCountdownDiagnostic("schedule", "warning", "starting_inexact_without_exact_permission")
                 runCatching {
                     context.startActivity(
                         Intent(android.provider.Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM).apply {
@@ -346,6 +363,7 @@ class SecurityViewModel(application: Application) : AndroidViewModel(application
                 }
             }
         }
+        syncCountdownTicker()
         _uiState.update {
             it.copy(
                 countdownEnabled = true,
@@ -358,6 +376,7 @@ class SecurityViewModel(application: Application) : AndroidViewModel(application
 
     fun cancelCountdown() {
         CountdownScheduler.cancel(context)
+        syncCountdownTicker()
         _uiState.update {
             it.copy(countdownEnabled = false, countdownEndTime = 0L, countdownRemainingMillis = 0L)
         }
@@ -369,6 +388,7 @@ class SecurityViewModel(application: Application) : AndroidViewModel(application
             return
         }
         CountdownScheduler.start(context, prefs.countdownDurationMillis)
+        syncCountdownTicker()
         _uiState.update {
             it.copy(
                 countdownEnabled = true,
@@ -449,21 +469,23 @@ class SecurityViewModel(application: Application) : AndroidViewModel(application
             true
         }
 
-        if (prefs.isTrackingEnabled && !isAdmin) {
-            prefs.isTrackingEnabled = false
-            prefs.resetFailedUnlockAttempts()
-            CountdownScheduler.cancel(context)
-            context.stopService(Intent(context, CameraForegroundService::class.java))
-        }
-
+        // FIX (audit): refreshStatuses is a passive read path (called on every
+        // ON_RESUME and after permission dialogs). It previously disabled
+        // protection, reset the failed-attempt counters and cancelled the
+        // countdown whenever isAdminActive read false, even transiently. The
+        // explicit "admin removed -> disable protection" behavior belongs to
+        // MyDeviceAdminReceiver.onDisabled (the real state-change callback);
+        // this path now only refreshes the displayed statuses.
         _uiState.update {
             it.copy(
                 isAdminActive = isAdmin,
                 hasCameraPermission = hasCamera,
                 hasLocationPermission = hasLocation,
                 hasNotificationPermission = hasNotifications,
-                isBatteryOptimizationIgnored = isBatteryIgnored
+                isBatteryOptimizationIgnored = isBatteryIgnored,
+                totalAttempts = prefs.totalAttempts
             )
         }
+        syncCountdownTicker()
     }
 }
