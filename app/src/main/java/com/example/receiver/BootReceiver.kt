@@ -25,31 +25,42 @@ class BootReceiver : BroadcastReceiver() {
         Log.d("BootReceiver", "Received action: $action")
 
         if (Intent.ACTION_BOOT_COMPLETED == action || "android.intent.action.QUICKBOOT_POWERON" == action) {
-            val prefs = SecurityPrefs.getInstance(context)
-            CountdownScheduler.rescheduleFromPrefs(context)
-            prefs.recoverStaleSecurityEvents()
-            if (prefs.isTrackingEnabled) {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
-                    // Android 14+ restricts camera foreground-service starts from
-                    // BOOT_COMPLETED. Do not enqueue a Worker that would repeatedly
-                    // attempt the same forbidden background start. Pending events
-                    // remain durable and are enqueued when the user opens the app.
-                    SecurityEventDistributor.enqueueAfterReboot(context)
-                    val needsVisibleCapture = prefs.getPendingSecurityEvents().any {
-                        it.status == SecurityEventStatus.PENDING || it.status == SecurityEventStatus.DEFERRED
+            // Room/SharedPreferences work here is synchronous (SecurityPrefs uses
+            // runBlocking); hop off the broadcast main thread to avoid a timeout.
+            val appContext = context.applicationContext
+            val pendingResult = goAsync()
+            Thread {
+                try {
+                    val prefs = SecurityPrefs.getInstance(appContext)
+                    CountdownScheduler.rescheduleFromPrefs(appContext)
+                    prefs.recoverStaleSecurityEvents()
+                    if (prefs.isTrackingEnabled) {
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                            // Android 12+ (S) restricts camera foreground-service
+                            // starts from BOOT_COMPLETED. Do not enqueue a Worker
+                            // that would repeatedly attempt the same forbidden
+                            // background start. Pending events remain durable and
+                            // are enqueued when the user opens the app.
+                            SecurityEventDistributor.enqueueAfterReboot(appContext)
+                            val needsVisibleCapture = prefs.getPendingSecurityEvents().any {
+                                it.status == SecurityEventStatus.PENDING || it.status == SecurityEventStatus.DEFERRED
+                            }
+                            Log.w("BootReceiver", "Protection requires a visible app start after boot")
+                            if (needsVisibleCapture) postResumeNotification(appContext)
+                        } else {
+                            SecurityEventDistributor.enqueuePending(appContext)
+                            Log.d("BootReceiver", "Pending events will resume from a visible app session")
+                        }
+                    } else {
+                        // FIX: do not enqueue work while protection is disabled.
+                        // Pending events were cancelled on disable; resuming them here
+                        // would capture while the user explicitly turned protection off.
+                        Log.d("BootReceiver", "Protection disabled; skipping pending-event resume")
                     }
-                    Log.w("BootReceiver", "Protection requires a visible app start after boot")
-                    if (needsVisibleCapture) postResumeNotification(context)
-                    return
+                } finally {
+                    pendingResult.finish()
                 }
-                SecurityEventDistributor.enqueuePending(context)
-                Log.d("BootReceiver", "Pending events will resume from a visible app session")
-            } else {
-                // FIX: do not enqueue work while protection is disabled.
-                // Pending events were cancelled on disable; resuming them here
-                // would capture while the user explicitly turned protection off.
-                Log.d("BootReceiver", "Protection disabled; skipping pending-event resume")
-            }
+            }.start()
         }
     }
 

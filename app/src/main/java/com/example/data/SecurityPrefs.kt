@@ -2,6 +2,7 @@ package com.example.data
 
 import android.content.Context
 import android.content.SharedPreferences
+import android.os.SystemClock
 import android.util.Base64
 import android.util.Log
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -48,13 +49,6 @@ enum class SecurityEventStatus {
 enum class SecurityEventComponentState {
     NOT_REQUESTED, PENDING, SUCCEEDED, FAILED, DEFERRED
 }
-
-private fun SecurityEventStatus.isTerminal(): Boolean = this in setOf(
-    SecurityEventStatus.SENT,
-    SecurityEventStatus.FAILED,
-    SecurityEventStatus.FAILED_FINAL,
-    SecurityEventStatus.CANCELLED
-)
 
 data class SecurityEvent(
     val id: String,
@@ -110,6 +104,7 @@ class SecurityPrefs private constructor(private val context: Context) {
         private const val KEY_FAILED_UNLOCK_ATTEMPTS = "key_failed_unlock_attempts"
         private const val KEY_COUNTDOWN_ENABLED = "key_countdown_enabled"
         private const val KEY_COUNTDOWN_END_TIME = "key_countdown_end_time"
+        private const val KEY_COUNTDOWN_END_REALTIME = "key_countdown_end_realtime"
         private const val KEY_COUNTDOWN_DURATION = "key_countdown_duration"
         private const val KEY_COUNTDOWN_CAPTURE_PENDING = "key_countdown_capture_pending"
         private const val KEY_COUNTDOWN_RETRY_COUNT = "key_countdown_retry_count"
@@ -119,6 +114,7 @@ class SecurityPrefs private constructor(private val context: Context) {
         private const val KEY_APP_PIN_HASH = "key_app_pin_hash"
         private const val KEY_PIN_FAILED_ATTEMPTS = "key_pin_failed_attempts"
         private const val KEY_PIN_BLOCKED_UNTIL = "key_pin_blocked_until"
+        private const val KEY_PIN_BLOCKED_UNTIL_REALTIME = "key_pin_blocked_until_realtime"
         private const val KEY_COUNTDOWN_DIAGNOSTICS_JSON = "key_countdown_diagnostics_json"
         private const val KEY_SECURITY_EVENTS_JSON = "key_security_events_json"
         private const val KEYSTORE_ALIAS = "intruder_security_credentials"
@@ -292,11 +288,14 @@ class SecurityPrefs private constructor(private val context: Context) {
         if (!cancelPendingEvents) return
         updateSecurityEventsInRoom { events ->
             events.map { event ->
-                if (event.status == SecurityEventStatus.PENDING ||
-                    event.status == SecurityEventStatus.DEFERRED ||
-                    event.status == SecurityEventStatus.IN_PROGRESS ||
-                    event.status == SecurityEventStatus.SEND_PENDING ||
-                    event.status == SecurityEventStatus.FAILED_RETRYABLE
+                // FIX: route cancellation through the state machine instead of a
+                // hardcoded status list, keeping the machine the single source
+                // of truth (CAPTURED events legitimately stay in flight).
+                if (event.status != SecurityEventStatus.CANCELLED &&
+                    SecurityEventStateMachine.canTransition(
+                        event.status,
+                        SecurityEventStatus.CANCELLED
+                    )
                 ) event.copy(status = SecurityEventStatus.CANCELLED) else event
             }
         }
@@ -527,25 +526,21 @@ class SecurityPrefs private constructor(private val context: Context) {
         }
     }
 
+    // FIX: both predicates now derive from SecurityEventStateMachine.isPendingWork
+    // so has/get answer the same question. Safety for existing callers: the worker
+    // gate (getPendingSecurityEvent below) and claimSecurityEvent still refuse
+    // IN_PROGRESS events, and CAPTURED events resume only through the send-only
+    // path, so including IN_PROGRESS/CAPTURED here cannot double-process a claim.
     fun hasPendingSecurityEvents(): Boolean = synchronized(this) {
-        getSecurityEventsFromRoom().any {
-            it.status == SecurityEventStatus.PENDING ||
-                it.status == SecurityEventStatus.DEFERRED ||
-                it.status == SecurityEventStatus.IN_PROGRESS ||
-                it.status == SecurityEventStatus.SEND_PENDING ||
-                it.status == SecurityEventStatus.FAILED_RETRYABLE
-        }
+        getSecurityEventsFromRoom().any { SecurityEventStateMachine.isPendingWork(it.status) }
     }
 
     fun getPendingSecurityEvents(): List<SecurityEvent> = synchronized(this) {
-        getSecurityEventsFromRoom().filter {
-            it.status == SecurityEventStatus.PENDING ||
-                it.status == SecurityEventStatus.DEFERRED ||
-                it.status == SecurityEventStatus.SEND_PENDING ||
-                it.status == SecurityEventStatus.FAILED_RETRYABLE
-        }
+        getSecurityEventsFromRoom().filter { SecurityEventStateMachine.isPendingWork(it.status) }
     }
 
+    /** Worker-side gate: intentionally excludes IN_PROGRESS/CAPTURED so an
+     * enqueued worker never re-processes an event the service already claims. */
     @Synchronized
     fun getPendingSecurityEvent(id: String): SecurityEvent? {
         return store.event(id)?.takeIf {
@@ -568,17 +563,23 @@ class SecurityPrefs private constructor(private val context: Context) {
                     now - event.updatedAt >= EVENT_LEASE_TIMEOUT_MILLIS
                 if (!stale) return@map event
 
-                if (event.recoveryAttempts < MAX_EVENT_RECOVERY_ATTEMPTS) {
-                    recovered += 1
-                    event.copy(
-                        status = if (event.photoPath != null) SecurityEventStatus.SEND_PENDING
-                            else SecurityEventStatus.PENDING,
-                        updatedAt = now,
-                        recoveryAttempts = event.recoveryAttempts + 1
-                    )
+                // FIX: lease-expiry recoveries (IN_PROGRESS/CAPTURED -> PENDING)
+                // are declared legal in the state machine, and every recovery
+                // write is validated through canTransition like all other paths.
+                val target = if (event.recoveryAttempts < MAX_EVENT_RECOVERY_ATTEMPTS) {
+                    if (event.photoPath != null) SecurityEventStatus.SEND_PENDING
+                    else SecurityEventStatus.PENDING
                 } else {
-                    event.copy(status = SecurityEventStatus.FAILED_FINAL, updatedAt = now)
+                    SecurityEventStatus.FAILED_FINAL
                 }
+                if (!SecurityEventStateMachine.canTransition(event.status, target)) return@map event
+                if (event.recoveryAttempts < MAX_EVENT_RECOVERY_ATTEMPTS) recovered += 1
+                event.copy(
+                    status = target,
+                    updatedAt = now,
+                    recoveryAttempts = if (target == SecurityEventStatus.FAILED_FINAL)
+                        event.recoveryAttempts else event.recoveryAttempts + 1
+                )
             }
         }
         return recovered
@@ -618,13 +619,16 @@ class SecurityPrefs private constructor(private val context: Context) {
 
     private fun updateSecurityEventsInRoom(transform: (List<SecurityEvent>) -> List<SecurityEvent>) {
         val events = transform(store.events())
-        val active = events.filterNot { it.status.isTerminal() }
-        val terminal = events.filter { it.status.isTerminal() }
+        val active = events.filterNot { SecurityEventStateMachine.isTerminal(it.status) }
+        val terminal = events.filter { SecurityEventStateMachine.isTerminal(it.status) }
         // Never evict retryable or in-flight work; bound only terminal history.
+        // FIX: terminal events are capped on their own (dropped oldest-first),
+        // so a burst of >MAX non-terminal events no longer wipes every terminal
+        // record via takeLast(0). All non-terminal events are always preserved.
         // FIX: preserve chronological order (timestamp ASC) instead of
         // active+terminal grouping which broke claimNext ordering.
         val boundedTerminal = terminal.sortedBy { it.timestamp }
-            .takeLast((MAX_SECURITY_EVENTS - active.size).coerceAtLeast(0))
+            .takeLast(MAX_SECURITY_EVENTS)
         val merged = (active + boundedTerminal).sortedBy { it.timestamp }
         store.replaceEvents(merged)
     }
@@ -670,19 +674,47 @@ class SecurityPrefs private constructor(private val context: Context) {
         return setAppPin(newPin)
     }
 
-    fun isPinBlocked(now: Long = System.currentTimeMillis()): Boolean =
-        prefs.getLong(KEY_PIN_BLOCKED_UNTIL, 0L) > now
+    fun isPinBlocked(now: Long = System.currentTimeMillis()): Boolean {
+        val persistedUntil = prefs.getLong(KEY_PIN_BLOCKED_UNTIL, 0L)
+        if (persistedUntil <= 0L) return false
+        // FIX: enforce the lockout with elapsedRealtime so advancing the device
+        // clock cannot shorten the 30-second block. When no realtime deadline was
+        // persisted (older installs), fall back to the legacy wall-clock check.
+        val realtimeDeadline = prefs.getLong(KEY_PIN_BLOCKED_UNTIL_REALTIME, 0L)
+        return if (realtimeDeadline > 0L) {
+            SystemClock.elapsedRealtime() < realtimeDeadline
+        } else {
+            persistedUntil > now
+        }
+    }
 
-    fun getPinBlockedUntil(): Long = prefs.getLong(KEY_PIN_BLOCKED_UNTIL, 0L)
+    fun getPinBlockedUntil(): Long = pinBlockedUntilForUi(System.currentTimeMillis())
+
+    /** Wall-clock mirror of the lockout end, kept in sync with the elapsedRealtime deadline. */
+    private fun pinBlockedUntilForUi(now: Long): Long {
+        val persistedUntil = prefs.getLong(KEY_PIN_BLOCKED_UNTIL, 0L)
+        val realtimeDeadline = prefs.getLong(KEY_PIN_BLOCKED_UNTIL_REALTIME, 0L)
+        if (realtimeDeadline <= 0L) return persistedUntil
+        val realtimeRemaining = realtimeDeadline - SystemClock.elapsedRealtime()
+        return if (realtimeRemaining > 0L) {
+            persistedUntil.coerceAtLeast(now + realtimeRemaining)
+        } else {
+            persistedUntil
+        }
+    }
 
     @Synchronized
     fun registerPinFailure(now: Long = System.currentTimeMillis()): Long {
-        if (isPinBlocked(now)) return prefs.getLong(KEY_PIN_BLOCKED_UNTIL, 0L)
+        if (isPinBlocked(now)) return pinBlockedUntilForUi(now)
         val attempts = prefs.getInt(KEY_PIN_FAILED_ATTEMPTS, 0) + 1
         return if (attempts >= PIN_LOCKOUT_THRESHOLD) {
             val blockedUntil = now + PIN_LOCKOUT_MILLIS
+            // FIX: persist the authoritative deadline on the monotonic
+            // elapsedRealtime clock; the epoch value stays as a UI mirror.
+            val realtimeDeadline = SystemClock.elapsedRealtime() + PIN_LOCKOUT_MILLIS
             prefs.edit().putInt(KEY_PIN_FAILED_ATTEMPTS, 0)
-                .putLong(KEY_PIN_BLOCKED_UNTIL, blockedUntil).apply()
+                .putLong(KEY_PIN_BLOCKED_UNTIL, blockedUntil)
+                .putLong(KEY_PIN_BLOCKED_UNTIL_REALTIME, realtimeDeadline).apply()
             blockedUntil
         } else {
             prefs.edit().putInt(KEY_PIN_FAILED_ATTEMPTS, attempts).apply()
@@ -693,7 +725,8 @@ class SecurityPrefs private constructor(private val context: Context) {
     @Synchronized
     fun resetPinFailures() {
         prefs.edit().putInt(KEY_PIN_FAILED_ATTEMPTS, 0)
-            .putLong(KEY_PIN_BLOCKED_UNTIL, 0L).apply()
+            .putLong(KEY_PIN_BLOCKED_UNTIL, 0L)
+            .putLong(KEY_PIN_BLOCKED_UNTIL_REALTIME, 0L).apply()
     }
 
     private fun derivePinHash(pin: String, salt: ByteArray): ByteArray {
@@ -712,7 +745,39 @@ class SecurityPrefs private constructor(private val context: Context) {
 
     var countdownEndTime: Long
         get() = prefs.getLong(KEY_COUNTDOWN_END_TIME, 0L)
-        set(value) = prefs.edit().putLong(KEY_COUNTDOWN_END_TIME, value).apply()
+        set(value) {
+            // FIX: keep the epoch target for AlarmManager scheduling, but also
+            // capture an elapsedRealtime-based deadline at scheduling time so
+            // watchdog/expiry checks can detect wall-clock tampering. The setter
+            // is invoked exactly when the countdown is (re)armed or cleared.
+            val remaining = value - System.currentTimeMillis()
+            prefs.edit()
+                .putLong(KEY_COUNTDOWN_END_TIME, value)
+                .putLong(KEY_COUNTDOWN_END_REALTIME, SystemClock.elapsedRealtime() + remaining)
+                .apply()
+        }
+
+    /**
+     * Countdown expiry evaluated against the earlier (min) of the epoch and the
+     * elapsedRealtime deadlines, so advancing the device clock cannot freeze the
+     * countdown. Missing realtime deadlines (persisted by older versions) fall
+     * back to the legacy wall-clock comparison.
+     */
+    fun isCountdownExpired(now: Long = System.currentTimeMillis()): Boolean {
+        if (countdownEndTime <= now) return true
+        val realtimeDeadline = prefs.getLong(KEY_COUNTDOWN_END_REALTIME, 0L)
+        return realtimeDeadline > 0L && SystemClock.elapsedRealtime() >= realtimeDeadline
+    }
+
+    /** Remaining countdown time measured against the min of both deadlines. */
+    fun countdownRemainingMillis(now: Long = System.currentTimeMillis()): Long {
+        val epochRemaining = (countdownEndTime - now).coerceAtLeast(0L)
+        val realtimeDeadline = prefs.getLong(KEY_COUNTDOWN_END_REALTIME, 0L)
+        if (realtimeDeadline <= 0L) return epochRemaining // legacy data: old behavior
+        val realtimeRemaining =
+            (realtimeDeadline - SystemClock.elapsedRealtime()).coerceAtLeast(0L)
+        return minOf(epochRemaining, realtimeRemaining)
+    }
 
     var countdownDurationMillis: Long
         get() = prefs.getLong(KEY_COUNTDOWN_DURATION, DEFAULT_COUNTDOWN_DURATION_MILLIS)
@@ -738,6 +803,7 @@ class SecurityPrefs private constructor(private val context: Context) {
         prefs.edit()
             .putBoolean(KEY_COUNTDOWN_ENABLED, false)
             .putLong(KEY_COUNTDOWN_END_TIME, 0L)
+            .putLong(KEY_COUNTDOWN_END_REALTIME, 0L)
             .putBoolean(KEY_COUNTDOWN_CAPTURE_PENDING, false)
             .putInt(KEY_COUNTDOWN_RETRY_COUNT, 0)
             .putString(KEY_COUNTDOWN_EVENT_ID, "")
@@ -859,21 +925,41 @@ class SecurityPrefs private constructor(private val context: Context) {
     }
 
     fun clearLogs() {
+        // FIX: evidence for events still in flight (pending resend/capture) must
+        // survive a log clear: their photo files are kept and their photoPath
+        // references stay intact. Only terminal events lose the reference.
+        val protectedPhotoPaths = getSecurityEvents()
+            .filter { SecurityEventStateMachine.isPendingWork(it.status) }
+            .mapNotNull { event ->
+                event.photoPath?.let { path ->
+                    runCatching { File(path).canonicalPath }.getOrNull() ?: path
+                }
+            }
+            .toSet()
         val photoPaths = buildSet {
             getLogs().mapNotNullTo(this) { it.photoPath }
             getSecurityEvents().mapNotNullTo(this) { it.photoPath }
         }
         for (path in photoPaths) {
-                try {
-                    val file = File(path)
-                    if (file.exists()) file.delete()
-                } catch (e: Exception) {
-                    // Ignore
-                }
+            val canonical = runCatching { File(path).canonicalPath }.getOrNull() ?: path
+            if (path in protectedPhotoPaths || canonical in protectedPhotoPaths) continue
+            try {
+                val file = File(path)
+                if (file.exists()) file.delete()
+            } catch (e: Exception) {
+                // Ignore
+            }
         }
         saveLogs(emptyList())
         updateSecurityEventsInRoom { events ->
-            events.map { it.copy(photoPath = null, photoState = SecurityEventComponentState.NOT_REQUESTED, updatedAt = System.currentTimeMillis()) }
+            events.map { event ->
+                if (SecurityEventStateMachine.isPendingWork(event.status)) event
+                else event.copy(
+                    photoPath = null,
+                    photoState = SecurityEventComponentState.NOT_REQUESTED,
+                    updatedAt = System.currentTimeMillis()
+                )
+            }
         }
         totalAttempts = 0
         _logsFlow.value = emptyList()

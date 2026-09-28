@@ -16,12 +16,23 @@ import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.WorkerParameters
 import androidx.work.workDataOf
+import com.example.data.IntruderLog
+import com.example.data.SecurityEvent
+import com.example.data.SecurityEventComponentState
 import com.example.data.SecurityPrefs
 import com.example.data.SecurityEventStatus
 import com.example.MainActivity
 import com.example.R
 import com.example.SecurityApp
 import com.example.service.CameraForegroundService
+import com.example.util.EmailSender
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import java.io.File
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
+import java.util.UUID
 import java.util.concurrent.TimeUnit
 
 /**
@@ -171,10 +182,12 @@ class SecurityEventWorker(
             ?: return Result.success()
 
         // A camera foreground service must be started from a user-visible flow
-        // on Android 14+. Keep the durable event pending; the next visible app
-        // session will enqueue it again instead of converting this policy block
-        // into a failed security event or an endless retry loop.
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE &&
+        // once the background-start restriction applies (Android 12/S+, where
+        // ForegroundServiceStartNotAllowedException was introduced). Keep the
+        // durable event pending; the next visible app session will enqueue it
+        // again instead of converting this policy block into a failed security
+        // event or an endless retry loop.
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S &&
             event.status != SecurityEventStatus.SEND_PENDING &&
             event.status != SecurityEventStatus.FAILED_RETRYABLE
         ) {
@@ -183,20 +196,34 @@ class SecurityEventWorker(
             return Result.success()
         }
 
+        // FIX: the service intentionally skips startForeground() on the
+        // ACTION_SEND_PENDING mail-only path, so calling
+        // ContextCompat.startForegroundService() for it from this background
+        // worker can crash with "Context.startForegroundService() did not
+        // then call Service.startForeground()". Perform the mail-only resend
+        // in-process instead, mirroring the service's status handling.
+        if (event.status == SecurityEventStatus.SEND_PENDING ||
+            event.status == SecurityEventStatus.FAILED_RETRYABLE
+        ) {
+            return sendPendingEventFromWorker(prefs, event)
+        }
+
         return try {
             val intent = Intent(applicationContext, CameraForegroundService::class.java).apply {
-                action = if (event.status == SecurityEventStatus.SEND_PENDING ||
-                    event.status == SecurityEventStatus.FAILED_RETRYABLE
-                ) {
-                    CameraForegroundService.ACTION_SEND_PENDING
-                } else {
-                    CameraForegroundService.ACTION_CAPTURE_AND_SEND
-                }
+                action = CameraForegroundService.ACTION_CAPTURE_AND_SEND
                 putExtra(CameraForegroundService.EXTRA_SECURITY_EVENT_ID, event.id)
             }
             ContextCompat.startForegroundService(applicationContext, intent)
             Result.success()
         } catch (_: Exception) {
+            // On Android 12+ a background foreground-service start is rejected by
+            // policy rather than a transient fault, so defer for a visible session
+            // instead of draining retries into an unrecoverable FAILED_FINAL.
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                prefs.deferSecurityEvent(event.id)
+                SecurityEventDistributor.notifyDeferredCapture(applicationContext, event.id)
+                return Result.success()
+            }
             if (runAttemptCount + 1 < SecurityEventDistributor.MAX_ATTEMPTS) {
                 Result.retry()
             } else {
@@ -204,6 +231,156 @@ class SecurityEventWorker(
                 Result.failure()
             }
         }
+    }
+
+    /**
+     * Minimal mirror of CameraForegroundService's ACTION_SEND_PENDING send flow:
+     * normalize status, send the stored photo by email, then apply the same
+     * SENT / retry / FAILED_FINAL handling the service applies. Location is
+     * reused from the event (never re-fetched), which the service's send-only
+     * path already tolerates (null/absent coordinates fall back gracefully).
+     */
+    private suspend fun sendPendingEventFromWorker(
+        prefs: SecurityPrefs,
+        event: SecurityEvent
+    ): Result = withContext(Dispatchers.IO) {
+        try {
+            prefs.moveCapturedEventToSendPending(event.id)
+            val senderEmail = prefs.email
+            val appPassword = prefs.password
+            if (senderEmail.isBlank() || appPassword.isBlank()) {
+                prefs.updateEmailState(event.id, SecurityEventComponentState.FAILED)
+                prefs.completeSecurityEvent(event.id, SecurityEventStatus.FAILED_FINAL)
+                return@withContext Result.success()
+            }
+            prefs.updateEmailState(event.id, SecurityEventComponentState.PENDING)
+
+            val imageFile = event.photoPath?.let(::File)?.takeIf { it.exists() }
+            val timeStr = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
+                .format(Date(event.timestamp))
+            val locationText = if (event.latitude != null && event.longitude != null) {
+                applicationContext.getString(
+                    R.string.ui_location_coordinates,
+                    event.latitude.toString(),
+                    event.longitude.toString()
+                )
+            } else {
+                applicationContext.getString(R.string.ui_c0ae8d5ba4fa)
+            }
+            val body = """
+                ${applicationContext.getString(R.string.ui_greeting)}
+
+                ${applicationContext.getString(R.string.ui_intrusion_body)}
+
+                ${applicationContext.getString(R.string.ui_time_label, timeStr)}
+                ${applicationContext.getString(R.string.ui_location_label)}
+                $locationText
+
+                ${applicationContext.getString(R.string.ui_photo_attached)}
+
+                ---
+                ${applicationContext.getString(R.string.ui_auto_sent)}
+            """.trimIndent()
+
+            val sendResult = EmailSender.sendSecurityAlert(
+                context = applicationContext,
+                senderEmail = senderEmail,
+                appPassword = appPassword,
+                recipientEmail = senderEmail,
+                subject = applicationContext.getString(R.string.ui_alert_subject, timeStr),
+                bodyText = body,
+                imageFile = imageFile,
+                eventId = event.id
+            )
+            prefs.recordCountdownDiagnostic(
+                "email",
+                if (sendResult.isSuccess) "success" else "failed",
+                sendResult.errorMessage ?: "smtp_ok"
+            )
+            prefs.updateEmailState(
+                event.id,
+                if (sendResult.isSuccess) SecurityEventComponentState.SUCCEEDED else SecurityEventComponentState.FAILED
+            )
+            when {
+                sendResult.isSuccess -> {
+                    prefs.completeSecurityEvent(event.id, SecurityEventStatus.SENT)
+                    recordWorkerSendLog(prefs, event, imageFile, true, null)
+                    Result.success()
+                }
+                sendResult.retryable && prefs.recordSendRetry(event.id) -> {
+                    prefs.markSendPendingForRetry(event.id)
+                    // Re-arms the durable queue; enqueue() also schedules the
+                    // recovery worker that will pick the event back up.
+                    SecurityEventDistributor.enqueue(applicationContext, event.id)
+                    recordWorkerSendLog(prefs, event, imageFile, false, sendResult.errorMessage)
+                    Result.success()
+                }
+                else -> {
+                    prefs.completeSecurityEvent(event.id, SecurityEventStatus.FAILED_FINAL)
+                    recordWorkerSendLog(prefs, event, imageFile, false, sendResult.errorMessage)
+                    Result.success()
+                }
+            }
+        } catch (_: Exception) {
+            // Same terminal handling the service applies to an unexpected error
+            // while processing a send-pending event.
+            prefs.failPendingSecurityEvent(event.id)
+            Result.failure()
+        }
+    }
+
+    /** Keeps the intruder log honest after a background resend: addLog updates
+     * the existing entry for the event id in place. */
+    private fun recordWorkerSendLog(
+        prefs: SecurityPrefs,
+        event: SecurityEvent,
+        imageFile: File?,
+        emailSuccess: Boolean,
+        errorMessage: String?
+    ) {
+        val separator = applicationContext.getString(R.string.ui_separator)
+        val photoStatus = if (imageFile != null) {
+            applicationContext.getString(R.string.ui_dd886e527edc)
+        } else {
+            applicationContext.getString(R.string.ui_22a64e14f4b3)
+        }
+        val locationStatus = if (event.latitude != null && event.longitude != null) {
+            applicationContext.getString(R.string.ui_c0a3068f31ba)
+        } else {
+            applicationContext.getString(R.string.ui_243471de5777)
+        }
+        val emailStatus = if (emailSuccess) {
+            applicationContext.getString(R.string.ui_fd5b9e2ff279)
+        } else {
+            applicationContext.getString(R.string.ui_email_failed, errorMessage ?: "")
+        }
+        val completedEvent = prefs.getSecurityEvent(event.id)
+        prefs.addLog(
+            IntruderLog(
+                id = UUID.randomUUID().toString(),
+                eventId = event.id,
+                photoCaptured = imageFile != null,
+                locationCaptured = event.latitude != null && event.longitude != null,
+                timestamp = event.timestamp,
+                photoPath = imageFile?.absolutePath,
+                latitude = event.latitude,
+                longitude = event.longitude,
+                address = if (event.latitude != null && event.longitude != null) {
+                    "${event.latitude}, ${event.longitude}"
+                } else {
+                    null
+                },
+                emailSent = emailSuccess,
+                statusMessage = listOf(photoStatus, locationStatus, emailStatus)
+                    .joinToString(separator),
+                photoState = completedEvent?.photoState
+                    ?: if (imageFile != null) SecurityEventComponentState.SUCCEEDED else SecurityEventComponentState.FAILED,
+                locationState = completedEvent?.locationState
+                    ?: if (event.latitude != null && event.longitude != null) SecurityEventComponentState.SUCCEEDED else SecurityEventComponentState.FAILED,
+                emailState = completedEvent?.emailState
+                    ?: if (emailSuccess) SecurityEventComponentState.SUCCEEDED else SecurityEventComponentState.FAILED
+            )
+        )
     }
 }
 

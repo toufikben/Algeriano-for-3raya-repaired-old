@@ -78,10 +78,20 @@ class MyDeviceAdminReceiver : DeviceAdminReceiver() {
     override fun onDisabled(context: Context, intent: Intent) {
         super.onDisabled(context, intent)
         Log.d("DeviceAdminReceiver", "Device Admin Disabled")
-        // If disabled, turn off tracking to avoid inconsistent UI
-        val prefs = SecurityPrefs.getInstance(context)
-        prefs.isTrackingEnabled = false
-        prefs.resetFailedUnlockAttempts()
-        com.example.receiver.CountdownScheduler.cancel(context)
+        // resetFailedUnlockAttempts/cancel do synchronous Room work (SecurityPrefs
+        // uses runBlocking); run them off the broadcast main thread via goAsync.
+        val appContext = context.applicationContext
+        val pendingResult = goAsync()
+        Thread {
+            try {
+                // If disabled, turn off tracking to avoid inconsistent UI
+                val prefs = SecurityPrefs.getInstance(appContext)
+                prefs.isTrackingEnabled = false
+                prefs.resetFailedUnlockAttempts()
+                com.example.receiver.CountdownScheduler.cancel(appContext)
+            } finally {
+                pendingResult.finish()
+            }
+        }.start()
     }
 }

@@ -23,6 +23,7 @@ object SecurityEventStateMachine {
                 SecurityEventStatus.CANCELLED
             )
             SecurityEventStatus.IN_PROGRESS -> to in setOf(
+                SecurityEventStatus.PENDING, // lease expiry recovery
                 SecurityEventStatus.CAPTURED,
                 SecurityEventStatus.SEND_PENDING,
                 SecurityEventStatus.FAILED_RETRYABLE,
@@ -41,7 +42,14 @@ object SecurityEventStateMachine {
                 SecurityEventStatus.FAILED_FINAL,
                 SecurityEventStatus.CANCELLED
             )
-            SecurityEventStatus.CAPTURED -> to == SecurityEventStatus.SEND_PENDING
+            SecurityEventStatus.CAPTURED -> to in setOf(
+                SecurityEventStatus.SEND_PENDING,
+                SecurityEventStatus.PENDING, // lease expiry recovery
+                // Early send failures on a captured event must be recorded
+                // instead of being swallowed by canTransition.
+                SecurityEventStatus.FAILED_RETRYABLE,
+                SecurityEventStatus.FAILED_FINAL
+            )
             SecurityEventStatus.SENT,
             SecurityEventStatus.FAILED,
             SecurityEventStatus.FAILED_FINAL,

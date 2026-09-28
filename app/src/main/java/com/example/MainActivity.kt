@@ -484,6 +484,7 @@ fun SecurityMainScreen(
                     hasSavedPassword = uiState.hasPassword,
                     onEmailChange = viewModel::onEmailChange,
                     onPasswordChange = viewModel::onPasswordChange,
+                    onClearPassword = viewModel::requestClearSavedPassword,
                     onSave = viewModel::saveCredentials,
                     onOpenGuide = { showAppPasswordGuide = true },
                     saveFeedback = uiState.saveFeedback

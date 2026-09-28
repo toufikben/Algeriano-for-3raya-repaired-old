@@ -18,69 +18,82 @@ import com.example.worker.CaptureRetryWorker
 
 class CountdownReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent?) {
-        val prefs = SecurityPrefs.getInstance(context)
-        prefs.recordCountdownDiagnostic(
-            stage = "receiver",
-            status = "received",
-            detail = intent?.action ?: "null_action"
-        )
-        when (intent?.action) {
-            CountdownScheduler.ACTION_WARNING -> {
-                prefs.recordCountdownDiagnostic("warning", "started", "warning_broadcast")
-                showWarning(context, prefs)
-            }
-            CountdownScheduler.ACTION_RESET -> {
-                if (prefs.countdownEnabled && prefs.countdownEndTime > System.currentTimeMillis()) {
-                    prefs.recordCountdownDiagnostic("reset", "accepted", "remaining_countdown_reset")
-                    // FIX: complete orphan countdown event before restarting so
-                    // the old PENDING event does not leak as a generic capture.
-                    val orphanId = prefs.countdownEventId
-                    if (!orphanId.isBlank()) {
-                        prefs.completeSecurityEvent(orphanId, com.example.data.SecurityEventStatus.CANCELLED)
+        // Room/SharedPreferences work here is synchronous (SecurityPrefs uses
+        // runBlocking); hop off the broadcast main thread to avoid a timeout.
+        val appContext = context.applicationContext
+        val action = intent?.action
+        val pendingResult = goAsync()
+        Thread {
+            try {
+                val prefs = SecurityPrefs.getInstance(appContext)
+                prefs.recordCountdownDiagnostic(
+                    stage = "receiver",
+                    status = "received",
+                    detail = action ?: "null_action"
+                )
+                when (action) {
+                    CountdownScheduler.ACTION_WARNING -> {
+                        prefs.recordCountdownDiagnostic("warning", "started", "warning_broadcast")
+                        showWarning(appContext, prefs)
                     }
-                    CountdownScheduler.start(context, prefs.countdownDurationMillis)
-                } else {
-                    prefs.recordCountdownDiagnostic("reset", "ignored", "countdown_not_active_or_expired")
-                }
-            }
-            CountdownScheduler.ACTION_EXPIRED -> {
-                if (prefs.countdownEnabled && (prefs.countdownCapturePending || prefs.countdownEndTime <= System.currentTimeMillis())) {
-                    prefs.recordCountdownDiagnostic("expired", "accepted", "expiration_broadcast")
-                    prefs.countdownCapturePending = true
-                    if (prefs.countdownEventId.isBlank()) {
-                        prefs.countdownEventId = prefs.enqueueSecurityEvent().id
-                    }
-                    try {
-                        val serviceIntent = Intent(context, CameraForegroundService::class.java).apply {
-                            action = CameraForegroundService.ACTION_COUNTDOWN_EXPIRED
-                            putExtra(CameraForegroundService.EXTRA_SECURITY_EVENT_ID, prefs.countdownEventId)
+                    CountdownScheduler.ACTION_RESET -> {
+                        // FIX: use the tamper-resistant expiry check (min of epoch
+                        // and elapsedRealtime deadlines) instead of raw clock compare.
+                        if (prefs.countdownEnabled && !prefs.isCountdownExpired()) {
+                            prefs.recordCountdownDiagnostic("reset", "accepted", "remaining_countdown_reset")
+                            // FIX: complete orphan countdown event before restarting so
+                            // the old PENDING event does not leak as a generic capture.
+                            val orphanId = prefs.countdownEventId
+                            if (!orphanId.isBlank()) {
+                                prefs.completeSecurityEvent(orphanId, com.example.data.SecurityEventStatus.CANCELLED)
+                            }
+                            CountdownScheduler.start(appContext, prefs.countdownDurationMillis)
+                        } else {
+                            prefs.recordCountdownDiagnostic("reset", "ignored", "countdown_not_active_or_expired")
                         }
-                        // FIX: service is event-driven (not persistent), so go
-                        // straight to startForegroundService. The old
-                        // startService-first path always threw on API 26+.
-                        try {
-                            ContextCompat.startForegroundService(context, serviceIntent)
-                            prefs.recordCountdownDiagnostic("service_start", "requested", "startForegroundService")
-                        } catch (e: Exception) {
-                            prefs.recordCountdownDiagnostic("service_start", "failed", "${e.javaClass.simpleName}:${e.message}")
-                            throw e
-                        }
-                    } catch (e: Exception) {
-                        prefs.recordCountdownDiagnostic("retry", "scheduled", "receiver_service_start:${e.javaClass.simpleName}")
-                        CaptureRetryWorker.enqueue(context)
-                        // FIX(countdown): background start denied — notify user
-                        // to open the app so visible dispatch can complete it.
-                        CountdownScheduler.postTapToComplete(context)
                     }
-                } else {
-                    prefs.recordCountdownDiagnostic("expired", "ignored", "countdown_not_active")
+                    CountdownScheduler.ACTION_EXPIRED -> {
+                        if (prefs.countdownEnabled && (prefs.countdownCapturePending || prefs.isCountdownExpired())) {
+                            prefs.recordCountdownDiagnostic("expired", "accepted", "expiration_broadcast")
+                            prefs.countdownCapturePending = true
+                            if (prefs.countdownEventId.isBlank()) {
+                                prefs.countdownEventId = prefs.enqueueSecurityEvent().id
+                            }
+                            try {
+                                val serviceIntent = Intent(appContext, CameraForegroundService::class.java).apply {
+                                    action = CameraForegroundService.ACTION_COUNTDOWN_EXPIRED
+                                    putExtra(CameraForegroundService.EXTRA_SECURITY_EVENT_ID, prefs.countdownEventId)
+                                }
+                                // FIX: service is event-driven (not persistent), so go
+                                // straight to startForegroundService. The old
+                                // startService-first path always threw on API 26+.
+                                try {
+                                    ContextCompat.startForegroundService(appContext, serviceIntent)
+                                    prefs.recordCountdownDiagnostic("service_start", "requested", "startForegroundService")
+                                } catch (e: Exception) {
+                                    prefs.recordCountdownDiagnostic("service_start", "failed", "${e.javaClass.simpleName}:${e.message}")
+                                    throw e
+                                }
+                            } catch (e: Exception) {
+                                prefs.recordCountdownDiagnostic("retry", "scheduled", "receiver_service_start:${e.javaClass.simpleName}")
+                                CaptureRetryWorker.enqueue(appContext)
+                                // FIX(countdown): background start denied — notify user
+                                // to open the app so visible dispatch can complete it.
+                                CountdownScheduler.postTapToComplete(appContext)
+                            }
+                        } else {
+                            prefs.recordCountdownDiagnostic("expired", "ignored", "countdown_not_active")
+                        }
+                    }
                 }
+            } finally {
+                pendingResult.finish()
             }
-        }
+        }.start()
     }
 
     private fun showWarning(context: Context, prefs: SecurityPrefs) {
-        if (!prefs.countdownEnabled || prefs.countdownEndTime <= System.currentTimeMillis()) return
+        if (!prefs.countdownEnabled || prefs.isCountdownExpired()) return
 
         val resetIntent = PendingIntent.getBroadcast(
             context,
@@ -166,7 +179,7 @@ object CountdownScheduler {
             prefs.recordCountdownDiagnostic("reschedule", "ignored", "countdown_disabled")
             return
         }
-        if (prefs.countdownCapturePending || prefs.countdownEndTime <= System.currentTimeMillis()) {
+        if (prefs.countdownCapturePending || prefs.isCountdownExpired()) {
             prefs.recordCountdownDiagnostic("reschedule", "retry", "expired_or_capture_pending")
             prefs.countdownCapturePending = true
             if (prefs.countdownEventId.isBlank()) {

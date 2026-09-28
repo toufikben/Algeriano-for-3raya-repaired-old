@@ -76,6 +76,7 @@ class CameraForegroundService : Service() {
         const val EXTRA_SECURITY_EVENT_ID = "extra_security_event_id"
         private const val NOTIFICATION_ID = 1001
         private const val ALERT_NOTIFICATION_ID = 2002
+        private const val ALERT_NOTIFICATION_ID_SPAN = 1000
         private const val TAG = "CameraService"
     }
 
@@ -86,6 +87,7 @@ class CameraForegroundService : Service() {
     private var backgroundThread: HandlerThread? = null
     private var backgroundHandler: Handler? = null
     private var foregroundStarted = false
+    private var foregroundTypeStarted = false
     private var foregroundNeedsCamera = true
     private var countdownArmJob: Job? = null
 
@@ -106,15 +108,21 @@ class CameraForegroundService : Service() {
         )
 
         if (action == ACTION_STOP_MONITORING) {
-            NotificationManagerCompat.from(this).cancel(ALERT_NOTIFICATION_ID)
+            // FIX: alert ids vary across ALERT_NOTIFICATION_ID..(+SPAN), so
+            // cancelling only the base id orphaned the rest. Cancel the range.
+            val manager = NotificationManagerCompat.from(this)
+            for (id in ALERT_NOTIFICATION_ID until ALERT_NOTIFICATION_ID + ALERT_NOTIFICATION_ID_SPAN) {
+                manager.cancel(id)
+            }
             ServiceCompat.stopForeground(this, ServiceCompat.STOP_FOREGROUND_REMOVE)
             foregroundStarted = false
+            foregroundTypeStarted = false
             stopSelf()
             return START_NOT_STICKY
         }
 
         if (action == ACTION_ARM_COUNTDOWN) {
-            if (!foregroundStarted && !promoteToForeground(buildForegroundNotification())) {
+            if (!foregroundTypeStarted && !promoteToForeground(buildForegroundNotification())) {
                 SecurityPrefs.getInstance(applicationContext).recordCountdownDiagnostic(
                     "service", "failed", "countdown_arm_foreground_failed"
                 )
@@ -126,7 +134,9 @@ class CameraForegroundService : Service() {
             return START_STICKY
         }
 
-        if (!foregroundStarted) {
+        // Re-promote when a camera-capable request arrives while the service is
+        // only running unpromoted (send-only path never called startForeground).
+        if (!foregroundTypeStarted && (foregroundNeedsCamera || !foregroundStarted)) {
             if (!promoteToForeground(buildForegroundNotification())) {
                 val prefs = SecurityPrefs.getInstance(applicationContext)
                 prefs.recordCountdownDiagnostic(
@@ -207,6 +217,19 @@ class CameraForegroundService : Service() {
             0
         }
 
+        // FIX: on Android 10+ startForeground(type=0) throws for a manifest
+        // camera|location service. Mail-only sends need no while-in-use access,
+        // so run them unpromoted; monitoring without any suitable permission
+        // fails gracefully (caller defers the event and stops the service).
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q && foregroundServiceType == 0) {
+            if (!foregroundNeedsCamera) {
+                Log.w(TAG, "Send-only request proceeding without foreground promotion")
+                return true
+            }
+            Log.e(TAG, "No camera or location permission; cannot promote with a compliant foreground type")
+            return false
+        }
+
         return try {
             ServiceCompat.startForeground(
                 this,
@@ -214,6 +237,7 @@ class CameraForegroundService : Service() {
                 notification,
                 foregroundServiceType
             )
+            foregroundTypeStarted = true
             true
         } catch (e: Exception) {
             when {
@@ -271,22 +295,24 @@ class CameraForegroundService : Service() {
             SecurityEventStatus.SEND_PENDING,
             SecurityEventStatus.FAILED_RETRYABLE
         ) && !existingEvent?.photoPath.isNullOrBlank()
-        if (!isTest && !eventId.isNullOrBlank() && !sendOnly && !prefs.claimSecurityEvent(eventId)) {
-            Log.w(TAG, "Ignoring duplicate or already-processed security event: $eventId")
-            return
-        }
+        // FIX: check the busy flag BEFORE claiming. Claiming first left a busy
+        // event stuck IN_PROGRESS (invisible to getPendingSecurityEvents) until
+        // a lease sweep; now it stays PENDING/DEFERRED for the distributor.
         if (!captureInProgress.compareAndSet(false, true)) {
             prefs.recordCountdownDiagnostic(
                 "capture", "ignored", "already_in_progress,event=${eventId ?: "none"}"
             )
-            Log.w(TAG, "Capture already in progress; ignoring duplicate request")
-            // FIX: do not downgrade SEND_PENDING/FAILED_RETRYABLE to PENDING
-            // and do not spawn unbounded waiter coroutines. The event already
-            // claimed stays IN_PROGRESS and will be processed; duplicates are
-            // dropped. Countdown retry is still scheduled once.
+            Log.w(TAG, "Capture already in progress; leaving event unclaimed for retry")
+            // Do not downgrade SEND_PENDING/FAILED_RETRYABLE and do not spawn
+            // unbounded waiter coroutines. Countdown retry is scheduled once.
             if (isCountdownCapture) {
                 CountdownScheduler.schedulePendingRetry(applicationContext)
             }
+            return
+        }
+        if (!isTest && !eventId.isNullOrBlank() && !sendOnly && !prefs.claimSecurityEvent(eventId)) {
+            captureInProgress.set(false)
+            Log.w(TAG, "Ignoring duplicate or already-processed security event: $eventId")
             return
         }
 
@@ -601,7 +627,10 @@ class CameraForegroundService : Service() {
     private fun armCountdownCapture() {
         countdownArmJob?.cancel()
         val prefs = SecurityPrefs.getInstance(applicationContext)
-        val remaining = (prefs.countdownEndTime - System.currentTimeMillis()).coerceAtLeast(0L)
+        // FIX: derive the remaining time from the tamper-resistant deadline
+        // (min of epoch vs elapsedRealtime) so a wall-clock jump cannot freeze
+        // the pre-armed watchdog. AlarmManager RTC scheduling is untouched.
+        val remaining = prefs.countdownRemainingMillis()
         prefs.recordCountdownDiagnostic("service", "armed", "countdown_remaining_ms=$remaining")
         countdownArmJob = serviceScope.launch {
             delay(remaining)
@@ -692,6 +721,9 @@ class CameraForegroundService : Service() {
             Log.w(TAG, "Unable to query supported JPEG sizes; using fallback", e)
             Size(640, 480)
         }
+        // FIX: release leftovers from a previous failed attempt before replacing
+        // imageReader; otherwise the previous ImageReader is leaked on retry.
+        closeCamera()
         val reader = ImageReader.newInstance(outputSize.width, outputSize.height, ImageFormat.JPEG, 2)
         imageReader = reader
 
@@ -832,7 +864,12 @@ class CameraForegroundService : Service() {
             }, backgroundHandler)
         } catch (e: Exception) {
             Log.e(TAG, "Error opening camera", e)
-            captureCompleted.complete(null)
+            if (!captureCompleted.isCompleted) {
+                captureCompleted.complete(null)
+            }
+            // FIX: openCamera threw with the fresh ImageReader already assigned;
+            // close state now instead of relying on the await path below.
+            closeCamera()
         }
 
         // Allow slow front-camera HALs enough time after AE/AWB/AF warm-up.
@@ -987,7 +1024,7 @@ class CameraForegroundService : Service() {
 
         try {
             NotificationManagerCompat.from(this).notify(
-                ALERT_NOTIFICATION_ID + (System.currentTimeMillis() % 1000L).toInt(),
+                ALERT_NOTIFICATION_ID + (System.currentTimeMillis() % ALERT_NOTIFICATION_ID_SPAN.toLong()).toInt(),
                 notification
             )
             SecurityPrefs.getInstance(applicationContext).recordCountdownDiagnostic(

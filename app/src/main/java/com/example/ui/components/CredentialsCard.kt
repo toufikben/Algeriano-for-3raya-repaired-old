@@ -17,12 +17,12 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.HelpOutline
 import androidx.compose.material.icons.filled.Key
 import androidx.compose.material.icons.filled.Save
-import androidx.compose.material.icons.filled.Visibility
-import androidx.compose.material.icons.filled.VisibilityOff
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -32,6 +32,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -46,9 +47,9 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
-import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.ui.theme.CrimsonAlert
 import com.example.ui.theme.CyanAccent
 import com.example.ui.theme.CyberCardBorder
 import com.example.ui.theme.CyberNavySurfaceVariant
@@ -61,12 +62,19 @@ fun CredentialsCard(
     hasSavedPassword: Boolean,
     onEmailChange: (String) -> Unit,
     onPasswordChange: (String) -> Unit,
+    // Explicit clear action: the stored password is only wiped when the user
+    // confirms this and then saves. Defaults to no-op so existing call sites
+    // keep compiling until MainActivity wires it to the ViewModel.
+    onClearPassword: () -> Unit = {},
     onSave: () -> Unit,
     onOpenGuide: () -> Unit,
     saveFeedback: Boolean,
     modifier: Modifier = Modifier
 ) {
-    var passwordVisible by remember { mutableStateOf(false) }
+    // The stored password is never displayed; this field is input-only and
+    // shows a "saved" placeholder while empty (no reveal toggle on purpose:
+    // plaintext would leak into recents screenshots / shoulder surfing).
+    var showClearPasswordConfirm by remember { mutableStateOf(false) }
 
     Card(
         modifier = modifier
@@ -196,7 +204,15 @@ fun CredentialsCard(
                     .fillMaxWidth()
                     .testTag("password_input"),
                 placeholder = {
-                    Text("abcd efgh ijkl mnop", color = Color(0xFF64748B), fontSize = 14.sp)
+                    Text(
+                        text = if (hasSavedPassword && password.isEmpty()) {
+                            "•••••••• (محفوظ)"
+                        } else {
+                            "abcd efgh ijkl mnop"
+                        },
+                        color = Color(0xFF64748B),
+                        fontSize = 14.sp
+                    )
                 },
                 leadingIcon = {
                     Icon(
@@ -206,15 +222,20 @@ fun CredentialsCard(
                     )
                 },
                 trailingIcon = {
-                    IconButton(onClick = { passwordVisible = !passwordVisible }) {
-                        Icon(
-                            imageVector = if (passwordVisible) Icons.Filled.Visibility else Icons.Filled.VisibilityOff,
-                            contentDescription = if (passwordVisible) tr(com.example.R.string.ui_7fbdeb8d974e) else tr(com.example.R.string.ui_6e7844e2d16a),
-                            tint = Color(0xFF94A3B8)
-                        )
+                    if (hasSavedPassword) {
+                        IconButton(
+                            onClick = { showClearPasswordConfirm = true },
+                            modifier = Modifier.testTag("clear_password_button")
+                        ) {
+                            Icon(
+                                imageVector = Icons.Filled.Delete,
+                                contentDescription = "مسح كلمة السر",
+                                tint = Color(0xFF94A3B8)
+                            )
+                        }
                     }
                 },
-                visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+                visualTransformation = PasswordVisualTransformation(),
                 singleLine = true,
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
                 shape = RoundedCornerShape(12.dp),
@@ -264,6 +285,36 @@ fun CredentialsCard(
                 )
             }
         }
+    }
+
+    // Confirm Clear Password Dialog — the stored password is wiped only after
+    // this explicit action followed by pressing Save (empty field alone keeps
+    // the stored value unchanged).
+    if (showClearPasswordConfirm) {
+        AlertDialog(
+            onDismissRequest = { showClearPasswordConfirm = false },
+            title = { Text("مسح كلمة السر", fontWeight = FontWeight.Bold) },
+            text = { Text("سيتم مسح كلمة مرور التطبيق المحفوظة عند الضغط على «حفظ الإعدادات»، ولن تُستعاد.") },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        onClearPassword()
+                        showClearPasswordConfirm = false
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = CrimsonAlert)
+                ) {
+                    Text(tr(com.example.R.string.ui_2ea780822000))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showClearPasswordConfirm = false }) {
+                    Text(tr(com.example.R.string.ui_e776b0209b50), color = Color.White)
+                }
+            },
+            containerColor = Color(0xFF1E293B),
+            titleContentColor = Color.White,
+            textContentColor = Color(0xFFCBD5E1)
+        )
     }
 }
 

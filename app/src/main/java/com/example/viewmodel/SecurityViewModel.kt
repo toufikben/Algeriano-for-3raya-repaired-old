@@ -16,7 +16,9 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.data.IntruderLog
+import com.example.data.SecurityEventStateMachine
 import com.example.data.SecurityPrefs
+import java.io.File
 import com.example.receiver.CountdownScheduler
 import com.example.receiver.MyDeviceAdminReceiver
 import com.example.service.CameraForegroundService
@@ -32,6 +34,8 @@ import kotlinx.coroutines.launch
 
 data class SecurityUiState(
     val email: String = "",
+    // User-input buffer only. Never populated with the stored plaintext
+    // password; hasPassword signals that a password is saved.
     val password: String = "",
     val hasPassword: Boolean = false,
     val isTrackingEnabled: Boolean = false,
@@ -57,10 +61,13 @@ class SecurityViewModel(application: Application) : AndroidViewModel(application
 
     private val prefs = SecurityPrefs.getInstance(context)
 
+    // Set by the explicit "clear password" action; the next successful save
+    // then writes an empty password instead of keeping the stored one.
+    private var credentialsClearRequested = false
+
     private val _uiState = MutableStateFlow(
         SecurityUiState(
             email = prefs.email,
-            password = prefs.password,
             hasPassword = prefs.password.isNotEmpty(),
             isTrackingEnabled = prefs.isTrackingEnabled,
             logs = prefs.getLogs(),
@@ -110,7 +117,9 @@ class SecurityViewModel(application: Application) : AndroidViewModel(application
 
     private fun remainingCountdownMillis(): Long {
         if (!prefs.countdownEnabled) return 0L
-        return (prefs.countdownEndTime - System.currentTimeMillis()).coerceAtLeast(0L)
+        // FIX: use the tamper-resistant min(epoch, elapsedRealtime) remaining
+        // instead of a raw wall-clock subtraction the user could inflate.
+        return prefs.countdownRemainingMillis()
     }
 
     fun resumeProtectionFromVisibleActivity() {
@@ -138,10 +147,13 @@ class SecurityViewModel(application: Application) : AndroidViewModel(application
     fun refreshCredentials() {
         val savedEmail = prefs.email
         val savedPassword = prefs.password
+        // FIX: do not copy the decrypted app password into UI state on every
+        // resume (recents screenshot / shoulder-surfing exposure). The field
+        // stays empty; hasPassword reports that a password is stored.
         _uiState.update {
             it.copy(
                 email = savedEmail,
-                password = savedPassword,
+                password = "",
                 hasPassword = savedPassword.isNotEmpty()
             )
         }
@@ -152,19 +164,45 @@ class SecurityViewModel(application: Application) : AndroidViewModel(application
     }
 
     fun onPasswordChange(newPassword: String) {
+        // Typing a new password supersedes a pending explicit clear request.
+        if (newPassword.isNotEmpty()) credentialsClearRequested = false
         _uiState.update { it.copy(password = newPassword) }
+    }
+
+    /**
+     * Explicit "clear password" action from the credentials card. Saving with
+     * this flag set writes an empty password; without it, an empty password
+     * field keeps the stored value unchanged.
+     */
+    fun requestClearSavedPassword() {
+        credentialsClearRequested = true
+        _uiState.update { it.copy(password = "") }
     }
 
     fun saveCredentials(): Boolean {
         val email = _uiState.value.email.trim()
         val enteredPassword = _uiState.value.password.trim()
-        val password = enteredPassword.ifEmpty { prefs.password }
+        val clearRequested = credentialsClearRequested
+        val password = when {
+            clearRequested -> ""
+            enteredPassword.isEmpty() -> prefs.password
+            else -> enteredPassword
+        }
         if (email.isNotEmpty() && !Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
             _uiState.update { it.copy(bannerMessage = context.getString(com.example.R.string.ui_2def4fef47d3)) }
             return false
         }
         if (email.isNotEmpty() && password.isEmpty()) {
             _uiState.update { it.copy(bannerMessage = context.getString(com.example.R.string.ui_f509a4a96bac)) }
+            return false
+        }
+        // FIX: an empty email AND empty password used to silently erase both
+        // stored credentials even while protection was active. Wiping stored
+        // credentials now requires the explicit clear-password action.
+        if (email.isEmpty() && password.isEmpty() && !clearRequested &&
+            (prefs.email.isNotBlank() || prefs.password.isNotBlank())
+        ) {
+            _uiState.update { it.copy(bannerMessage = context.getString(com.example.R.string.ui_16b9f058a24f)) }
             return false
         }
         prefs.email = email
@@ -190,7 +228,15 @@ class SecurityViewModel(application: Application) : AndroidViewModel(application
             }
             return false
         }
-        _uiState.update { it.copy(password = password, hasPassword = password.isNotEmpty()) }
+        credentialsClearRequested = false
+        // Never echo the plaintext back into UI state; the field stays empty
+        // with the "saved" placeholder shown by the credentials card.
+        _uiState.update {
+            it.copy(
+                password = "",
+                hasPassword = prefs.password.isNotEmpty()
+            )
+        }
 
         viewModelScope.launch {
             _uiState.update { it.copy(saveFeedback = true) }
@@ -336,13 +382,30 @@ class SecurityViewModel(application: Application) : AndroidViewModel(application
 
     fun clearLogs() {
         viewModelScope.launch(Dispatchers.IO) {
+            // FIX (audit preservation): this previously deleted every file in
+            // intruder_photos, which burned the evidence photos still
+            // referenced by non-terminal events awaiting send/resend. Build
+            // the set of photo paths referenced by pending-work events first
+            // (their files and photoPath references must survive), then let
+            // prefs.clearLogs() clear the logs and drop photo references for
+            // terminal events only, and finally delete just the orphaned
+            // files that no pending event references.
+            val pendingPhotoPaths = prefs.getSecurityEvents()
+                .filter { SecurityEventStateMachine.isPendingWork(it.status) }
+                .mapNotNull { event ->
+                    event.photoPath?.let { path ->
+                        runCatching { File(path).canonicalPath }.getOrNull() ?: path
+                    }
+                }
+                .toSet()
             prefs.clearLogs()
-            // FIX: clearLogs() deleted files but left SecurityEvent.photoPath
-            // pointing at missing files. Drop photo references from terminal
-            // events so future sendOnly reuse does not hit File.exists()==false.
-            // (Events themselves are kept for audit history.)
             context.getExternalFilesDir(null)?.resolve("intruder_photos")?.listFiles()
-                ?.forEach { runCatching { it.delete() } }
+                ?.forEach { file ->
+                    val canonical = runCatching { file.canonicalPath }.getOrNull() ?: file.absolutePath
+                    if (canonical !in pendingPhotoPaths && file.absolutePath !in pendingPhotoPaths) {
+                        runCatching { file.delete() }
+                    }
+                }
         }
     }
 
