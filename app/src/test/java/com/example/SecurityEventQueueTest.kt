@@ -39,6 +39,9 @@ class SecurityEventQueueTest {
         val event = prefs.enqueueSecurityEvent()
         assertTrue(prefs.claimSecurityEvent(event.id))
 
+        // IN_PROGRESS -> SENT is not a legal transition; walk the real lifecycle.
+        prefs.completeSecurityEvent(event.id, SecurityEventStatus.CAPTURED)
+        assertTrue(prefs.moveCapturedEventToSendPending(event.id))
         prefs.completeSecurityEvent(event.id, SecurityEventStatus.SENT)
 
         assertFalse(prefs.getPendingSecurityEvents().any { it.id == event.id })

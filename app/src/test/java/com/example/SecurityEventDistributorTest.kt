@@ -73,6 +73,9 @@ class SecurityEventDistributorTest {
     fun `enqueue ignores completed event`() {
         val event = prefs.enqueueSecurityEvent()
         assertTrue(prefs.claimSecurityEvent(event.id))
+        // IN_PROGRESS -> SENT is not a legal transition; walk the real lifecycle.
+        prefs.completeSecurityEvent(event.id, com.example.data.SecurityEventStatus.CAPTURED)
+        prefs.completeSecurityEvent(event.id, com.example.data.SecurityEventStatus.SEND_PENDING)
         prefs.completeSecurityEvent(event.id, com.example.data.SecurityEventStatus.SENT)
 
         SecurityEventDistributor.enqueue(context, event.id)
