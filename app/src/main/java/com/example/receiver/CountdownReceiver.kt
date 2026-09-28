@@ -61,7 +61,7 @@ class CountdownReceiver : BroadcastReceiver() {
                             }
                             try {
                                 val serviceIntent = Intent(appContext, CameraForegroundService::class.java).apply {
-                                    action = CameraForegroundService.ACTION_COUNTDOWN_EXPIRED
+                                    this.action = CameraForegroundService.ACTION_COUNTDOWN_EXPIRED
                                     putExtra(CameraForegroundService.EXTRA_SECURITY_EVENT_ID, prefs.countdownEventId)
                                 }
                                 // FIX: service is event-driven (not persistent), so go
