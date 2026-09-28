@@ -282,4 +282,13 @@
     <string name="ui_privacy_disclosure_body">Phone Fortress utilise la caméra, la localisation et les notifications lorsque la protection est activée. Après une tentative de déverrouillage incorrecte, l’application peut prendre une photo, déterminer la position de l’appareil et enregistrer le résultat localement. La photo et la position peuvent être jointes à un e-mail envoyé à l’adresse choisie. Ces données ne sont pas envoyées au serveur du développeur. Utilisez l’application sur votre appareil ou avec l’accord de son propriétaire. Vous pouvez refuser les autorisations ou arrêter la protection à tout moment.</string>
     <string name="ui_privacy_disclosure_accept">J’ai compris et je souhaite continuer</string>
     <string name="ui_privacy_disclosure_not_now">Pas maintenant</string>
+    <string name="ui_pin_reset_title">Récupérer l\'accès au code PIN</string>
+    <string name="ui_pin_reset_desc">Pour définir un nouveau code PIN sans effacer les données de l\'application, saisissez votre mot de passe d\'application Gmail enregistré (utilisé pour envoyer les alertes d\'intrusion).</string>
+    <string name="ui_pin_reset_password_label">Mot de passe d\'application Gmail</string>
+    <string name="ui_pin_reset_password_required">Saisissez le mot de passe de l\'application pour vérifier</string>
+    <string name="ui_pin_reset_password_wrong">Mot de passe de l\'application incorrect</string>
+    <string name="ui_pin_reset_failed_generic">Impossible de mettre à jour le code PIN, réessayez</string>
+    <string name="ui_pin_reset_submit">Vérifier et définir un nouveau code PIN</string>
+    <string name="ui_pin_reset_back">Retour</string>
+    <string name="ui_pin_reset_no_password">Aucun mot de passe d\'application Gmail n\'est enregistré dans les paramètres, la réinitialisation dans l\'application est donc impossible. La seule option est d\'ouvrir les paramètres système et d\'effacer les données de l\'application, ce qui supprime le code PIN, les journaux et les paramètres.</string>
 </resources>

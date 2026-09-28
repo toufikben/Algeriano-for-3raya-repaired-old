@@ -282,4 +282,13 @@
     <string name="ui_privacy_disclosure_body">Phone Fortress uses the camera, location, and notifications when protection is enabled. After a failed unlock attempt, it may capture a photo, determine the device location, and store the result locally. The photo and location may be attached to an email sent to the address you choose. These data are not sent to the developer\'s server. Use the app on your own device or with the owner\'s consent. You can refuse permissions or stop protection at any time.</string>
     <string name="ui_privacy_disclosure_accept">I understand and want to continue</string>
     <string name="ui_privacy_disclosure_not_now">Not now</string>
+    <string name="ui_pin_reset_title">Recuperar acceso al PIN</string>
+    <string name="ui_pin_reset_desc">Para establecer un nuevo PIN sin borrar los datos de la aplicación, introduce tu contraseña de aplicación de Gmail guardada (usada para enviar alertas de intrusión).</string>
+    <string name="ui_pin_reset_password_label">Contraseña de aplicación de Gmail</string>
+    <string name="ui_pin_reset_password_required">Introduce la contraseña de aplicación para verificar</string>
+    <string name="ui_pin_reset_password_wrong">Contraseña de aplicación incorrecta</string>
+    <string name="ui_pin_reset_failed_generic">No se pudo actualizar el PIN, inténtalo de nuevo</string>
+    <string name="ui_pin_reset_submit">Verificar y establecer nuevo PIN</string>
+    <string name="ui_pin_reset_back">Atrás</string>
+    <string name="ui_pin_reset_no_password">No hay ninguna contraseña de aplicación de Gmail guardada en los ajustes, por lo que no es posible restablecer el PIN dentro de la aplicación. La única opción es abrir los ajustes del sistema y borrar los datos de la aplicación, lo que elimina el PIN, los registros y los ajustes.</string>
 </resources>

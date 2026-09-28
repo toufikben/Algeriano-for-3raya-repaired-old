@@ -282,4 +282,13 @@
     <string name="ui_privacy_disclosure_body">Phone Fortress uses the camera, location, and notifications when protection is enabled. After a failed unlock attempt, it may capture a photo, determine the device location, and store the result locally. The photo and location may be attached to an email sent to the address you choose. These data are not sent to the developer\'s server. Use the app on your own device or with the owner\'s consent. You can refuse permissions or stop protection at any time.</string>
     <string name="ui_privacy_disclosure_accept">I understand and want to continue</string>
     <string name="ui_privacy_disclosure_not_now">Not now</string>
+    <string name="ui_pin_reset_title">PIN のアクセスを復元</string>
+    <string name="ui_pin_reset_desc">アプリデータを消去せずに新しい PIN を設定するには、保存済みの Gmail アプリパスワード（不正侵入アラートの送信に使用）を入力してください。</string>
+    <string name="ui_pin_reset_password_label">Gmail アプリパスワード</string>
+    <string name="ui_pin_reset_password_required">確認のためアプリパスワードを入力してください</string>
+    <string name="ui_pin_reset_password_wrong">アプリパスワードが正しくありません</string>
+    <string name="ui_pin_reset_failed_generic">PIN を更新できませんでした。もう一度お試しください</string>
+    <string name="ui_pin_reset_submit">確認して新しい PIN を設定</string>
+    <string name="ui_pin_reset_back">戻る</string>
+    <string name="ui_pin_reset_no_password">設定に Gmail アプリパスワードが保存されていないため、アプリ内での再設定はできません。唯一の方法はシステム設定を開いてアプリデータを消去することですが、これにより PIN・ログ・設定がすべて削除されます。</string>
 </resources>

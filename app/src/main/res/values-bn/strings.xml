@@ -282,4 +282,13 @@
     <string name="ui_privacy_disclosure_body">Phone Fortress uses the camera, location, and notifications when protection is enabled. After a failed unlock attempt, it may capture a photo, determine the device location, and store the result locally. The photo and location may be attached to an email sent to the address you choose. These data are not sent to the developer\'s server. Use the app on your own device or with the owner\'s consent. You can refuse permissions or stop protection at any time.</string>
     <string name="ui_privacy_disclosure_accept">I understand and want to continue</string>
     <string name="ui_privacy_disclosure_not_now">Not now</string>
+    <string name="ui_pin_reset_title">PIN অ্যাক্সেস পুনরুদ্ধার</string>
+    <string name="ui_pin_reset_desc">অ্যাপের ডেটা মুছে না দিয়ে নতুন PIN ঠিক করতে সংরক্ষিত Gmail অ্যাপ পাসওয়ার্ড লিখুন (অনুপ্রবেশ সতর্কতা পাঠানোর জন্য ব্যবহৃত)।</string>
+    <string name="ui_pin_reset_password_label">Gmail অ্যাপ পাসওয়ার্ড</string>
+    <string name="ui_pin_reset_password_required">যাচাই করতে অ্যাপ পাসওয়ার্ড লিখুন</string>
+    <string name="ui_pin_reset_password_wrong">অ্যাপ পাসওয়ার্ড ভুল</string>
+    <string name="ui_pin_reset_failed_generic">PIN আপডেট করা যায়নি, আবার চেষ্টা করুন</string>
+    <string name="ui_pin_reset_submit">যাচাই করে নতুন PIN ঠিক করুন</string>
+    <string name="ui_pin_reset_back">ফিরে যান</string>
+    <string name="ui_pin_reset_no_password">সেটিংসে কোনো Gmail অ্যাপ পাসওয়ার্ড সংরক্ষিত নেই, তাই অ্যাপের ভেতরে রিসেট করা যাবে না। একমাত্র উপায় সিস্টেম সেটিংস খুলে অ্যাপের ডেটা মুছে ফেলা, যা PIN, লগ ও সেটিংস মুছে দেবে।</string>
 </resources>

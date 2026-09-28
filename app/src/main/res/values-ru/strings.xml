@@ -282,4 +282,13 @@
     <string name="ui_privacy_disclosure_body">Phone Fortress uses the camera, location, and notifications when protection is enabled. After a failed unlock attempt, it may capture a photo, determine the device location, and store the result locally. The photo and location may be attached to an email sent to the address you choose. These data are not sent to the developer\'s server. Use the app on your own device or with the owner\'s consent. You can refuse permissions or stop protection at any time.</string>
     <string name="ui_privacy_disclosure_accept">I understand and want to continue</string>
     <string name="ui_privacy_disclosure_not_now">Not now</string>
+    <string name="ui_pin_reset_title">Восстановление доступа к PIN-коду</string>
+    <string name="ui_pin_reset_desc">Чтобы установить новый PIN-код без сброса данных приложения, введите сохранённый пароль приложения Gmail (используется для отправки оповещений о взломе).</string>
+    <string name="ui_pin_reset_password_label">Пароль приложения Gmail</string>
+    <string name="ui_pin_reset_password_required">Введите пароль приложения для подтверждения</string>
+    <string name="ui_pin_reset_password_wrong">Неверный пароль приложения</string>
+    <string name="ui_pin_reset_failed_generic">Не удалось обновить PIN-код, попробуйте снова</string>
+    <string name="ui_pin_reset_submit">Подтвердить и установить новый PIN-код</string>
+    <string name="ui_pin_reset_back">Назад</string>
+    <string name="ui_pin_reset_no_password">В настройках не сохранён пароль приложения Gmail, поэтому сброс внутри приложения недоступен. Единственный способ — открыть системные настройки и удалить данные приложения, что сотрёт PIN-код, журналы и настройки.</string>
 </resources>

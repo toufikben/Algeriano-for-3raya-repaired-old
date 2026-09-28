@@ -282,4 +282,13 @@
     <string name="ui_privacy_disclosure_body">Phone Fortress uses the camera, location, and notifications when protection is enabled. After a failed unlock attempt, it may capture a photo, determine the device location, and store the result locally. The photo and location may be attached to an email sent to the address you choose. These data are not sent to the developer\'s server. Use the app on your own device or with the owner\'s consent. You can refuse permissions or stop protection at any time.</string>
     <string name="ui_privacy_disclosure_accept">I understand and want to continue</string>
     <string name="ui_privacy_disclosure_not_now">Not now</string>
+    <string name="ui_pin_reset_title">PIN erişimini geri kazan</string>
+    <string name="ui_pin_reset_desc">Uygulama verilerini silmeden yeni bir PIN belirlemek için kayıtlı Gmail uygulama parolanızı girin (izinsiz giriş uyarıları için kullanılır).</string>
+    <string name="ui_pin_reset_password_label">Gmail uygulama parolası</string>
+    <string name="ui_pin_reset_password_required">Doğrulamak için uygulama parolasını girin</string>
+    <string name="ui_pin_reset_password_wrong">Uygulama parolası hatalı</string>
+    <string name="ui_pin_reset_failed_generic">PIN güncellenemedi, tekrar deneyin</string>
+    <string name="ui_pin_reset_submit">Doğrula ve yeni PIN belirle</string>
+    <string name="ui_pin_reset_back">Geri</string>
+    <string name="ui_pin_reset_no_password">Ayarlarda Gmail uygulama parolası kayıtlı değil, bu yüzden uygulama içinden sıfırlama kullanılamaz. Tek seçenek sistem ayarlarını açıp uygulama verilerini silmektir; bu işlem PIN\'i, kayıtları ve ayarları siler.</string>
 </resources>

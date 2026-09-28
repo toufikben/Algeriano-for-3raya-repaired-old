@@ -282,4 +282,13 @@
     <string name="ui_privacy_disclosure_body">Phone Fortress uses the camera, location, and notifications when protection is enabled. After a failed unlock attempt, it may capture a photo, determine the device location, and store the result locally. The photo and location may be attached to an email sent to the address you choose. These data are not sent to the developer\'s server. Use the app on your own device or with the owner\'s consent. You can refuse permissions or stop protection at any time.</string>
     <string name="ui_privacy_disclosure_accept">I understand and want to continue</string>
     <string name="ui_privacy_disclosure_not_now">Not now</string>
+    <string name="ui_pin_reset_title">PIN 접근 복구</string>
+    <string name="ui_pin_reset_desc">앱 데이터를 삭제하지 않고 새 PIN을 설정하려면 저장된 Gmail 앱 비밀번호( 무단 접근 알림 전송에 사용 )를 입력하세요.</string>
+    <string name="ui_pin_reset_password_label">Gmail 앱 비밀번호</string>
+    <string name="ui_pin_reset_password_required">확인을 위해 앱 비밀번호를 입력하세요</string>
+    <string name="ui_pin_reset_password_wrong">앱 비밀번호가 올바르지 않습니다</string>
+    <string name="ui_pin_reset_failed_generic">PIN을 업데이트할 수 없습니다, 다시 시도하세요</string>
+    <string name="ui_pin_reset_submit">확인하고 새 PIN 설정</string>
+    <string name="ui_pin_reset_back">뒤로</string>
+    <string name="ui_pin_reset_no_password">설정에 Gmail 앱 비밀번호가 저장되어 있지 않아 앱 내 재설정이 불가능합니다. 유일한 방법은 시스템 설정을 열고 앱 데이터를 삭제하는 것이며, 그러면 PIN, 로그, 설정이 모두 삭제됩니다.</string>
 </resources>

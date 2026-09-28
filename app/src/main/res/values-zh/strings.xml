@@ -282,4 +282,13 @@
     <string name="ui_privacy_disclosure_body">Phone Fortress uses the camera, location, and notifications when protection is enabled. After a failed unlock attempt, it may capture a photo, determine the device location, and store the result locally. The photo and location may be attached to an email sent to the address you choose. These data are not sent to the developer\'s server. Use the app on your own device or with the owner\'s consent. You can refuse permissions or stop protection at any time.</string>
     <string name="ui_privacy_disclosure_accept">I understand and want to continue</string>
     <string name="ui_privacy_disclosure_not_now">Not now</string>
+    <string name="ui_pin_reset_title">恢复 PIN 访问权限</string>
+    <string name="ui_pin_reset_desc">若要在不清除应用数据的情况下设置新 PIN，请输入已保存的 Gmail 应用专用密码（用于发送入侵警报）。</string>
+    <string name="ui_pin_reset_password_label">Gmail 应用专用密码</string>
+    <string name="ui_pin_reset_password_required">请输入应用专用密码以验证</string>
+    <string name="ui_pin_reset_password_wrong">应用专用密码不正确</string>
+    <string name="ui_pin_reset_failed_generic">无法更新 PIN，请重试</string>
+    <string name="ui_pin_reset_submit">验证并设置新 PIN</string>
+    <string name="ui_pin_reset_back">返回</string>
+    <string name="ui_pin_reset_no_password">设置中未保存 Gmail 应用专用密码，因此无法在应用内重置。唯一的方法是打开系统设置并清除应用数据，这会删除 PIN、日志和设置。</string>
 </resources>

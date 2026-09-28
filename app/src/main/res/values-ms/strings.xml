@@ -282,4 +282,13 @@
     <string name="ui_privacy_disclosure_body">Phone Fortress uses the camera, location, and notifications when protection is enabled. After a failed unlock attempt, it may capture a photo, determine the device location, and store the result locally. The photo and location may be attached to an email sent to the address you choose. These data are not sent to the developer\'s server. Use the app on your own device or with the owner\'s consent. You can refuse permissions or stop protection at any time.</string>
     <string name="ui_privacy_disclosure_accept">I understand and want to continue</string>
     <string name="ui_privacy_disclosure_not_now">Not now</string>
+    <string name="ui_pin_reset_title">Pulihkan akses PIN</string>
+    <string name="ui_pin_reset_desc">Untuk menetapkan PIN baharu tanpa memadam data aplikasi, masukkan kata laluan aplikasi Gmail yang disimpan (digunakan untuk menghantar amaran pencerobohan).</string>
+    <string name="ui_pin_reset_password_label">Kata laluan aplikasi Gmail</string>
+    <string name="ui_pin_reset_password_required">Masukkan kata laluan aplikasi untuk pengesahan</string>
+    <string name="ui_pin_reset_password_wrong">Kata laluan aplikasi tidak betul</string>
+    <string name="ui_pin_reset_failed_generic">Tidak dapat mengemas kini PIN, cuba lagi</string>
+    <string name="ui_pin_reset_submit">Sahkan dan tetapkan PIN baharu</string>
+    <string name="ui_pin_reset_back">Kembali</string>
+    <string name="ui_pin_reset_no_password">Tiada kata laluan aplikasi Gmail disimpan dalam tetapan, jadi tetapan semula dalam aplikasi tidak tersedia. Satu-satunya pilihan ialah membuka tetapan sistem dan memadam data aplikasi, yang akan memadam PIN, log dan tetapan.</string>
 </resources>

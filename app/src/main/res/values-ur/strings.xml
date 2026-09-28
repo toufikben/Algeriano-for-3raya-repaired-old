@@ -282,4 +282,13 @@
     <string name="ui_privacy_disclosure_body">Phone Fortress uses the camera, location, and notifications when protection is enabled. After a failed unlock attempt, it may capture a photo, determine the device location, and store the result locally. The photo and location may be attached to an email sent to the address you choose. These data are not sent to the developer\'s server. Use the app on your own device or with the owner\'s consent. You can refuse permissions or stop protection at any time.</string>
     <string name="ui_privacy_disclosure_accept">I understand and want to continue</string>
     <string name="ui_privacy_disclosure_not_now">Not now</string>
+    <string name="ui_pin_reset_title">PIN تک رسائی بحال کریں</string>
+    <string name="ui_pin_reset_desc">ایپ کا ڈیٹا صاف کیے بغیر نیا PIN مقرر کرنے کے لیے محفوظ شدہ Gmail ایپ پاس ورڈ درج کریں (یہ غیر مجاز رسائی کے انتباہوں بھیجنے کے لیے استعمال ہوتا ہے)۔</string>
+    <string name="ui_pin_reset_password_label">Gmail ایپ پاس ورڈ</string>
+    <string name="ui_pin_reset_password_required">تصدیق کے لیے ایپ پاس ورڈ درج کریں</string>
+    <string name="ui_pin_reset_password_wrong">ایپ پاس ورڈ غلط ہے</string>
+    <string name="ui_pin_reset_failed_generic">PIN اپ ڈیٹ نہیں ہو سکا، دوبارہ کوشش کریں</string>
+    <string name="ui_pin_reset_submit">تصدیق کریں اور نیا PIN مقرر کریں</string>
+    <string name="ui_pin_reset_back">واپس</string>
+    <string name="ui_pin_reset_no_password">سیٹنگز میں Gmail ایپ پاس ورڈ محفوظ نہیں، اس لیے ایپ کے اندر دوبارہ ترتیب نہیں دی جا سکتی۔ واحد راستہ سسٹم سیٹنگز کھول کر ایپ کا ڈیٹا صاف کرنا ہے، جس سے PIN، لاگ اور سیٹنگز حذف ہو جائیں گے۔</string>
 </resources>
