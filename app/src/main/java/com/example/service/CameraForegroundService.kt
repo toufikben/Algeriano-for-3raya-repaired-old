@@ -78,6 +78,15 @@ class CameraForegroundService : Service() {
         private const val ALERT_NOTIFICATION_ID = 2002
         private const val ALERT_NOTIFICATION_ID_SPAN = 1000
         private const val TAG = "CameraService"
+
+        /**
+         * Monotonic time of the last finished test capture. The UI polls this
+         * instead of guessing how long a test takes: SMTP can outlast any fixed
+         * timeout, and a stopped service simply never advances it.
+         */
+        @Volatile
+        var lastTestFinishedAt = 0L
+            private set
     }
 
     private val serviceScope = CoroutineScope(Dispatchers.IO + Job())
@@ -558,6 +567,7 @@ class CameraForegroundService : Service() {
                 }
             } finally {
                 captureInProgress.set(false)
+                if (isTest) lastTestFinishedAt = SystemClock.elapsedRealtime()
                 if (wakeLock?.isHeld == true) {
                     runCatching { wakeLock.release() }
                 }
@@ -963,9 +973,11 @@ class CameraForegroundService : Service() {
         return try {
             val powerManager = getSystemService(Context.POWER_SERVICE) as? PowerManager
             powerManager?.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "IntruderApp::CaptureWakeLock")?.apply {
-                // FIX(email): 15s was shorter than camera(6s)+location(7s parallel)
-                // + SMTP connect(15s)+read(15s). Device slept mid-send in Doze.
-                acquire(60_000)
+                // The lock is always released in the capture's finally block; this
+                // bound only guards against a leak. Worst observed path is
+                // camera(6s) + location(7s) + SMTP connect/read with one retry,
+                // which can pass a minute on a slow mobile link.
+                acquire(120_000)
             }
         } catch (e: Exception) {
             null

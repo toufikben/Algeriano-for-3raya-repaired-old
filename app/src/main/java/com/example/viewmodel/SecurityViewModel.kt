@@ -11,6 +11,7 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.PowerManager
+import android.os.SystemClock
 import android.util.Patterns
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.AndroidViewModel
@@ -300,7 +301,16 @@ class SecurityViewModel(application: Application) : AndroidViewModel(application
             }
             SecurityEventDistributor.dispatchPendingFromVisibleContext(context)
         } else {
-            context.stopService(Intent(context, CameraForegroundService::class.java))
+            // Letting the service stop itself also clears the whole alert
+            // notification range, which a bare stopService() left behind. A
+            // receiver-initiated stop runs in the background, where startService
+            // is not allowed, so fall back to stopping it directly.
+            val stopIntent = Intent(context, CameraForegroundService::class.java).apply {
+                action = CameraForegroundService.ACTION_STOP_MONITORING
+            }
+            runCatching { context.startService(stopIntent) }.onFailure {
+                context.stopService(Intent(context, CameraForegroundService::class.java))
+            }
         }
     }
 
@@ -335,8 +345,16 @@ class SecurityViewModel(application: Application) : AndroidViewModel(application
             _uiState.update { it.copy(bannerMessage = message, isTesting = false) }
         }
 
+        val requestedAt = SystemClock.elapsedRealtime()
         viewModelScope.launch {
-            delay(6500)
+            // Wait for the service to report the test as finished rather than
+            // trusting a fixed duration: a slow SMTP handshake used to make the
+            // spinner stop while the alert was still being sent.
+            while (CameraForegroundService.lastTestFinishedAt < requestedAt &&
+                SystemClock.elapsedRealtime() - requestedAt < 60_000L
+            ) {
+                delay(400)
+            }
             _uiState.update { it.copy(isTesting = false) }
         }
     }

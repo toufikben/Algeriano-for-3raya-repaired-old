@@ -40,7 +40,6 @@ import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Key
 import androidx.compose.material.icons.filled.Language
 import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.Security
 import androidx.compose.material.icons.filled.Shield
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.Card
@@ -62,6 +61,7 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -125,19 +125,23 @@ class MainActivity : ComponentActivity() {
                     LocalLayoutDirection provides if (selectedLanguage.isRtl()) LayoutDirection.Rtl else LayoutDirection.Ltr
                 ) {
                     AppPinGate(SecurityPrefs.getInstance(this@MainActivity)) {
-                        SecurityMainScreen(
-                            viewModel = viewModel,
-                            onRequestAdmin = { requestDeviceAdmin() },
-                            onRequestBatteryExemption = { requestBatteryExemption() },
-                            language = selectedLanguage,
-                            onLanguageChanged = { language ->
-                                languageStore.set(language)
-                                applyLanguage(language)
-                                SecurityApp.refreshNotificationChannels(this@MainActivity)
-                                selectedLanguage = language
-                                recreate()
-                            }
-                        )
+                        // Recomposing with the language as key re-reads every string
+                        // from the reconfigured resources. recreate() did the same job
+                        // but also stopped the activity, which re-locked the PIN gate.
+                        key(selectedLanguage) {
+                            SecurityMainScreen(
+                                viewModel = viewModel,
+                                onRequestAdmin = { requestDeviceAdmin() },
+                                onRequestBatteryExemption = { requestBatteryExemption() },
+                                language = selectedLanguage,
+                                onLanguageChanged = { language ->
+                                    languageStore.set(language)
+                                    applyLanguage(language)
+                                    SecurityApp.refreshNotificationChannels(this@MainActivity)
+                                    selectedLanguage = language
+                                }
+                            )
+                        }
                     }
                 }
             }
@@ -432,7 +436,6 @@ fun SecurityMainScreen(
             item(key = "protection_toggle_card") {
                 ProtectionToggleCard(
                     isTrackingEnabled = uiState.isTrackingEnabled,
-                    isDeviceAdminActive = uiState.isAdminActive,
                     isTesting = uiState.isTesting,
                     onToggleTracking = { enabled ->
                         if (enabled && !securityPrefs.privacyDisclosureAccepted) {

@@ -15,7 +15,6 @@ import com.example.R
 import com.example.SecurityApp
 import com.example.data.SecurityPrefs
 import com.example.data.SecurityEventStatus
-import com.example.service.CameraForegroundService
 import com.example.worker.SecurityEventDistributor
 
 class BootReceiver : BroadcastReceiver() {

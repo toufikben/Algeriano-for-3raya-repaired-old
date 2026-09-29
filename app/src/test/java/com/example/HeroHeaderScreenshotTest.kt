@@ -1,5 +1,6 @@
 package com.example
 
+import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onRoot
 import com.example.ui.theme.MyApplicationTheme
@@ -18,18 +19,20 @@ import org.robolectric.annotation.GraphicsMode
 // mode remains sufficient for this Compose snapshot and is CI-safe.
 @GraphicsMode(GraphicsMode.Mode.LEGACY)
 @Config(qualifiers = RobolectricDeviceQualifiers.Pixel8, sdk = [36])
-class GreetingScreenshotTest {
+class HeroHeaderScreenshotTest {
 
   @get:Rule val composeTestRule = createComposeRule()
 
   @Test
-  fun greeting_screenshot() {
+  fun hero_header_renders_while_protecting() {
     composeTestRule.setContent {
       MyApplicationTheme {
         SecurityHeroHeader(isTrackingEnabled = true, attemptsCount = 0)
       }
     }
 
-    composeTestRule.onRoot().captureRoboImage(filePath = "src/test/screenshots/greeting.png")
+    composeTestRule.onRoot().assertIsDisplayed()
+    // Written under build/ so a local or CI run cannot dirty the working tree.
+    composeTestRule.onRoot().captureRoboImage(filePath = "build/tests/screenshots/hero-header-active.png")
   }
 }
