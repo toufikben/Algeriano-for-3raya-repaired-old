@@ -426,6 +426,7 @@ class CameraForegroundService : Service() {
                 val userPassword = prefs.password
                 var emailSuccess = false
                 var emailRetryable = false
+                var emailOffline = false
                 val photoStatus = when {
                     photoCaptured -> l10n.getString(com.example.R.string.ui_dd886e527edc)
                     !cameraPermissionGranted -> l10n.getString(com.example.R.string.ui_6ae598a1fca6)
@@ -474,6 +475,7 @@ class CameraForegroundService : Service() {
 
                     emailSuccess = sendResult.isSuccess
                     emailRetryable = sendResult.retryable
+                    emailOffline = sendResult.offline
                     if (!isTest && eventId != null) {
                         prefs.updateEmailState(
                             eventId,
@@ -494,7 +496,7 @@ class CameraForegroundService : Service() {
                 if (!isTest && eventId != null) {
                     if (emailSuccess) {
                         prefs.completeSecurityEvent(eventId, SecurityEventStatus.SENT)
-                    } else if (sendResult.offline &&
+                    } else if (emailOffline &&
                         userEmail.isNotBlank() && userPassword.isNotBlank()
                     ) {
                         // Unreachable network is not a failed send: the photo and

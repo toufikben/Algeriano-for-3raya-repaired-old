@@ -217,7 +217,7 @@ class SecurityEventWorker(
         // opens the app. With no live instance the event stays pending for the next
         // visible dispatch instead of becoming a failed security event.
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S &&
-            !awaitingSend(event.status) &&
+            !SecurityEventDistributor.awaitingSend(event.status) &&
             !CameraForegroundService.isCameraChannelOpen
         ) {
             prefs.deferSecurityEvent(event.id)
@@ -231,7 +231,7 @@ class SecurityEventWorker(
         // worker can crash with "Context.startForegroundService() did not
         // then call Service.startForeground()". Perform the mail-only resend
         // in-process instead, mirroring the service's status handling.
-        if (awaitingSend(event.status)) {
+        if (SecurityEventDistributor.awaitingSend(event.status)) {
             return sendPendingEventFromWorker(prefs, event)
         }
 
