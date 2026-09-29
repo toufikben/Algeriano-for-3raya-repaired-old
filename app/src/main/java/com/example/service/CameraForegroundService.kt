@@ -89,6 +89,18 @@ class CameraForegroundService : Service() {
         @Volatile
         var lastTestFinishedAt = 0L
             private set
+
+        @Volatile
+        private var liveInstance: CameraForegroundService? = null
+
+        /**
+         * True while a promoted, camera-capable instance of this service exists.
+         * A background caller may hand an event to that instance; starting a new
+         * camera-type foreground service from the background is rejected on
+         * Android 12+ (and as a SecurityException on Android 14+ while-in-use).
+         */
+        val isCameraChannelOpen: Boolean
+            get() = liveInstance?.let { it.foregroundTypeStarted && it.foregroundNeedsCamera } ?: false
     }
 
     private val serviceScope = CoroutineScope(Dispatchers.IO + Job())
@@ -99,12 +111,15 @@ class CameraForegroundService : Service() {
     private var backgroundThread: HandlerThread? = null
     private var backgroundHandler: Handler? = null
     private var foregroundStarted = false
+    @Volatile
     private var foregroundTypeStarted = false
+    @Volatile
     private var foregroundNeedsCamera = true
     private var countdownArmJob: Job? = null
 
     override fun onCreate() {
         super.onCreate()
+        liveInstance = this
         val prefs = SecurityPrefs.getInstance(applicationContext)
         prefs.recoverStaleSecurityEvents()
         startBackgroundThread()
@@ -479,6 +494,16 @@ class CameraForegroundService : Service() {
                 if (!isTest && eventId != null) {
                     if (emailSuccess) {
                         prefs.completeSecurityEvent(eventId, SecurityEventStatus.SENT)
+                    } else if (sendResult.offline &&
+                        userEmail.isNotBlank() && userPassword.isNotBlank()
+                    ) {
+                        // Unreachable network is not a failed send: the photo and
+                        // location stay queued and the connectivity-constrained
+                        // worker mails them as soon as the connection returns.
+                        prefs.moveCapturedEventToSendPending(eventId)
+                        prefs.updateEmailState(eventId, SecurityEventComponentState.PENDING)
+                        SecurityEventDistributor.enqueue(applicationContext, eventId)
+                        statusMsg = "$statusMsg${l10n.getString(com.example.R.string.ui_separator)}${l10n.getString(com.example.R.string.ui_retry_scheduled)}"
                     } else if (emailRetryable &&
                         userEmail.isNotBlank() && userPassword.isNotBlank() &&
                         prefs.recordSendRetry(eventId)
@@ -1018,6 +1043,8 @@ class CameraForegroundService : Service() {
     }
 
     override fun onDestroy() {
+        if (liveInstance === this) liveInstance = null
+        foregroundTypeStarted = false
         val prefs = SecurityPrefs.getInstance(applicationContext)
         // A normal user stop clears countdownEnabled first. This recovery path
         // is therefore reserved for unexpected service destruction.

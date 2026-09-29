@@ -9,9 +9,11 @@ import android.os.Build
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
+import androidx.work.Constraints
 import androidx.work.CoroutineWorker
 import androidx.work.BackoffPolicy
 import androidx.work.ExistingWorkPolicy
+import androidx.work.NetworkType
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.WorkerParameters
@@ -51,11 +53,24 @@ object SecurityEventDistributor {
     private const val MAX_WORK_ATTEMPTS = 3
     private const val RETRY_DELAY_MINUTES = 1L
 
+    /**
+     * Statuses that already hold their evidence: only the mail leg is left, so
+     * that work can wait for connectivity instead of losing send attempts.
+     */
+    internal fun awaitingSend(status: SecurityEventStatus): Boolean =
+        status == SecurityEventStatus.SEND_PENDING ||
+            status == SecurityEventStatus.FAILED_RETRYABLE
+
     fun enqueue(context: Context, eventId: String) {
         val prefs = SecurityPrefs.getInstance(context)
         if (prefs.getPendingSecurityEvents().none { it.id == eventId }) return
 
         val event = prefs.getPendingSecurityEvents().first { it.id == eventId }
+        // An event that already holds its evidence only needs the network to
+        // finish, so it waits for connectivity instead of burning send attempts
+        // during an outage. Capture work must stay unconstrained: a photo taken
+        // minutes late is worthless, and it needs no network at all.
+        val sendOnly = awaitingSend(event.status)
         val retryDelayMinutes = if (event.sendAttempts == 0) {
             0L
         } else {
@@ -64,6 +79,13 @@ object SecurityEventDistributor {
         val request = OneTimeWorkRequestBuilder<SecurityEventWorker>()
             .setInputData(workDataOf(EVENT_ID_KEY to eventId))
             .setInitialDelay(retryDelayMinutes, TimeUnit.MINUTES)
+            .setConstraints(
+                if (sendOnly) {
+                    Constraints.Builder().setRequiredNetworkType(NetworkType.CONNECTED).build()
+                } else {
+                    Constraints.NONE
+                }
+            )
             .setBackoffCriteria(
                 BackoffPolicy.EXPONENTIAL,
                 RETRY_DELAY_MINUTES,
@@ -141,6 +163,9 @@ object SecurityEventDistributor {
 
     internal const val MAX_ATTEMPTS = MAX_WORK_ATTEMPTS
 
+    /** Connectivity failures re-queue without consuming a send attempt, bounded only to avoid a hot loop. */
+    internal const val MAX_OFFLINE_RETRIES = 5
+
     fun notifyDeferredCapture(context: Context, eventId: String) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
             context.checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED
@@ -185,15 +210,15 @@ class SecurityEventWorker(
         val event = prefs.getPendingSecurityEvent(eventId)
             ?: return Result.success()
 
-        // A camera foreground service must be started from a user-visible flow
-        // once the background-start restriction applies (Android 12/S+, where
-        // ForegroundServiceStartNotAllowedException was introduced). Keep the
-        // durable event pending; the next visible app session will enqueue it
-        // again instead of converting this policy block into a failed security
-        // event or an endless retry loop.
+        // Android 12+ rejects a background start of a camera foreground service,
+        // but an event can still be handed to the instance the app keeps running
+        // while tracking is on — that is the difference between photographing the
+        // intruder at the failed unlock and photographing them when the owner next
+        // opens the app. With no live instance the event stays pending for the next
+        // visible dispatch instead of becoming a failed security event.
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S &&
-            event.status != SecurityEventStatus.SEND_PENDING &&
-            event.status != SecurityEventStatus.FAILED_RETRYABLE
+            !awaitingSend(event.status) &&
+            !CameraForegroundService.isCameraChannelOpen
         ) {
             prefs.deferSecurityEvent(event.id)
             SecurityEventDistributor.notifyDeferredCapture(applicationContext, event.id)
@@ -206,9 +231,7 @@ class SecurityEventWorker(
         // worker can crash with "Context.startForegroundService() did not
         // then call Service.startForeground()". Perform the mail-only resend
         // in-process instead, mirroring the service's status handling.
-        if (event.status == SecurityEventStatus.SEND_PENDING ||
-            event.status == SecurityEventStatus.FAILED_RETRYABLE
-        ) {
+        if (awaitingSend(event.status)) {
             return sendPendingEventFromWorker(prefs, event)
         }
 
@@ -305,6 +328,19 @@ class SecurityEventWorker(
                     prefs.completeSecurityEvent(event.id, SecurityEventStatus.SENT)
                     recordWorkerSendLog(prefs, event, imageFile, true, null)
                     Result.success()
+                }
+                sendResult.offline -> {
+                    // Unreachable network is not a failed send: keep the evidence
+                    // queued with the connectivity-constrained work so it goes out
+                    // the moment the connection returns.
+                    prefs.updateEmailState(event.id, SecurityEventComponentState.PENDING)
+                    recordWorkerSendLog(prefs, event, imageFile, false, sendResult.errorMessage)
+                    if (runAttemptCount + 1 < SecurityEventDistributor.MAX_OFFLINE_RETRIES) {
+                        Result.retry()
+                    } else {
+                        SecurityEventDistributor.scheduleRecovery(applicationContext)
+                        Result.success()
+                    }
                 }
                 sendResult.retryable && prefs.recordSendRetry(event.id) -> {
                     prefs.markSendPendingForRetry(event.id)

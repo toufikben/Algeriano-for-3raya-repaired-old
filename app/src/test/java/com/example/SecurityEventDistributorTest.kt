@@ -44,6 +44,23 @@ class SecurityEventDistributorTest {
     }
 
     @Test
+    fun `only events that already hold their evidence wait for connectivity`() {
+        val sendOnly = com.example.data.SecurityEventStatus.entries.filter {
+            SecurityEventDistributor.awaitingSend(it)
+        }
+        assertEquals(
+            setOf(
+                com.example.data.SecurityEventStatus.SEND_PENDING,
+                com.example.data.SecurityEventStatus.FAILED_RETRYABLE
+            ),
+            sendOnly.toSet()
+        )
+        // A capture still needs the camera, so it must never be gated on network.
+        assertTrue(!SecurityEventDistributor.awaitingSend(com.example.data.SecurityEventStatus.PENDING))
+        assertTrue(!SecurityEventDistributor.awaitingSend(com.example.data.SecurityEventStatus.DEFERRED))
+    }
+
+    @Test
     fun `enqueue creates unique work for a pending event`() {
         val event = prefs.enqueueSecurityEvent()
 

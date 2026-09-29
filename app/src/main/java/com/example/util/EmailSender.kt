@@ -6,6 +6,11 @@ import android.util.Log
 import com.example.R
 
 import java.io.File
+import java.net.ConnectException
+import java.net.NoRouteToHostException
+import java.net.SocketException
+import java.net.SocketTimeoutException
+import java.net.UnknownHostException
 import java.util.Properties
 import javax.activation.DataHandler
 import javax.activation.FileDataSource
@@ -29,7 +34,13 @@ object EmailSender {
     data class SendResult(
         val isSuccess: Boolean,
         val errorMessage: String? = null,
-        val retryable: Boolean = true
+        val retryable: Boolean = true,
+        /**
+         * The failure was reaching the network rather than the SMTP conversation
+         * (no route, DNS, connect timeout). Callers keep the event queued without
+         * consuming one of the bounded send attempts.
+         */
+        val offline: Boolean = false
     )
 
     fun sendSecurityAlert(
@@ -155,11 +166,13 @@ object EmailSender {
             val detail = smtpDiagnostic(e)
             val authenticationFailure = detail.contains("535") ||
                 detail.contains("534") || detail.contains("5.7.8")
+            val connectivity = !authenticationFailure && isConnectivityFailure(e)
             Log.w(TAG, "EmailSender: SMTP messaging failure ${e.javaClass.simpleName}: $detail")
             SendResult(
                 false,
                 context.getString(R.string.ui_smtp_error_detail, e.javaClass.simpleName, detail),
-                retryable = !authenticationFailure
+                retryable = !authenticationFailure,
+                offline = connectivity
             )
         } catch (e: Exception) {
             val detail = smtpDiagnostic(e)
@@ -167,9 +180,35 @@ object EmailSender {
             SendResult(
                 false,
                 context.getString(R.string.ui_smtp_error_detail, e.javaClass.simpleName, detail),
-                retryable = true
+                retryable = true,
+                offline = isConnectivityFailure(e)
             )
         }
+    }
+
+    /**
+     * JavaMail hides transport failures inside MessagingException with the real
+     * java.net cause, so the whole chain has to be inspected.
+     */
+    private fun isConnectivityFailure(error: Throwable): Boolean {
+        var current: Throwable? = error
+        repeat(5) {
+            val throwable = current ?: return false
+            if (throwable is UnknownHostException ||
+                throwable is ConnectException ||
+                throwable is NoRouteToHostException ||
+                throwable is SocketTimeoutException ||
+                throwable is SocketException
+            ) return true
+            val message = throwable.message.orEmpty()
+            if (message.contains("Unable to resolve host") ||
+                message.contains("failed to connect", ignoreCase = true) ||
+                message.contains("Network is unreachable") ||
+                message.contains("Connection timed out")
+            ) return true
+            current = throwable.cause
+        }
+        return false
     }
 
     private fun smtpDiagnostic(error: Throwable): String {
