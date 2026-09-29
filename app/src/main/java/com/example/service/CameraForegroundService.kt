@@ -302,6 +302,25 @@ class CameraForegroundService : Service() {
             SecurityEventStatus.SEND_PENDING,
             SecurityEventStatus.FAILED_RETRYABLE
         ) && !existingEvent?.photoPath.isNullOrBlank()
+
+        val autoRestartCountdown = isCountdownCapture &&
+            prefs.countdownAutoRestart &&
+            prefs.isTrackingEnabled
+        val capturedCountdownEndTime = if (isCountdownCapture) prefs.countdownEndTime else 0L
+        // FIX(#19): the next cycle used to be started *before* this capture touched
+        // the camera. When a capture or its retry outlived the new deadline, the new
+        // watchdog hit the busy guard and its photo landed seconds later at an
+        // arbitrary moment — the "the event starts before the time is up" seen on
+        // the device. restartCycle() is idempotent (the deadline check makes the
+        // first caller the only one that acts) and runs on every exit path, so a
+        // failure still cannot stop an auto-restarting timer.
+        fun restartCycle() {
+            if (!autoRestartCountdown) return
+            if (prefs.countdownEndTime != capturedCountdownEndTime) return
+            CountdownScheduler.start(applicationContext, prefs.countdownDurationMillis)
+            Log.d(TAG, "Countdown cycle finished; next cycle scheduled")
+        }
+
         // FIX: check the busy flag BEFORE claiming. Claiming first left a busy
         // event stuck IN_PROGRESS (invisible to getPendingSecurityEvents) until
         // a lease sweep; now it stays PENDING/DEFERRED for the distributor.
@@ -310,29 +329,25 @@ class CameraForegroundService : Service() {
             // Do not downgrade SEND_PENDING/FAILED_RETRYABLE and do not spawn
             // unbounded waiter coroutines. Countdown retry is scheduled once.
             if (isCountdownCapture) {
+                if (autoRestartCountdown && !isTest && eventId != null) {
+                    // The restart below clears countdownCapturePending, which makes
+                    // CaptureRetryWorker skip the event; hand it to the durable queue.
+                    com.example.worker.SecurityEventDistributor.enqueue(applicationContext, eventId)
+                }
                 CountdownScheduler.schedulePendingRetry(applicationContext)
+                restartCycle()
             }
             return
         }
         if (!isTest && !eventId.isNullOrBlank() && !sendOnly && !prefs.claimSecurityEvent(eventId)) {
             captureInProgress.set(false)
             Log.w(TAG, "Ignoring duplicate or already-processed security event: $eventId")
+            restartCycle()
             return
         }
 
         if (!isTest && eventId != null && !sendOnly) {
             prefs.markCapturePending(eventId)
-        }
-
-        // Schedule the next countdown before touching camera, location, or email.
-        // A failure in any of those operations must not stop an auto-restarting timer.
-        val autoRestartCountdown = isCountdownCapture &&
-            prefs.countdownAutoRestart &&
-            prefs.isTrackingEnabled
-        val capturedCountdownEndTime = if (isCountdownCapture) prefs.countdownEndTime else 0L
-        if (autoRestartCountdown) {
-            CountdownScheduler.start(applicationContext, prefs.countdownDurationMillis)
-            Log.d(TAG, "Countdown completed; next cycle scheduled before capture")
         }
 
         val wakeLock = acquireWakeLock()
@@ -601,6 +616,9 @@ class CameraForegroundService : Service() {
                 if (wakeLock?.isHeld == true) {
                     runCatching { wakeLock.release() }
                 }
+                // FIX(#19): the next cycle starts only after the camera is released,
+                // before the persistence check so the service stays alive to run it.
+                restartCycle()
                 if (!isServicePersistent()) {
                     stopForeground(false)
                     stopSelf()

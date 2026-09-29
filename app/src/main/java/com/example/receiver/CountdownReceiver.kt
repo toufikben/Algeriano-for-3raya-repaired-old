@@ -7,6 +7,7 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.os.Build
+import android.os.PowerManager
 import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
 import com.example.MainActivity
@@ -60,10 +61,33 @@ class CountdownReceiver : BroadcastReceiver() {
                                 }
                                 ContextCompat.startForegroundService(appContext, serviceIntent)
                             } catch (e: Exception) {
-                                CaptureRetryWorker.enqueue(appContext)
-                                // FIX(countdown): background start denied — notify user
-                                // to open the app so visible dispatch can complete it.
+                                // FIX(countdown): background start denied — replace the
+                                // queued retry so a stale KEEP entry cannot stall it,
+                                // and tell the user the capture is still outstanding.
+                                CaptureRetryWorker.enqueue(appContext, replaceExisting = true)
                                 CountdownScheduler.postTapToComplete(appContext)
+                            }
+                            // FIX(#18): the pre-expiry wake guard is left alone here.
+                            // The service takes its own capture lock within milliseconds,
+                            // and the guard's acquire timeout releases it anyway.
+                        }
+                    }
+                    CountdownScheduler.ACTION_WAKE_GUARD -> {
+                        // FIX(#18): the in-process delay() watchdog is not a wake
+                        // source and the inexact backup alarm can sit in an idle
+                        // window, so expiry landed 5-45 s late with the screen off.
+                        // This alarm wakes the CPU, holds a time-boxed partial lock
+                        // for the last window, then re-arms the watchdog while the
+                        // CPU is guaranteed to be running.
+                        if (prefs.countdownEnabled && !prefs.isCountdownExpired() && !prefs.countdownCapturePending) {
+                            CountdownWakeGuard.acquire(appContext, prefs.countdownRemainingMillis())
+                            runCatching {
+                                ContextCompat.startForegroundService(
+                                    appContext,
+                                    Intent(appContext, CameraForegroundService::class.java).apply {
+                                        action = CameraForegroundService.ACTION_ARM_COUNTDOWN
+                                    }
+                                )
                             }
                         }
                     }
@@ -110,12 +134,17 @@ object CountdownScheduler {
     const val ACTION_WARNING = "com.example.action.COUNTDOWN_WARNING"
     const val ACTION_RESET = "com.example.action.COUNTDOWN_RESET"
     const val ACTION_EXPIRED = "com.example.action.COUNTDOWN_EXPIRED"
+    const val ACTION_WAKE_GUARD = "com.example.action.COUNTDOWN_WAKE_GUARD"
     const val RESET_REQUEST_CODE = 4102
     const val OPEN_REQUEST_CODE = 4103
     const val WARNING_NOTIFICATION_ID = 4104
     private const val WARNING_REQUEST_CODE = 4100
     private const val EXPIRED_REQUEST_CODE = 4101
+    private const val WAKE_GUARD_REQUEST_CODE = 4106
     private const val WARNING_LEAD_MILLIS = 10 * 60 * 1000L
+
+    // FIX(#18): how long before expiry the CPU is guaranteed to be awake.
+    private const val WAKE_GUARD_LEAD_MILLIS = 90 * 1000L
 
     fun start(context: Context, durationMillis: Long) {
         val prefs = SecurityPrefs.getInstance(context)
@@ -127,6 +156,7 @@ object CountdownScheduler {
         prefs.countdownEventId = ""
         prefs.countdownEnabled = true
         CaptureRetryWorker.cancel(context)
+        CountdownWakeGuard.release()
         context.getSystemService(NotificationManager::class.java)?.cancel(WARNING_NOTIFICATION_ID)
         scheduleAlarms(context, prefs.countdownEndTime)
         runCatching {
@@ -140,13 +170,23 @@ object CountdownScheduler {
     }
 
     fun cancel(context: Context) {
+        val prefs = SecurityPrefs.getInstance(context)
+        // FIX(#17): the countdown and the camera service are independent. The
+        // unconditional stopService() below killed live camera monitoring
+        // whenever a countdown was cancelled while tracking stayed on, so every
+        // later failed-unlock capture had to use the denied background start.
+        val trackingEnabled = prefs.isTrackingEnabled
         val alarmManager = context.getSystemService(AlarmManager::class.java)
         alarmManager?.cancel(pendingIntent(context, ACTION_WARNING, WARNING_REQUEST_CODE))
         alarmManager?.cancel(pendingIntent(context, ACTION_EXPIRED, EXPIRED_REQUEST_CODE))
+        alarmManager?.cancel(pendingIntent(context, ACTION_WAKE_GUARD, WAKE_GUARD_REQUEST_CODE))
         context.getSystemService(NotificationManager::class.java)?.cancel(WARNING_NOTIFICATION_ID)
+        CountdownWakeGuard.release()
         CaptureRetryWorker.cancel(context)
-        SecurityPrefs.getInstance(context).clearCountdown()
-        context.stopService(Intent(context, CameraForegroundService::class.java))
+        prefs.clearCountdown()
+        if (!trackingEnabled) {
+            context.stopService(Intent(context, CameraForegroundService::class.java))
+        }
     }
 
     fun rescheduleFromPrefs(context: Context) {
@@ -178,6 +218,12 @@ object CountdownScheduler {
             runCatching {
                 scheduleAlarm(alarmManager, warningAt, pendingIntent(context, ACTION_WARNING, WARNING_REQUEST_CODE))
             }
+        }
+        // FIX(#18): always armed, even for a 1-minute test timer — it is the
+        // only thing that keeps the CPU awake for the final window.
+        runCatching {
+            val guardAt = (endTime - WAKE_GUARD_LEAD_MILLIS).coerceAtLeast(now + 1_000L)
+            scheduleAlarm(alarmManager, guardAt, pendingIntent(context, ACTION_WAKE_GUARD, WAKE_GUARD_REQUEST_CODE))
         }
         runCatching {
             scheduleAlarm(alarmManager, endTime.coerceAtLeast(now + 1_000L), pendingIntent(context, ACTION_EXPIRED, EXPIRED_REQUEST_CODE))
@@ -249,4 +295,38 @@ object CountdownScheduler {
     }
 
     private const val TAP_TO_COMPLETE_NOTIFICATION_ID = 4105
+}
+
+/**
+ * FIX(#18): keeps the CPU running for the last window before a countdown
+ * expires. A coroutine delay() is scheduled on CLOCK_MONOTONIC, which stops
+ * during deep sleep, and an inexact backup alarm is only delivered inside an
+ * idle window — both made the expiry land seconds late with the screen off.
+ * The lock is time-boxed by the acquire timeout, so a crashed or killed
+ * handoff can never hold the device awake.
+ */
+object CountdownWakeGuard {
+    private const val TAG = "IntruderApp::CountdownWakeGuard"
+    private const val SLACK_MILLIS = 60_000L
+    private const val MIN_HOLD_MILLIS = 15_000L
+    private const val MAX_HOLD_MILLIS = 4 * 60_000L
+
+    private var lock: PowerManager.WakeLock? = null
+
+    @Synchronized
+    fun acquire(context: Context, remainingMillis: Long) {
+        val powerManager = context.getSystemService(Context.POWER_SERVICE) as? PowerManager ?: return
+        val hold = (remainingMillis + SLACK_MILLIS).coerceIn(MIN_HOLD_MILLIS, MAX_HOLD_MILLIS)
+        val current = lock ?: powerManager
+            .newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, TAG)
+            .apply { isReferenceCounted = false }
+            .also { lock = it }
+        runCatching { current.acquire(hold) }
+    }
+
+    @Synchronized
+    fun release() {
+        val current = lock ?: return
+        runCatching { if (current.isHeld) current.release() }
+    }
 }
