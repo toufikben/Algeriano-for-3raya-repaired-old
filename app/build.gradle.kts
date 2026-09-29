@@ -79,6 +79,13 @@ android {
   }
 }
 
+// Unit tests only ever run in CI here, so failure output has to be readable from the log.
+tasks.withType<org.gradle.api.tasks.testing.Test>().configureEach {
+  testLogging {
+    exceptionFormat = org.gradle.api.tasks.testing.logging.TestExceptionFormat.FULL
+  }
+}
+
 // Configure the Secrets Gradle Plugin to use .env and .env.example files
 // to match the convention used in Web projects.
 secrets {

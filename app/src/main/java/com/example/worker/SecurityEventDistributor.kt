@@ -24,6 +24,7 @@ import com.example.data.SecurityEventStatus
 import com.example.MainActivity
 import com.example.R
 import com.example.SecurityApp
+import com.example.i18n.localizedForAppLanguage
 import com.example.service.CameraForegroundService
 import com.example.util.EmailSender
 import kotlinx.coroutines.Dispatchers
@@ -154,11 +155,12 @@ object SecurityEventDistributor {
             },
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
+        val l10n = context.localizedForAppLanguage()
         val notification = NotificationCompat.Builder(context, SecurityApp.CHANNEL_ID_ALERTS)
             .setSmallIcon(R.drawable.ic_launcher_foreground_img_1787338860864)
-            .setContentTitle(context.getString(R.string.notification_deferred_title))
-            .setContentText(context.getString(R.string.notification_deferred_text))
-            .setStyle(NotificationCompat.BigTextStyle().bigText(context.getString(R.string.notification_deferred_text)))
+            .setContentTitle(l10n.getString(R.string.notification_deferred_title))
+            .setContentText(l10n.getString(R.string.notification_deferred_text))
+            .setStyle(NotificationCompat.BigTextStyle().bigText(l10n.getString(R.string.notification_deferred_text)))
             .setContentIntent(openIntent)
             .setAutoCancel(true)
             .setPriority(NotificationCompat.PRIORITY_HIGH)
@@ -175,6 +177,8 @@ class SecurityEventWorker(
     appContext: Context,
     workerParams: WorkerParameters
 ) : CoroutineWorker(appContext, workerParams) {
+    private val l10n by lazy { applicationContext.localizedForAppLanguage() }
+
     override suspend fun doWork(): Result {
         val eventId = SecurityEventDistributor.eventId(inputData) ?: return Result.failure()
         val prefs = SecurityPrefs.getInstance(applicationContext)
@@ -259,35 +263,35 @@ class SecurityEventWorker(
             val timeStr = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
                 .format(Date(event.timestamp))
             val locationText = if (event.latitude != null && event.longitude != null) {
-                applicationContext.getString(
+                l10n.getString(
                     R.string.ui_location_coordinates,
                     event.latitude.toString(),
                     event.longitude.toString()
                 )
             } else {
-                applicationContext.getString(R.string.ui_c0ae8d5ba4fa)
+                l10n.getString(R.string.ui_c0ae8d5ba4fa)
             }
             val body = """
-                ${applicationContext.getString(R.string.ui_greeting)}
+                ${l10n.getString(R.string.ui_greeting)}
 
-                ${applicationContext.getString(R.string.ui_intrusion_body)}
+                ${l10n.getString(R.string.ui_intrusion_body)}
 
-                ${applicationContext.getString(R.string.ui_time_label, timeStr)}
-                ${applicationContext.getString(R.string.ui_location_label)}
+                ${l10n.getString(R.string.ui_time_label, timeStr)}
+                ${l10n.getString(R.string.ui_location_label)}
                 $locationText
 
-                ${applicationContext.getString(R.string.ui_photo_attached)}
+                ${l10n.getString(R.string.ui_photo_attached)}
 
                 ---
-                ${applicationContext.getString(R.string.ui_auto_sent)}
+                ${l10n.getString(R.string.ui_auto_sent)}
             """.trimIndent()
 
             val sendResult = EmailSender.sendSecurityAlert(
-                context = applicationContext,
+                context = l10n,
                 senderEmail = senderEmail,
                 appPassword = appPassword,
                 recipientEmail = senderEmail,
-                subject = applicationContext.getString(R.string.ui_alert_subject, timeStr),
+                subject = l10n.getString(R.string.ui_alert_subject, timeStr),
                 bodyText = body,
                 imageFile = imageFile,
                 eventId = event.id
@@ -333,21 +337,21 @@ class SecurityEventWorker(
         emailSuccess: Boolean,
         errorMessage: String?
     ) {
-        val separator = applicationContext.getString(R.string.ui_separator)
+        val separator = l10n.getString(R.string.ui_separator)
         val photoStatus = if (imageFile != null) {
-            applicationContext.getString(R.string.ui_dd886e527edc)
+            l10n.getString(R.string.ui_dd886e527edc)
         } else {
-            applicationContext.getString(R.string.ui_22a64e14f4b3)
+            l10n.getString(R.string.ui_22a64e14f4b3)
         }
         val locationStatus = if (event.latitude != null && event.longitude != null) {
-            applicationContext.getString(R.string.ui_c0a3068f31ba)
+            l10n.getString(R.string.ui_c0a3068f31ba)
         } else {
-            applicationContext.getString(R.string.ui_243471de5777)
+            l10n.getString(R.string.ui_243471de5777)
         }
         val emailStatus = if (emailSuccess) {
-            applicationContext.getString(R.string.ui_fd5b9e2ff279)
+            l10n.getString(R.string.ui_fd5b9e2ff279)
         } else {
-            applicationContext.getString(R.string.ui_email_failed, errorMessage ?: "")
+            l10n.getString(R.string.ui_email_failed, errorMessage ?: "")
         }
         val completedEvent = prefs.getSecurityEvent(event.id)
         prefs.addLog(
