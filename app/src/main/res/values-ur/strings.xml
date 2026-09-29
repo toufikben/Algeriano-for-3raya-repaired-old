@@ -11,9 +11,9 @@
     <string name="notification_channel_desc">تحفظ فعال ہونے پر اور کوششوں کے نتائج کے لیے دکھائی جانے والی اطلاع</string>
     <string name="notification_channel_name">سیکیورٹی اور تحفظ سروس</string>
     <string name="device_admin_description">غلط پاس ورڈ یا پیٹرن کی کوششوں کی نگرانی اور گھس پیٹھ کی تصویر کے لیے ڈیوائس ایڈمن اجازت درکار ہے۔</string>
-    <string name="language_french">French</string>
+    <string name="language_french">Français</string>
     <string name="language_english">English</string>
-    <string name="language_arabic">Arabic</string>
+    <string name="language_arabic">العربية</string>
     <string name="language_spanish">Español</string>
     <string name="language_german">Deutsch</string>
     <string name="language_italian">Italiano</string>

@@ -11,9 +11,9 @@
     <string name="notification_channel_desc">Notification shown while protection is active and for attempt results</string>
     <string name="notification_channel_name">Security and protection service</string>
     <string name="device_admin_description">Device Admin permission is required to monitor incorrect password or pattern attempts and capture an intruder photo.</string>
-    <string name="language_french">French</string>
+    <string name="language_french">Français</string>
     <string name="language_english">English</string>
-    <string name="language_arabic">Arabic</string>
+    <string name="language_arabic">العربية</string>
     <string name="language_spanish">Español</string>
     <string name="language_german">Deutsch</string>
     <string name="language_italian">Italiano</string>

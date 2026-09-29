@@ -11,9 +11,9 @@
     <string name="notification_channel_desc">Koruma etkinken ve deneme sonuçları için gösterilen bildirim</string>
     <string name="notification_channel_name">Güvenlik ve koruma hizmeti</string>
     <string name="device_admin_description">Yanlış şifre veya desen denemelerini izlemek ve izinsiz giren kişinin fotoğrafını çekmek için Cihaz Yöneticisi izni gereklidir.</string>
-    <string name="language_french">French</string>
+    <string name="language_french">Français</string>
     <string name="language_english">English</string>
-    <string name="language_arabic">Arabic</string>
+    <string name="language_arabic">العربية</string>
     <string name="language_spanish">Español</string>
     <string name="language_german">Deutsch</string>
     <string name="language_italian">Italiano</string>

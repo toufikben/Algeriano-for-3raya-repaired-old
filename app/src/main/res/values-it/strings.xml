@@ -11,9 +11,9 @@
     <string name="notification_channel_desc">Notifica mostrata con la protezione attiva e per gli esiti dei tentativi</string>
     <string name="notification_channel_name">Servizio di sicurezza e protezione</string>
     <string name="device_admin_description">L\'autorizzazione Device Admin è necessaria per monitorare i tentativi con password o sequenza errati e scattare una foto all\'intruso.</string>
-    <string name="language_french">French</string>
+    <string name="language_french">Français</string>
     <string name="language_english">English</string>
-    <string name="language_arabic">Arabic</string>
+    <string name="language_arabic">العربية</string>
     <string name="language_spanish">Español</string>
     <string name="language_german">Deutsch</string>
     <string name="language_italian">Italiano</string>

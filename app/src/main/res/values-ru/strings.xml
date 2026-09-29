@@ -11,9 +11,9 @@
     <string name="notification_channel_desc">Уведомление при активной защите и о результатах попыток</string>
     <string name="notification_channel_name">Служба безопасности и защиты</string>
     <string name="device_admin_description">Разрешение Device Admin требуется для отслеживания неверных попыток ввода пароля или графического ключа и съемки фото нарушителя.</string>
-    <string name="language_french">French</string>
+    <string name="language_french">Français</string>
     <string name="language_english">English</string>
-    <string name="language_arabic">Arabic</string>
+    <string name="language_arabic">العربية</string>
     <string name="language_spanish">Español</string>
     <string name="language_german">Deutsch</string>
     <string name="language_italian">Italiano</string>

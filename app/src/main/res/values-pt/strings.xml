@@ -11,9 +11,9 @@
     <string name="notification_channel_desc">Notificação exibida enquanto a proteção está ativa e para os resultados das tentativas</string>
     <string name="notification_channel_name">Serviço de segurança e proteção</string>
     <string name="device_admin_description">A permissão Device Admin é necessária para monitorizar tentativas de palavra-passe ou padrão incorretos e capturar uma foto do intruso.</string>
-    <string name="language_french">French</string>
+    <string name="language_french">Français</string>
     <string name="language_english">English</string>
-    <string name="language_arabic">Arabic</string>
+    <string name="language_arabic">العربية</string>
     <string name="language_spanish">Español</string>
     <string name="language_german">Deutsch</string>
     <string name="language_italian">Italiano</string>
