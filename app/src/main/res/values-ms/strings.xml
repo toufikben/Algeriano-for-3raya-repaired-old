@@ -74,6 +74,9 @@
     <string name="ui_2def4fef47d3">Masukkan e-mel yang sah seperti name@gmail.com</string>
     <string name="ui_f509a4a96bac">Masukkan kata laluan aplikasi bersama e-mel</string>
     <string name="ui_credentials_save_failed">Kata laluan aplikasi tidak dapat disimpan dengan selamat. Sila cuba lagi.</string>
+    <string name="ui_saved_password_placeholder">•••••••• (disimpan)</string>
+    <string name="ui_clear_password">Buang kata laluan</string>
+    <string name="ui_clear_password_body">Kata laluan aplikasi yang disimpan akan dibuang apabila anda mengetik Simpan tetapan, dan tidak boleh dipulihkan.</string>
     <string name="ui_9a86733913f4">Sila hidupkan kebenaran Device Admin dahulu untuk mula mengesan</string>
     <string name="ui_66c3afea06a2">Sistem enggan memulakan perkhidmatan perlindungan di latar belakang; buka aplikasi dan hidupkan perlindungan daripada antara muka</string>
     <string name="ui_e2e69f0a016c">Tidak dapat memulakan perkhidmatan; periksa kebenaran kamera dan lokasi</string>

@@ -74,6 +74,9 @@
     <string name="ui_2def4fef47d3">Masukkan email yang valid seperti name@gmail.com</string>
     <string name="ui_f509a4a96bac">Masukkan kata sandi aplikasi beserta email</string>
     <string name="ui_credentials_save_failed">Kata sandi aplikasi tidak dapat disimpan dengan aman. Harap coba lagi.</string>
+    <string name="ui_saved_password_placeholder">•••••••• (tersimpan)</string>
+    <string name="ui_clear_password">Hapus kata sandi</string>
+    <string name="ui_clear_password_body">Kata sandi aplikasi yang tersimpan akan dihapus saat Anda mengetuk Simpan pengaturan, dan tidak dapat dipulihkan.</string>
     <string name="ui_9a86733913f4">Harap aktifkan izin Device Admin terlebih dahulu untuk mulai melacak</string>
     <string name="ui_66c3afea06a2">Sistem menolak memulai layanan perlindungan di latar belakang; buka aplikasi dan aktifkan perlindungan dari antarmuka</string>
     <string name="ui_e2e69f0a016c">Tidak dapat memulai layanan; periksa izin kamera dan lokasi</string>

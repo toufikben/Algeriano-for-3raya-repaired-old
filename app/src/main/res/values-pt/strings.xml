@@ -74,6 +74,9 @@
     <string name="ui_2def4fef47d3">Introduza um e-mail válido, como nome@gmail.com</string>
     <string name="ui_f509a4a96bac">Introduza a palavra-passe da aplicação juntamente com o e-mail</string>
     <string name="ui_credentials_save_failed">A palavra-passe da aplicação não pôde ser guardada com segurança. Tente novamente.</string>
+    <string name="ui_saved_password_placeholder">•••••••• (guardada)</string>
+    <string name="ui_clear_password">Apagar palavra-passe</string>
+    <string name="ui_clear_password_body">A palavra-passe da aplicação guardada será apagada quando tocar em Guardar definições e não poderá ser recuperada.</string>
     <string name="ui_9a86733913f4">Ative primeiro a permissão Device Admin para iniciar o rastreio</string>
     <string name="ui_66c3afea06a2">O sistema recusou iniciar o serviço de proteção em segundo plano; abra a aplicação e ative a proteção a partir da interface</string>
     <string name="ui_e2e69f0a016c">Não é possível iniciar o serviço; verifique as permissões da câmara e de localização</string>

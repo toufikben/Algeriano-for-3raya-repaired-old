@@ -74,6 +74,9 @@
     <string name="ui_2def4fef47d3">Введите корректный адрес эл. почты, например name@gmail.com</string>
     <string name="ui_f509a4a96bac">Введите пароль приложения вместе с адресом эл. почты</string>
     <string name="ui_credentials_save_failed">Не удалось безопасно сохранить пароль приложения. Повторите попытку.</string>
+    <string name="ui_saved_password_placeholder">•••••••• (сохранён)</string>
+    <string name="ui_clear_password">Стереть пароль</string>
+    <string name="ui_clear_password_body">Сохранённый пароль приложения будет удалён при нажатии «Сохранить параметры» и не подлежит восстановлению.</string>
     <string name="ui_9a86733913f4">Сначала включите разрешение Device Admin, чтобы начать отслеживание</string>
     <string name="ui_66c3afea06a2">Система отказалась запустить фоновую службу защиты; откройте приложение и включите защиту в интерфейсе</string>
     <string name="ui_e2e69f0a016c">Невозможно запустить службу; проверьте разрешения камеры и геолокации</string>

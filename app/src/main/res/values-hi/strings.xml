@@ -74,6 +74,9 @@
     <string name="ui_2def4fef47d3">name@gmail.com जैसा मान्य ईमेल दर्ज करें</string>
     <string name="ui_f509a4a96bac">ईमेल के साथ ऐप पासवर्ड भी दर्ज करें</string>
     <string name="ui_credentials_save_failed">ऐप पासवर्ड सुरक्षित रूप से सहेजा नहीं जा सका। कृपया पुनः प्रयास करें।</string>
+    <string name="ui_saved_password_placeholder">•••••••• (सहेजा गया)</string>
+    <string name="ui_clear_password">पासवर्ड हटाएँ</string>
+    <string name="ui_clear_password_body">जब आप सेटिंग्स सहेजें दबाएँगे तो सहेजा गया ऐप पासवर्ड हट जाएगा और पुनर्प्राप्त नहीं किया जा सकेगा।</string>
     <string name="ui_9a86733913f4">ट्रैकिंग शुरू करने से पहले कृपया Device Admin अनुमति चालू करें</string>
     <string name="ui_66c3afea06a2">सिस्टम ने पृष्ठभूमि सुरक्षा सेवा शुरू करने से इनकार कर दिया; ऐप खोलें और इंटरफ़ेस से सुरक्षा चालू करें</string>
     <string name="ui_e2e69f0a016c">सेवा शुरू नहीं हो सकी; कैमरा और स्थान अनुमतियाँ जाँचें</string>

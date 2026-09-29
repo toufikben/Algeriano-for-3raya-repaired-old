@@ -74,6 +74,9 @@
     <string name="ui_2def4fef47d3">Geben Sie eine gültige E-Mail wie name@gmail.com ein</string>
     <string name="ui_f509a4a96bac">Geben Sie das App-Passwort zusammen mit der E-Mail ein</string>
     <string name="ui_credentials_save_failed">Das App-Passwort konnte nicht sicher gespeichert werden. Bitte versuchen Sie es erneut.</string>
+    <string name="ui_saved_password_placeholder">•••••••• (gespeichert)</string>
+    <string name="ui_clear_password">Passwort löschen</string>
+    <string name="ui_clear_password_body">Das gespeicherte App-Passwort wird gelöscht, wenn Sie „Einstellungen speichern“ drücken, und kann nicht wiederhergestellt werden.</string>
     <string name="ui_9a86733913f4">Bitte aktivieren Sie zuerst die Geräteadministrator-Berechtigung, um das Tracking zu starten</string>
     <string name="ui_66c3afea06a2">Das System hat den Start des Hintergrund-Schutzdienstes verweigert; öffnen Sie die App und aktivieren Sie den Schutz in der Oberfläche</string>
     <string name="ui_e2e69f0a016c">Dienst kann nicht gestartet werden; Kamera- und Standortberechtigung prüfen</string>

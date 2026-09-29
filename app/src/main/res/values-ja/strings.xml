@@ -74,6 +74,9 @@
     <string name="ui_2def4fef47d3">name@gmail.com のような有効なメールアドレスを入力してください</string>
     <string name="ui_f509a4a96bac">メールと一緒にアプリパスワードを入力してください</string>
     <string name="ui_credentials_save_failed">アプリパスワードを安全に保存できませんでした。もう一度お試しください。</string>
+    <string name="ui_saved_password_placeholder">•••••••• (保存済み)</string>
+    <string name="ui_clear_password">パスワードを削除</string>
+    <string name="ui_clear_password_body">保存されたアプリのパスワードは「設定を保存」を押すと削除され、復元できません。</string>
     <string name="ui_9a86733913f4">追跡を開始する前に端末管理者権限を有効にしてください</string>
     <string name="ui_66c3afea06a2">システムがバックグラウンドの保護サービスの開始を拒否しました。アプリを開いて UI から保護を有効にしてください</string>
     <string name="ui_e2e69f0a016c">サービスを開始できません。カメラと位置情報の権限を確認してください</string>

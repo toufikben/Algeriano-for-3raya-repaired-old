@@ -74,6 +74,9 @@
     <string name="ui_2def4fef47d3">请输入有效的邮箱，例如 name@gmail.com</string>
     <string name="ui_f509a4a96bac">请输入邮箱以及应用密码</string>
     <string name="ui_credentials_save_failed">无法安全保存应用密码。请重试。</string>
+    <string name="ui_saved_password_placeholder">••••••••（已保存）</string>
+    <string name="ui_clear_password">清除密码</string>
+    <string name="ui_clear_password_body">按下“保存设置”后，已保存的应用密码将被清除且无法恢复。</string>
     <string name="ui_9a86733913f4">请先开启设备管理员权限，以便开始跟踪</string>
     <string name="ui_66c3afea06a2">系统拒绝启动后台防护服务；请打开应用并在界面中开启防护</string>
     <string name="ui_e2e69f0a016c">无法启动服务；请检查摄像头与位置权限</string>

@@ -74,6 +74,9 @@
     <string name="ui_2def4fef47d3">Enter a valid email like name@gmail.com</string>
     <string name="ui_f509a4a96bac">Enter the app password along with the email</string>
     <string name="ui_credentials_save_failed">The app password could not be saved securely. Please try again.</string>
+    <string name="ui_saved_password_placeholder">•••••••• (saved)</string>
+    <string name="ui_clear_password">Clear password</string>
+    <string name="ui_clear_password_body">The saved app password will be cleared when you press Save settings, and it cannot be restored.</string>
     <string name="ui_9a86733913f4">Please enable Device Admin permission first to start tracking</string>
     <string name="ui_66c3afea06a2">The system refused to start the background protection service; open the app and enable protection from the UI</string>
     <string name="ui_e2e69f0a016c">Cannot start the service; check camera and location permissions</string>
@@ -220,6 +223,15 @@
     <string name="ui_pin_checking">Checking…</string>
     <string name="ui_pin_current_rule">Current PIN: 6 to 8 digits</string>
     <string name="ui_pin_new_rule">New PIN: 6 to 8 digits</string>
+    <string name="ui_pin_reset_title">Recover PIN access</string>
+    <string name="ui_pin_reset_desc">To set a new PIN without clearing app data, enter your saved Gmail app password (used to send intrusion alerts).</string>
+    <string name="ui_pin_reset_password_label">Gmail app password</string>
+    <string name="ui_pin_reset_password_required">Enter the app password to verify</string>
+    <string name="ui_pin_reset_password_wrong">Incorrect app password</string>
+    <string name="ui_pin_reset_failed_generic">Couldn\'t update PIN, try again</string>
+    <string name="ui_pin_reset_submit">Verify and set new PIN</string>
+    <string name="ui_pin_reset_back">Back</string>
+    <string name="ui_pin_reset_no_password">No Gmail app password is saved in settings, so in-app reset is not available. The only option is to open system settings and clear app data, which deletes the PIN, logs and settings.</string>
     <string name="ui_d4a1d92f7a68">Tracking and protection system is active</string>
     <string name="ui_edb2324aba4d">Tracking and protection system is inactive</string>
     <string name="ui_3d9e78dd04a7">Protection on/off button</string>
@@ -282,13 +294,4 @@
     <string name="ui_privacy_disclosure_body">Phone Fortress uses the camera, location, and notifications when protection is enabled. After a failed unlock attempt, it may capture a photo, determine the device location, and store the result locally. The photo and location may be attached to an email sent to the address you choose. These data are not sent to the developer\'s server. Use the app on your own device or with the owner\'s consent. You can refuse permissions or stop protection at any time.</string>
     <string name="ui_privacy_disclosure_accept">I understand and want to continue</string>
     <string name="ui_privacy_disclosure_not_now">Not now</string>
-    <string name="ui_pin_reset_title">Recover PIN access</string>
-    <string name="ui_pin_reset_desc">To set a new PIN without clearing app data, enter your saved Gmail app password (used to send intrusion alerts).</string>
-    <string name="ui_pin_reset_password_label">Gmail app password</string>
-    <string name="ui_pin_reset_password_required">Enter the app password to verify</string>
-    <string name="ui_pin_reset_password_wrong">Incorrect app password</string>
-    <string name="ui_pin_reset_failed_generic">Couldn\'t update PIN, try again</string>
-    <string name="ui_pin_reset_submit">Verify and set new PIN</string>
-    <string name="ui_pin_reset_back">Back</string>
-    <string name="ui_pin_reset_no_password">No Gmail app password is saved in settings, so in-app reset is not available. The only option is to open system settings and clear app data, which deletes the PIN, logs and settings.</string>
 </resources>

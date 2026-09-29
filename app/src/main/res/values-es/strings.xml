@@ -74,6 +74,9 @@
     <string name="ui_2def4fef47d3">Introduce un correo válido como nombre@gmail.com</string>
     <string name="ui_f509a4a96bac">Introduce la contraseña de aplicación junto con el correo</string>
     <string name="ui_credentials_save_failed">No se pudo guardar la contraseña de aplicación de forma segura. Inténtalo de nuevo.</string>
+    <string name="ui_saved_password_placeholder">•••••••• (guardada)</string>
+    <string name="ui_clear_password">Borrar contraseña</string>
+    <string name="ui_clear_password_body">La contraseña de la aplicación guardada se borrará al pulsar «Guardar ajustes» y no podrá recuperarse.</string>
     <string name="ui_9a86733913f4">Activa primero el permiso de administrador del dispositivo para empezar el seguimiento</string>
     <string name="ui_66c3afea06a2">El sistema rechazó iniciar el servicio de protección en segundo plano; abre la aplicación y activa la protección desde la interfaz</string>
     <string name="ui_e2e69f0a016c">No se puede iniciar el servicio; revisa los permisos de cámara y ubicación</string>

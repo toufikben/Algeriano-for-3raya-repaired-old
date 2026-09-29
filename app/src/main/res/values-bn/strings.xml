@@ -74,6 +74,9 @@
     <string name="ui_2def4fef47d3">name@gmail.com-এর মতো বৈধ ইমেইল লিখুন</string>
     <string name="ui_f509a4a96bac">ইমেইলের সাথে অ্যাপ পাসওয়ার্ডও লিখুন</string>
     <string name="ui_credentials_save_failed">অ্যাপ পাসওয়ার্ড নিরাপদে সংরক্ষণ করা যায়নি। অনুগ্রহ করে আবার চেষ্টা করুন।</string>
+    <string name="ui_saved_password_placeholder">•••••••• (সংরক্ষিত)</string>
+    <string name="ui_clear_password">পাসওয়ার্ড মুছুন</string>
+    <string name="ui_clear_password_body">আপনি সেটিংস সংরক্ষণ করুন চাপলে সংরক্ষিত অ্যাপ পাসওয়ার্ড মুছে যাবে এবং আর ফেরানো যাবে না।</string>
     <string name="ui_9a86733913f4">ট্র্যাকিং শুরু করার আগে অনুগ্রহ করে Device Admin অনুমতি চালু করুন</string>
     <string name="ui_66c3afea06a2">সিস্টেম ব্যাকগ্রাউন্ড সুরক্ষা পরিষেবা শুরু করতে অস্বীকার করেছে; অ্যাপটি খুলে ইন্টারফেস থেকে সুরক্ষা চালু করুন</string>
     <string name="ui_e2e69f0a016c">পরিষেবা শুরু করা যায়নি; ক্যামেরা ও অবস্থানের অনুমতি পরীক্ষা করুন</string>

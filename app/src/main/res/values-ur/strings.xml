@@ -74,6 +74,9 @@
     <string name="ui_2def4fef47d3">name@gmail.com جیسا درست ای میل درج کریں</string>
     <string name="ui_f509a4a96bac">ای میل کے ساتھ ایپ کا پاس ورڈ بھی درج کریں</string>
     <string name="ui_credentials_save_failed">ایپ کا پاس ورڈ محفوظ طریقے سے محفوظ نہیں ہو سکا۔ براہ کرم دوبارہ کوشش کریں۔</string>
+    <string name="ui_saved_password_placeholder">•••••••• (محفوظ)</string>
+    <string name="ui_clear_password">پاس ورڈ صاف کریں</string>
+    <string name="ui_clear_password_body">جب آپ ترتیبات محفوظ کریں دبائیں گے تو محفوظ کردہ ایپ پاس ورڈ صاف ہو جائے گا اور بحال نہیں ہو سکے گا۔</string>
     <string name="ui_9a86733913f4">نقل شروع کرنے سے پہلے براہ کرم ڈیوائس ایڈمن اجازت فعال کریں</string>
     <string name="ui_66c3afea06a2">نظام نے پس منظر کی تحفظ سروس شروع کرنے سے انکار کیا؛ ایپ کھولیں اور انٹرفیس سے تحفظ فعال کریں</string>
     <string name="ui_e2e69f0a016c">سروس شروع نہیں ہو سکی؛ کیمرا اور مقام کی اجازتیں دیکھیں</string>

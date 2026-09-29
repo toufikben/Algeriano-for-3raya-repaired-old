@@ -74,6 +74,9 @@
     <string name="ui_2def4fef47d3">name@gmail.com gibi geçerli bir e-posta girin</string>
     <string name="ui_f509a4a96bac">E-posta ile birlikte uygulama şifresini girin</string>
     <string name="ui_credentials_save_failed">Uygulama şifresi güvenle kaydedilemedi. Lütfen tekrar deneyin.</string>
+    <string name="ui_saved_password_placeholder">•••••••• (kayıtlı)</string>
+    <string name="ui_clear_password">Şifreyi sil</string>
+    <string name="ui_clear_password_body">Kayıtlı uygulama şifresi, Ayarları kaydet düğmesine bastığınızda silinecek ve geri yüklenemeyecek.</string>
     <string name="ui_9a86733913f4">Takibi başlatmadan önce lütfen Cihaz Yöneticisi iznini etkinleştirin</string>
     <string name="ui_66c3afea06a2">Sistem arka plan koruma hizmetini başlatmayı reddetti; uygulamayı açın ve arayüzden korumayı etkinleştirin</string>
     <string name="ui_e2e69f0a016c">Hizmet başlatılamıyor; kamera ve konum izinlerini kontrol edin</string>

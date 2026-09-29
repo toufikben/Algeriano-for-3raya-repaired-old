@@ -74,6 +74,9 @@
     <string name="ui_2def4fef47d3">Inserisci un\'email valida come name@gmail.com</string>
     <string name="ui_f509a4a96bac">Inserisci la password dell\'app insieme all\'email</string>
     <string name="ui_credentials_save_failed">Impossibile salvare in modo sicuro la password dell\'app. Riprova.</string>
+    <string name="ui_saved_password_placeholder">•••••••• (salvata)</string>
+    <string name="ui_clear_password">Cancella password</string>
+    <string name="ui_clear_password_body">La password dell’app salvata verrà cancellata quando premi Salva impostazioni e non potrà essere ripristinata.</string>
     <string name="ui_9a86733913f4">Attiva prima l\'autorizzazione Device Admin per avviare il tracciamento</string>
     <string name="ui_66c3afea06a2">Il sistema ha rifiutato di avviare il servizio di protezione in background; apri l\'app e attiva la protezione dall\'interfaccia</string>
     <string name="ui_e2e69f0a016c">Impossibile avviare il servizio; controlla le autorizzazioni per fotocamera e posizione</string>

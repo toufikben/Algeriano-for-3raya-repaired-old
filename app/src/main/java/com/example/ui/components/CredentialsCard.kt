@@ -203,7 +203,7 @@ fun CredentialsCard(
                 placeholder = {
                     Text(
                         text = if (hasSavedPassword && password.isEmpty()) {
-                            "•••••••• (محفوظ)"
+                            tr(com.example.R.string.ui_saved_password_placeholder)
                         } else {
                             "abcd efgh ijkl mnop"
                         },
@@ -226,7 +226,7 @@ fun CredentialsCard(
                         ) {
                             Icon(
                                 imageVector = Icons.Filled.Delete,
-                                contentDescription = "مسح كلمة السر",
+                                contentDescription = tr(com.example.R.string.ui_clear_password),
                                 tint = Color(0xFF94A3B8)
                             )
                         }
@@ -290,8 +290,8 @@ fun CredentialsCard(
     if (showClearPasswordConfirm) {
         AlertDialog(
             onDismissRequest = { showClearPasswordConfirm = false },
-            title = { Text("مسح كلمة السر", fontWeight = FontWeight.Bold) },
-            text = { Text("سيتم مسح كلمة مرور التطبيق المحفوظة عند الضغط على «حفظ الإعدادات»، ولن تُستعاد.") },
+            title = { Text(tr(com.example.R.string.ui_clear_password), fontWeight = FontWeight.Bold) },
+            text = { Text(tr(com.example.R.string.ui_clear_password_body)) },
             confirmButton = {
                 Button(
                     onClick = {
