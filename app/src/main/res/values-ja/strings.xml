@@ -276,7 +276,7 @@
     <string name="ui_status_failed">失敗</string>
     <string name="ui_status_not_sent">未送信</string>
     <string name="ui_log_summary">写真: %1$s; 位置情報: %2$s; メール: %3$s</string>
-    <string name="ui_separator">; </string>
+    <string name="ui_separator">"; "</string>
     <string name="ui_unexpected_event">FAILED_FINAL: イベントの処理中に予期しないエラーが発生しました: %1$s</string>
     <string name="ui_recovered_events">保留中の警告 %1$d 件を復旧しました。試行ログを確認してください</string>
     <string name="ui_map_query_label">スマホ解錠試行の位置</string>

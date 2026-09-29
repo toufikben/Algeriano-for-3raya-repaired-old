@@ -276,7 +276,7 @@
     <string name="ui_status_failed">विफल</string>
     <string name="ui_status_not_sent">नहीं भेजा गया</string>
     <string name="ui_log_summary">फ़ोटो: %1$s; स्थान: %2$s; ईमेल: %3$s</string>
-    <string name="ui_separator">; </string>
+    <string name="ui_separator">"; "</string>
     <string name="ui_unexpected_event">FAILED_FINAL: घटना संसाधित करते समय अप्रत्याशित त्रुटि: %1$s</string>
     <string name="ui_recovered_events">%1$d लंबित चेतावनियाँ पुनः प्राप्त हुईं; प्रयास लॉग देखें</string>
     <string name="ui_map_query_label">फ़ोन अनलॉक प्रयास का स्थान</string>

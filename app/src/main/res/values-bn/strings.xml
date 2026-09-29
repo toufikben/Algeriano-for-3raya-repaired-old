@@ -276,7 +276,7 @@
     <string name="ui_status_failed">ব্যর্থ</string>
     <string name="ui_status_not_sent">পাঠানো হয়নি</string>
     <string name="ui_log_summary">ছবি: %1$s; অবস্থান: %2$s; ইমেইল: %3$s</string>
-    <string name="ui_separator">; </string>
+    <string name="ui_separator">"; "</string>
     <string name="ui_unexpected_event">FAILED_FINAL: ঘটনা প্রক্রিয়া করার সময় অপ্রত্যাশিত ত্রুটি: %1$s</string>
     <string name="ui_recovered_events">%1$d টি মুলতুবি সতর্কতা পুনরুদ্ধার হয়েছে; প্রচেষ্টার লগ দেখুন</string>
     <string name="ui_map_query_label">ফোন আনলক প্রচেষ্টার অবস্থান</string>

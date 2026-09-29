@@ -276,7 +276,7 @@
     <string name="ui_status_failed">فشل</string>
     <string name="ui_status_not_sent">لم ينجح</string>
     <string name="ui_log_summary">الصورة: %1$s؛ الموقع: %2$s؛ البريد: %3$s</string>
-    <string name="ui_separator">؛ </string>
+    <string name="ui_separator">"؛ "</string>
     <string name="ui_unexpected_event">FAILED_FINAL: فشل غير متوقع أثناء معالجة الحدث: %1$s</string>
     <string name="ui_recovered_events">تمت استعادة %1$d منبهات معلقة؛ راجع سجل المحاولات</string>
     <string name="ui_map_query_label">موقع محاولة فتح الهاتف</string>

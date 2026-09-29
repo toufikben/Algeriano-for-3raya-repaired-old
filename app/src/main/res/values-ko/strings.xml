@@ -276,7 +276,7 @@
     <string name="ui_status_failed">실패</string>
     <string name="ui_status_not_sent">전송되지 않음</string>
     <string name="ui_log_summary">사진: %1$s; 위치: %2$s; 이메일: %3$s</string>
-    <string name="ui_separator">; </string>
+    <string name="ui_separator">"; "</string>
     <string name="ui_unexpected_event">FAILED_FINAL: 이벤트 처리 중 예상치 못한 오류: %1$s</string>
     <string name="ui_recovered_events">대기 중인 경고 %1$d개를 복원했습니다. 시도 기록을 확인하세요</string>
     <string name="ui_map_query_label">휴대폰 잠금 해제 시도의 위치</string>

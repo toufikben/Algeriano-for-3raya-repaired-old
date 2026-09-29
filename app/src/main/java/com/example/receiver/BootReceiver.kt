@@ -16,6 +16,7 @@ import com.example.SecurityApp
 import com.example.data.SecurityPrefs
 import com.example.data.SecurityEventStatus
 import com.example.worker.SecurityEventDistributor
+import com.example.i18n.localizedForAppLanguage
 
 class BootReceiver : BroadcastReceiver() {
 
@@ -76,10 +77,11 @@ class BootReceiver : BroadcastReceiver() {
             },
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
-        val message = context.getString(R.string.notification_boot_text)
+        val l10n = context.localizedForAppLanguage()
+        val message = l10n.getString(R.string.notification_boot_text)
         val notification = NotificationCompat.Builder(context, SecurityApp.CHANNEL_ID_ALERTS)
             .setSmallIcon(R.drawable.ic_launcher_foreground_img_1787338860864)
-            .setContentTitle(context.getString(R.string.notification_boot_title))
+            .setContentTitle(l10n.getString(R.string.notification_boot_title))
             .setContentText(message)
             .setStyle(NotificationCompat.BigTextStyle().bigText(message))
             .setContentIntent(openIntent)

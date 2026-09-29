@@ -276,7 +276,7 @@
     <string name="ui_status_failed">Non riuscito</string>
     <string name="ui_status_not_sent">Non inviato</string>
     <string name="ui_log_summary">Foto: %1$s; posizione: %2$s; email: %3$s</string>
-    <string name="ui_separator">; </string>
+    <string name="ui_separator">"; "</string>
     <string name="ui_unexpected_event">FAILED_FINAL: errore imprevisto durante l\'elaborazione dell\'evento: %1$s</string>
     <string name="ui_recovered_events">%1$d avvisi in sospeso recuperati; consulta il registro dei tentativi</string>
     <string name="ui_map_query_label">Posizione del tentativo di sblocco del telefono</string>

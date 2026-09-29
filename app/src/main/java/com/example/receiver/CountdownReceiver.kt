@@ -15,6 +15,7 @@ import com.example.SecurityApp
 import com.example.data.SecurityPrefs
 import com.example.service.CameraForegroundService
 import com.example.worker.CaptureRetryWorker
+import com.example.i18n.localizedForAppLanguage
 
 class CountdownReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent?) {
@@ -90,13 +91,14 @@ class CountdownReceiver : BroadcastReceiver() {
             },
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
+        val l10n = context.localizedForAppLanguage()
         val notification = NotificationCompat.Builder(context, SecurityApp.CHANNEL_ID_ALERTS)
             .setSmallIcon(R.drawable.ic_launcher_foreground_img_1787338860864)
-            .setContentTitle(context.getString(com.example.R.string.ui_158bb9c625fb))
-            .setContentText(context.getString(com.example.R.string.ui_0b183fd63f65))
-            .setStyle(NotificationCompat.BigTextStyle().bigText(context.getString(com.example.R.string.ui_226510ac7ba6)))
+            .setContentTitle(l10n.getString(com.example.R.string.ui_158bb9c625fb))
+            .setContentText(l10n.getString(com.example.R.string.ui_0b183fd63f65))
+            .setStyle(NotificationCompat.BigTextStyle().bigText(l10n.getString(com.example.R.string.ui_226510ac7ba6)))
             .setContentIntent(openIntent)
-            .addAction(R.drawable.ic_launcher_foreground_img_1787338860864, context.getString(com.example.R.string.ui_771471017b22), resetIntent)
+            .addAction(R.drawable.ic_launcher_foreground_img_1787338860864, l10n.getString(com.example.R.string.ui_771471017b22), resetIntent)
             .setAutoCancel(true)
             .setPriority(NotificationCompat.PRIORITY_HIGH)
             .build()
@@ -232,11 +234,12 @@ object CountdownScheduler {
             },
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
+        val l10n = context.localizedForAppLanguage()
         val notification = NotificationCompat.Builder(context, SecurityApp.CHANNEL_ID_ALERTS)
             .setSmallIcon(R.drawable.ic_launcher_foreground_img_1787338860864)
-            .setContentTitle(context.getString(R.string.ui_98c4ee03d7e4))
-            .setContentText(context.getString(R.string.ui_0b183fd63f65))
-            .setStyle(NotificationCompat.BigTextStyle().bigText(context.getString(R.string.ui_226510ac7ba6)))
+            .setContentTitle(l10n.getString(R.string.ui_98c4ee03d7e4))
+            .setContentText(l10n.getString(R.string.ui_0b183fd63f65))
+            .setStyle(NotificationCompat.BigTextStyle().bigText(l10n.getString(R.string.ui_226510ac7ba6)))
             .setContentIntent(openIntent)
             .setAutoCancel(true)
             .setPriority(NotificationCompat.PRIORITY_HIGH)

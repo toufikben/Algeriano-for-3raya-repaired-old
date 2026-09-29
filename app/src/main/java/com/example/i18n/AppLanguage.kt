@@ -1,8 +1,10 @@
 package com.example.i18n
 
 import android.content.Context
+import android.content.res.Configuration
 import androidx.annotation.StringRes
 import com.example.R
+import java.util.Locale
 
 /** Supported app languages. The selected value is persisted in app-private preferences. */
 enum class AppLanguage(val code: String, @StringRes val displayNameRes: Int) {
@@ -46,3 +48,14 @@ class LanguageStore(context: Context) {
 }
 
 fun AppLanguage.isRtl(): Boolean = this == AppLanguage.ARABIC || this == AppLanguage.URDU
+
+/**
+ * Services, workers and receivers are created with the device locale, so their own
+ * [getString] ignores the language chosen inside the app. Resolve user-visible text
+ * through this context instead.
+ */
+fun Context.localizedForAppLanguage(): Context {
+    val storage = applicationContext ?: this
+    val locale = Locale.forLanguageTag(LanguageStore(storage).get().code)
+    return createConfigurationContext(Configuration(resources.configuration).apply { setLocale(locale) })
+}

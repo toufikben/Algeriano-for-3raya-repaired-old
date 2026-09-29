@@ -276,7 +276,7 @@
     <string name="ui_status_failed">Не удалось</string>
     <string name="ui_status_not_sent">Не отправлено</string>
     <string name="ui_log_summary">Фото: %1$s; геолокация: %2$s; эл. почта: %3$s</string>
-    <string name="ui_separator">; </string>
+    <string name="ui_separator">"; "</string>
     <string name="ui_unexpected_event">FAILED_FINAL: Неожиданная ошибка при обработке события: %1$s</string>
     <string name="ui_recovered_events">Восстановлено отложенных оповещений: %1$d; проверьте журнал попыток</string>
     <string name="ui_map_query_label">Местоположение попытки разблокировки телефона</string>

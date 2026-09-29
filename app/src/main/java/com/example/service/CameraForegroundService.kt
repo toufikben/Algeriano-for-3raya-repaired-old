@@ -63,6 +63,7 @@ import java.util.Date
 import java.util.Locale
 import java.util.UUID
 import java.util.concurrent.atomic.AtomicBoolean
+import com.example.i18n.localizedForAppLanguage
 
 class CameraForegroundService : Service() {
 
@@ -92,6 +93,7 @@ class CameraForegroundService : Service() {
 
     private val serviceScope = CoroutineScope(Dispatchers.IO + Job())
     private val captureInProgress = AtomicBoolean(false)
+    private val l10n by lazy { localizedForAppLanguage() }
     private var cameraDevice: CameraDevice? = null
     private var imageReader: ImageReader? = null
     private var backgroundThread: HandlerThread? = null
@@ -256,8 +258,8 @@ class CameraForegroundService : Service() {
         )
 
         return NotificationCompat.Builder(this, SecurityApp.CHANNEL_ID_SERVICE)
-            .setContentTitle(getString(R.string.notification_title))
-            .setContentText(getString(R.string.notification_text))
+            .setContentTitle(l10n.getString(R.string.notification_title))
+            .setContentText(l10n.getString(R.string.notification_text))
             .setSmallIcon(R.drawable.ic_launcher_foreground_img_1787338860864)
             .setContentIntent(pendingIntent)
             .setPriority(NotificationCompat.PRIORITY_LOW)
@@ -383,9 +385,9 @@ class CameraForegroundService : Service() {
                 val photoCaptured = capturedFile != null
                 val locationCaptured = lat != null && lng != null
                 val locationText = if (lat != null && lng != null) {
-                    getString(com.example.R.string.ui_location_coordinates, lat.toString(), lng.toString())
+                    l10n.getString(com.example.R.string.ui_location_coordinates, lat.toString(), lng.toString())
                 } else {
-                    getString(com.example.R.string.ui_c0ae8d5ba4fa)
+                    l10n.getString(com.example.R.string.ui_c0ae8d5ba4fa)
                 }
 
                 if (!isTest && eventId != null && !sendOnly) {
@@ -410,42 +412,42 @@ class CameraForegroundService : Service() {
                 var emailSuccess = false
                 var emailRetryable = false
                 val photoStatus = when {
-                    photoCaptured -> getString(com.example.R.string.ui_dd886e527edc)
-                    !cameraPermissionGranted -> getString(com.example.R.string.ui_6ae598a1fca6)
-                    else -> getString(com.example.R.string.ui_22a64e14f4b3)
+                    photoCaptured -> l10n.getString(com.example.R.string.ui_dd886e527edc)
+                    !cameraPermissionGranted -> l10n.getString(com.example.R.string.ui_6ae598a1fca6)
+                    else -> l10n.getString(com.example.R.string.ui_22a64e14f4b3)
                 }
                 val locationStatus = when {
-                    locationCaptured -> getString(com.example.R.string.ui_c0a3068f31ba)
-                    !locationPermissionGranted -> getString(com.example.R.string.ui_243471de5777)
-                    else -> getString(com.example.R.string.ui_9e2833dca3b0)
+                    locationCaptured -> l10n.getString(com.example.R.string.ui_c0a3068f31ba)
+                    !locationPermissionGranted -> l10n.getString(com.example.R.string.ui_243471de5777)
+                    else -> l10n.getString(com.example.R.string.ui_9e2833dca3b0)
                 }
-                var statusMsg = listOf(photoStatus, locationStatus).joinToString(getString(com.example.R.string.ui_separator))
+                var statusMsg = listOf(photoStatus, locationStatus).joinToString(l10n.getString(com.example.R.string.ui_separator))
 
                 if (userEmail.isNotBlank() && userPassword.isNotBlank()) {
                     if (!isTest && eventId != null) prefs.updateEmailState(eventId, SecurityEventComponentState.PENDING)
                     val subject = if (isTest) {
-                        getString(com.example.R.string.ui_test_subject, timeStr)
+                        l10n.getString(com.example.R.string.ui_test_subject, timeStr)
                     } else {
-                        getString(com.example.R.string.ui_alert_subject, timeStr)
+                        l10n.getString(com.example.R.string.ui_alert_subject, timeStr)
                     }
 
                     val body = """
-                        ${getString(com.example.R.string.ui_greeting)}
+                        ${l10n.getString(com.example.R.string.ui_greeting)}
                         
-                        ${getString(if (isTest) com.example.R.string.ui_test_body else com.example.R.string.ui_intrusion_body)}
+                        ${l10n.getString(if (isTest) com.example.R.string.ui_test_body else com.example.R.string.ui_intrusion_body)}
                         
-                        ${getString(com.example.R.string.ui_time_label, timeStr)}
-                        ${getString(com.example.R.string.ui_location_label)}
+                        ${l10n.getString(com.example.R.string.ui_time_label, timeStr)}
+                        ${l10n.getString(com.example.R.string.ui_location_label)}
                         $locationText
                         
-                        ${getString(com.example.R.string.ui_photo_attached)}
+                        ${l10n.getString(com.example.R.string.ui_photo_attached)}
                         
                         ---
-                        ${getString(com.example.R.string.ui_auto_sent)}
+                        ${l10n.getString(com.example.R.string.ui_auto_sent)}
                     """.trimIndent()
 
                     val sendResult = EmailSender.sendSecurityAlert(
-                        context = this@CameraForegroundService,
+                        context = l10n,
                         senderEmail = userEmail,
                         appPassword = userPassword,
                         recipientEmail = userEmail,
@@ -464,14 +466,14 @@ class CameraForegroundService : Service() {
                         )
                     }
                     val emailStatus = if (emailSuccess) {
-                        getString(com.example.R.string.ui_fd5b9e2ff279)
+                        l10n.getString(com.example.R.string.ui_fd5b9e2ff279)
                     } else {
-                        getString(com.example.R.string.ui_email_failed, sendResult.errorMessage ?: "")
+                        l10n.getString(com.example.R.string.ui_email_failed, sendResult.errorMessage ?: "")
                     }
-                    statusMsg = "$statusMsg${getString(com.example.R.string.ui_separator)}$emailStatus"
+                    statusMsg = "$statusMsg${l10n.getString(com.example.R.string.ui_separator)}$emailStatus"
                 } else {
                     if (!isTest && eventId != null) prefs.updateEmailState(eventId, SecurityEventComponentState.FAILED)
-                    statusMsg = "$statusMsg${getString(com.example.R.string.ui_separator)}${getString(com.example.R.string.ui_email_unconfigured)}"
+                    statusMsg = "$statusMsg${l10n.getString(com.example.R.string.ui_separator)}${l10n.getString(com.example.R.string.ui_email_unconfigured)}"
                 }
 
                 if (!isTest && eventId != null) {
@@ -483,10 +485,10 @@ class CameraForegroundService : Service() {
                     ) {
                         prefs.markSendPendingForRetry(eventId)
                         SecurityEventDistributor.enqueue(applicationContext, eventId)
-                        statusMsg = "$statusMsg${getString(com.example.R.string.ui_separator)}${getString(com.example.R.string.ui_retry_scheduled)}"
+                        statusMsg = "$statusMsg${l10n.getString(com.example.R.string.ui_separator)}${l10n.getString(com.example.R.string.ui_retry_scheduled)}"
                     } else {
                         prefs.completeSecurityEvent(eventId, SecurityEventStatus.FAILED_FINAL)
-                        statusMsg = "$statusMsg${getString(com.example.R.string.ui_separator)}${getString(com.example.R.string.ui_final_failure)}"
+                        statusMsg = "$statusMsg${l10n.getString(com.example.R.string.ui_separator)}${l10n.getString(com.example.R.string.ui_final_failure)}"
                     }
                 }
 
@@ -548,7 +550,7 @@ class CameraForegroundService : Service() {
                                     "${failedEvent.latitude}, ${failedEvent.longitude}"
                                 } else null,
                                 emailSent = false,
-                                statusMessage = getString(com.example.R.string.ui_unexpected_event, e.javaClass.simpleName),
+                                statusMessage = l10n.getString(com.example.R.string.ui_unexpected_event, e.javaClass.simpleName),
                                 photoState = failedEvent?.photoState ?: SecurityEventComponentState.FAILED,
                                 locationState = failedEvent?.locationState ?: SecurityEventComponentState.FAILED,
                                 emailState = failedEvent?.emailState ?: SecurityEventComponentState.FAILED
@@ -922,20 +924,20 @@ class CameraForegroundService : Service() {
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
 
-        val title = if (isTest) getString(com.example.R.string.ui_12e7498cb299) else getString(com.example.R.string.ui_98c4ee03d7e4)
+        val title = if (isTest) l10n.getString(com.example.R.string.ui_12e7498cb299) else l10n.getString(com.example.R.string.ui_98c4ee03d7e4)
         val resultText = when {
             emailSent && photoCaptured && locationAvailable ->
-                getString(com.example.R.string.ui_84f757b6cc1f)
+                l10n.getString(com.example.R.string.ui_84f757b6cc1f)
             emailSent && photoCaptured ->
-                getString(com.example.R.string.ui_02ef3442fe06)
+                l10n.getString(com.example.R.string.ui_02ef3442fe06)
             emailSent ->
-                getString(com.example.R.string.ui_f2c0b25654bc)
+                l10n.getString(com.example.R.string.ui_f2c0b25654bc)
             photoCaptured && locationAvailable ->
-                getString(com.example.R.string.ui_7ea431a98540)
+                l10n.getString(com.example.R.string.ui_7ea431a98540)
             photoCaptured ->
-                getString(com.example.R.string.ui_cc8fa378c847)
+                l10n.getString(com.example.R.string.ui_cc8fa378c847)
             else ->
-                getString(com.example.R.string.ui_2386801c5fa2)
+                l10n.getString(com.example.R.string.ui_2386801c5fa2)
         }
         val text = "$resultText ($timeStr)"
 
