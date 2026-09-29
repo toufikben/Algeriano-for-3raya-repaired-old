@@ -85,7 +85,9 @@ class CountdownReceiver : BroadcastReceiver() {
                                 ContextCompat.startForegroundService(
                                     appContext,
                                     Intent(appContext, CameraForegroundService::class.java).apply {
-                                        action = CameraForegroundService.ACTION_ARM_COUNTDOWN
+                                        // 'this' is required: the enclosing onReceive
+                                        // declares a local val named 'action'.
+                                        this.action = CameraForegroundService.ACTION_ARM_COUNTDOWN
                                     }
                                 )
                             }
@@ -319,7 +321,7 @@ object CountdownWakeGuard {
         val hold = (remainingMillis + SLACK_MILLIS).coerceIn(MIN_HOLD_MILLIS, MAX_HOLD_MILLIS)
         val current = lock ?: powerManager
             .newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, TAG)
-            .apply { isReferenceCounted = false }
+            .apply { setReferenceCounted(false) }
             .also { lock = it }
         runCatching { current.acquire(hold) }
     }
