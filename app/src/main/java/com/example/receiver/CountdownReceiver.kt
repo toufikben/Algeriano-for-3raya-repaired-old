@@ -51,21 +51,23 @@ class CountdownReceiver : BroadcastReceiver() {
                             if (prefs.countdownEventId.isBlank()) {
                                 prefs.countdownEventId = prefs.enqueueSecurityEvent().id
                             }
-                            // FIX: service is event-driven (not persistent), so go
-                            // straight to startForegroundService. The old
-                            // startService-first path always threw on API 26+.
+                            // FIX(#19): the event must survive even when the background
+                            // FGS start is denied. Hand it to the durable distributor
+                            // immediately so it retries forever (not just 3 times).
+                            com.example.worker.SecurityEventDistributor.enqueue(
+                                appContext,
+                                prefs.countdownEventId
+                            )
+                            // Also try the direct path in case the service is alive.
                             try {
                                 val serviceIntent = Intent(appContext, CameraForegroundService::class.java).apply {
                                     this.action = CameraForegroundService.ACTION_COUNTDOWN_EXPIRED
                                     putExtra(CameraForegroundService.EXTRA_SECURITY_EVENT_ID, prefs.countdownEventId)
                                 }
                                 ContextCompat.startForegroundService(appContext, serviceIntent)
-                            } catch (e: Exception) {
-                                // FIX(countdown): background start denied — replace the
-                                // queued retry so a stale KEEP entry cannot stall it,
-                                // and tell the user the capture is still outstanding.
-                                CaptureRetryWorker.enqueue(appContext, replaceExisting = true)
-                                CountdownScheduler.postTapToComplete(appContext)
+                            } catch (_: Exception) {
+                                // Background start denied — the distributor will retry
+                                // when the app becomes visible or on next boot.
                             }
                             // FIX(#18): the pre-expiry wake guard is left alone here.
                             // The service takes its own capture lock within milliseconds,

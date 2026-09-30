@@ -220,9 +220,14 @@ class SecurityEventWorker(
             !SecurityEventDistributor.awaitingSend(event.status) &&
             !CameraForegroundService.isCameraChannelOpen
         ) {
+            // FIX(#19): returning Result.success() here made WorkManager think the
+            // job was done, so a deferred capture would never retry until the user
+            // opened the app. Return Result.retry() with exponential backoff so it
+            // keeps trying periodically (and succeeds immediately when the service
+            // comes alive or the app becomes visible).
             prefs.deferSecurityEvent(event.id)
             SecurityEventDistributor.notifyDeferredCapture(applicationContext, event.id)
-            return Result.success()
+            return Result.retry()
         }
 
         // FIX: the service intentionally skips startForeground() on the
