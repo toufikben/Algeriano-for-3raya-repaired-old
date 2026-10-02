@@ -62,7 +62,6 @@ data class SecurityUiState(
     val evidenceUsage: Pair<Int, Int> = Pair(0, 3), // (current, limit)
     val historyLimit: Int = 5,
     val localizedPrice: String? = null,
-    val billingAvailable: Boolean = true,
     val showPremiumScreen: Boolean = false
 )
 
@@ -120,13 +119,6 @@ class SecurityViewModel(application: Application) : AndroidViewModel(application
                 }
             }
             
-            // Collect billing availability
-            launch {
-                billingManager.billingAvailable.collect { available ->
-                    _uiState.update { it.copy(billingAvailable = available) }
-                }
-            }
-
             // Play answers later than the screen opens, so the price arrives here.
             launch {
                 billingManager.localizedPrice.collect { price ->

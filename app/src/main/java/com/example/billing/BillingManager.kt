@@ -49,9 +49,6 @@ class BillingManager(private val context: Context) {
     private val _isPremium = MutableStateFlow(readCachedPremium())
     val isPremium: StateFlow<Boolean> = _isPremium.asStateFlow()
 
-    private val _billingAvailable = MutableStateFlow(true)
-    val billingAvailable: StateFlow<Boolean> = _billingAvailable.asStateFlow()
-
     private fun readCachedPremium(): Boolean = try {
         SecurityPrefs.getInstance(context).isPremium
     } catch (e: Exception) {
@@ -103,7 +100,6 @@ class BillingManager(private val context: Context) {
             queryProductDetails()
         } catch (e: Exception) {
             Log.e(TAG, "Failed to initialize billing", e)
-            _billingAvailable.value = false
         }
     }
 
@@ -111,23 +107,16 @@ class BillingManager(private val context: Context) {
         suspendCoroutine<Unit> { continuation ->
             billingClient?.startConnection(object : BillingClientStateListener {
                 override fun onBillingSetupFinished(billingResult: BillingResult) {
-                    when (billingResult.responseCode) {
-                        BillingClient.BillingResponseCode.OK -> {
-                            Log.d(TAG, "Billing connected")
-                            _billingAvailable.value = true
-                            continuation.resume(Unit)
-                        }
-                        else -> {
-                            Log.e(TAG, "Billing setup failed: ${billingResult.debugMessage}")
-                            _billingAvailable.value = false
-                            continuation.resume(Unit)
-                        }
+                    if (billingResult.responseCode == BillingClient.BillingResponseCode.OK) {
+                        Log.d(TAG, "Billing connected")
+                    } else {
+                        Log.e(TAG, "Billing setup failed: ${billingResult.debugMessage}")
                     }
+                    continuation.resume(Unit)
                 }
 
                 override fun onBillingServiceDisconnected() {
                     Log.w(TAG, "Billing disconnected")
-                    _billingAvailable.value = false
                 }
             }) ?: continuation.resume(Unit)
         }
