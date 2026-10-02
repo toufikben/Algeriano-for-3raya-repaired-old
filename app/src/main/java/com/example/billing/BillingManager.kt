@@ -7,6 +7,7 @@ import com.android.billingclient.api.BillingClient
 import com.android.billingclient.api.BillingClientStateListener
 import com.android.billingclient.api.BillingFlowParams
 import com.android.billingclient.api.BillingResult
+import com.android.billingclient.api.PendingPurchasesParams
 import com.android.billingclient.api.ProductDetails
 import com.android.billingclient.api.Purchase
 import com.android.billingclient.api.PurchasesUpdatedListener
@@ -92,7 +93,9 @@ class BillingManager(private val context: Context) {
         try {
             billingClient = BillingClient.newBuilder(context)
                 .setListener(purchasesUpdatedListener)
-                .enablePendingPurchases()
+                .enablePendingPurchases(
+                    PendingPurchasesParams.newBuilder().enableOneTimeProducts().build()
+                )
                 .build()
 
             connectToBillingService()
@@ -216,9 +219,11 @@ class BillingManager(private val context: Context) {
                 )
                 .build()
 
-            billingClient?.queryProductDetailsAsync(params) { billingResult, productDetailsList ->
+            billingClient?.queryProductDetailsAsync(params) { billingResult, result ->
                 if (billingResult.responseCode == BillingClient.BillingResponseCode.OK) {
-                    productDetails = productDetailsList?.firstOrNull()
+                    // Billing 9 hands back a result wrapper, not the list: products Play
+                    // could not find are reported separately as unfetched.
+                    productDetails = result.productDetailsList?.firstOrNull()
                     localizedPrice = productDetails?.oneTimePurchaseOfferDetails?.formattedPrice
                     Log.d(TAG, "Product found: $localizedPrice")
                 } else {
@@ -245,7 +250,7 @@ class BillingManager(private val context: Context) {
 
         try {
             val flowParams = BillingFlowParams.newBuilder()
-                .setProductDetailsParams(
+                .setProductDetailsParamsList(
                     listOf(
                         BillingFlowParams.ProductDetailsParams.newBuilder()
                             .setProductDetails(details)
