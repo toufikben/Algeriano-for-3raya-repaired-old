@@ -60,7 +60,7 @@ fun DeveloperInfoDialog(
 ) {
     val context = LocalContext.current
     val devEmail = "toufik.bendjeddah@gmail.com"
-    val privacyPolicyUrl = "https://raw.githubusercontent.com/toufikben/Algeriano-for-3raya-repaired/main/privacy-policy.html"
+    val privacyPolicyUrl = "https://toufikben.github.io/privacy-policies/phone-fortress/"
 
     Dialog(onDismissRequest = onDismiss) {
         Card(

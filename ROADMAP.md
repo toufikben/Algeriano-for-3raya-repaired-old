@@ -25,7 +25,7 @@ behaviour.
 | 6 | Signed release APK + AAB with verified signature and package identity | DONE | runs #104–#110: `apksigner verify` v2 true, package `com.toufikbendjeddah.phonefortress` |
 | 7 | Unit + lint + i18n gates green | DONE | 26 `@Test` across 7 files (`BillingManagerTest` added in `8c00004`, reconnect case in `c817b09`), `./gradlew lint` clean, 15/15 locale gates pass |
 | 7b | Play reconnection: a dropped connection is retried with a bounded backoff and the entitlement and price are re-read on resume, on opening the paywall, on restore and on the unlock tap | DONE (compiles + unit-pinned) | `c817b09`, CI #114 green except the artifact upload below; **never observed against real Play** |
-| 8 | A green run's APK/AAB downloadable | **BLOCKED** | `Upload signed APK` red in every run since #104, including #111–#115 after the storage flush — account-wide Actions artifact storage quota, see below |
+| 8 | A green run's APK/AAB downloadable | IN PROGRESS | Each run now publishes a `build-<sha>` GitHub Release with the signed APK + AAB attached (release assets sit outside the artifact quota that kept `Upload signed APK` red in #104–#116); **not yet observed on a finished run** |
 | 9 | Upload the billing-enabled AAB (versionCode 19) to Play | TODO | blocked by stage 8; 18 is already live so a new code was required (`f6b8a50`) |
 | 10 | Create + activate `phone_fortress_premium_lifetime` in Play Console | TODO | Google only allows the product to be created after a billing-enabled AAB is uploaded |
 | 11 | On-device purchase verification | PAUSED by owner | paywall, purchase, acknowledgement, persistence across restart, restore, offline premium keeps cache, quota not consumed by retries |
@@ -75,8 +75,17 @@ batch pushes instead of stacking them.
 - Real-time Developer Notifications / backend `Purchases.products:get` to revoke the
   entitlement on refund. The spec requires handling voided purchases; there is no server
   here yet, so revocation currently happens only on the next successful Play query.
-- `DeveloperInfoDialog` privacy link still points at the pre-rename repository name.
 - `exportSchema = false` in `SecurityDatabase` blocks Room migration testing.
 - Persisted history status line (`IntruderLogsCard`) is localized at capture time, so old
   rows keep the language they were written in; fixing it needs a raw-reason column, i.e.
   a Room migration.
+
+## Resolved
+
+- The in-app privacy link. It pointed at `raw.githubusercontent.com/.../Algeriano-for-3raya-repaired/...`,
+  a repository name that now redirects to a **private** repo, so no user or Play reviewer could open
+  it. The policy is published at `https://toufikben.github.io/privacy-policies/phone-fortress/`
+  (public Pages, alongside the other apps of this account) and `DeveloperInfoDialog` points there.
+  The published text also covers the one-time purchase — payment handled by Google Play, entitlement
+  tied to the Google account, refund returning the app to Free — which the old file predated, and it
+  corrects the contact address (`www.` was glued to the email in the old copy).
