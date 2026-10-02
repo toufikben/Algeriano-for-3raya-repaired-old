@@ -21,10 +21,11 @@ behaviour.
 | 2 | Billing 9.1.0 API surface (`enablePendingPurchases`, `QueryProductDetailsResult`, `setProductDetailsParamsList`, no `intentSender`) | DONE | `ce16957`, `77f504a`; first successful compile of this module in run #104 |
 | 3 | Entitlement truth from Play only: acknowledge (never consume), cache seeded, single writer, offline keeps last confirmed value | DONE | `8725ed6`, `bba9286`; CI #104 green |
 | 4 | Tier enforcement: 3/50 monthly evidence, retries never re-charge, history 5 displayed / 50 stored, continuous protection premium-only | DONE | `8725ed6`, `ee4b59b`; pinned by `SecurityEventDistributorTest` |
-| 5 | Premium screen reachable, price owned by Play (no hard-coded `$4.99`), button disabled until Play returns a price | DONE | `d200d4a`, `08feabd`; `premium_unavailable` in all 17 locales |
+| 5 | Premium screen reachable, price owned by Play (no hard-coded `$4.99`), button disabled until Play returns a price | DONE | `d200d4a`, `08feabd`; `premium_unavailable` in all 17 locales; the tier numbers in the table come from the same constants the enforcement uses (`ad4a185`) |
 | 6 | Signed release APK + AAB with verified signature and package identity | DONE | runs #104–#110: `apksigner verify` v2 true, package `com.toufikbendjeddah.phonefortress` |
-| 7 | Unit + lint + i18n gates green | DONE | 25 `@Test` across 7 files (`BillingManagerTest` added in `8c00004`), `./gradlew lint` clean, 15/15 locale gates pass |
-| 8 | A green run's APK/AAB downloadable | **BLOCKED** | `Upload signed APK` red since #104 — account-wide Actions artifact storage quota, see below |
+| 7 | Unit + lint + i18n gates green | DONE | 26 `@Test` across 7 files (`BillingManagerTest` added in `8c00004`, reconnect case in `c817b09`), `./gradlew lint` clean, 15/15 locale gates pass |
+| 7b | Play reconnection: a dropped connection is retried with a bounded backoff and the entitlement and price are re-read on resume, on opening the paywall, on restore and on the unlock tap | DONE (compiles + unit-pinned) | `c817b09`, CI #114 green except the artifact upload below; **never observed against real Play** |
+| 8 | A green run's APK/AAB downloadable | **BLOCKED** | `Upload signed APK` red in every run since #104, including #111–#115 after the storage flush — account-wide Actions artifact storage quota, see below |
 | 9 | Upload the billing-enabled AAB (versionCode 19) to Play | TODO | blocked by stage 8; 18 is already live so a new code was required (`f6b8a50`) |
 | 10 | Create + activate `phone_fortress_premium_lifetime` in Play Console | TODO | Google only allows the product to be created after a billing-enabled AAB is uploaded |
 | 11 | On-device purchase verification | PAUSED by owner | paywall, purchase, acknowledgement, persistence across restart, restore, offline premium keeps cache, quota not consumed by retries |
@@ -43,9 +44,11 @@ Never executed anywhere (no device since the owner paused on-device checks):
 
 - any purchase, refund, restore or acknowledgement round-trip with Play;
 - the offline path on a real install;
+- the reconnect burst against a Play process that actually died — the test only pins the
+  no-client path, not a live reconnect;
 - quota counting under real capture conditions;
-- the 17-locale UI after the premium strings (`premium_unavailable` included) — compiled
-  and gate-validated, not eyeballed.
+- the 17-locale UI after the premium strings (`premium_unavailable` included) and after the
+  comparison table lost its English `"/mo"` — compiled and gate-validated, not eyeballed.
 
 ## Blockers
 
@@ -56,7 +59,14 @@ approval, 343 of those and 125 in this repository were deleted (the 4 newest rel
 bundles of each kept), freeing ~31 GB. `retention-days` in the workflow dropped from 30 to
 7 (`800cadd`) so this cannot recur unnoticed. **GitHub recalculates storage usage every
 6–12 hours**, so uploads keep failing after the deletion until the counter catches up —
-re-run the workflow rather than assuming the flush did not work.
+re-run the workflow rather than assuming the flush did not work. Runs #111, #112, #114 and
+#115 (up to 2026-10-02 20:15 UTC) still report `Failed to CreateArtifact: Artifact storage
+quota has been hit`, which is the expected state before the recalculation lands. The next
+green upload needs only a re-run (`workflow_dispatch` is wired), not another code change.
+
+**A second run cannot start while one is running:** the workflow sets
+`concurrency.cancel-in-progress` (run #113 was cancelled by the push that followed it), so
+batch pushes instead of stacking them.
 
 ## Open decisions (owner, not code)
 
