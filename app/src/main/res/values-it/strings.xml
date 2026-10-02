@@ -91,7 +91,7 @@
     <string name="ui_de636443d0c9">Scegli la lingua dell\'app</string>
     <string name="ui_5b12a079c302">Lingua salvata</string>
     <string name="ui_bb2ff3994b74">Come creare una password dell\'app</string>
-    <string name="ui_8cdb06e7f48d">Google richiede una \"password dell\'app\" di 16 caratteri per inviare messaggi in modo sicuro tramite SMTP senza condividere la password del tuo account principale.</string>
+    <string name="ui_8cdb06e7f48d">Google richiede una "password dell\'app" di 16 caratteri per inviare messaggi in modo sicuro tramite SMTP senza condividere la password del tuo account principale.</string>
     <string name="ui_ea946f46338f">Attiva la verifica in 2 passaggi</string>
     <string name="ui_d61c80873687">Assicurati che la verifica in 2 passaggi sia attiva sul tuo account Google.</string>
     <string name="ui_3087ba16c32a">Apri la pagina Password delle app</string>
@@ -276,7 +276,7 @@
     <string name="ui_status_failed">Non riuscito</string>
     <string name="ui_status_not_sent">Non inviato</string>
     <string name="ui_log_summary">Foto: %1$s; posizione: %2$s; email: %3$s</string>
-    <string name="ui_separator">\"; \"</string>
+    <string name="ui_separator">"; "</string>
     <string name="ui_unexpected_event">FAILED_FINAL: errore imprevisto durante l\'elaborazione dell\'evento: %1$s</string>
     <string name="ui_recovered_events">%1$d avvisi in sospeso recuperati; consulta il registro dei tentativi</string>
     <string name="ui_map_query_label">Posizione del tentativo di sblocco del telefono</string>

@@ -114,9 +114,6 @@ object SecurityEventDistributor {
             request
         )
         
-        // Increment counter only when event actually starts processing
-        prefs.incrementEvidenceCounter()
-        
         scheduleRecovery(context)
     }
 

@@ -276,7 +276,7 @@
     <string name="ui_status_failed">失败</string>
     <string name="ui_status_not_sent">未发送</string>
     <string name="ui_log_summary">照片：%1$s；位置：%2$s；邮件：%3$s</string>
-    <string name="ui_separator">\"; \"</string>
+    <string name="ui_separator">"; "</string>
     <string name="ui_unexpected_event">FAILED_FINAL: 处理事件时发生意外错误：%1$s</string>
     <string name="ui_recovered_events">已恢复 %1$d 条待处理提醒；请查看尝试记录</string>
     <string name="ui_map_query_label">手机解锁尝试的位置</string>
