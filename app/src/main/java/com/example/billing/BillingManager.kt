@@ -260,11 +260,13 @@ class BillingManager(private val context: Context) {
                 )
                 .build()
 
-            activity.startIntentSenderForResult(
-                flowParams.intentSender,
-                1001, // Request code for purchase
-                null, 0, 0, 0
-            )
+            // Billing 9 removed BillingFlowParams.intentSender: launchBillingFlow starts
+            // the Play screen itself and reports only whether that request went out.
+            val result = billingClient?.launchBillingFlow(activity, flowParams)
+            if (result != null && result.responseCode != BillingClient.BillingResponseCode.OK) {
+                Log.e(TAG, "launchBillingFlow: ${result.debugMessage}")
+                _purchaseError.value = "Cannot start purchase"
+            }
             Log.d(TAG, "Purchase flow launched")
         } catch (e: Exception) {
             Log.e(TAG, "Failed to launch purchase", e)
