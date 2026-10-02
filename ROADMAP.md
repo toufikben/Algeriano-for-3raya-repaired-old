@@ -1,0 +1,72 @@
+# Phone Fortress — Google Play launch roadmap
+
+Single place to see what is proven, what is pending, and what is blocked. Update the
+stage table and the ledger after every pushed stage; do not mark a stage `DONE` without
+naming the CI run that proved it.
+
+App: `com.toufikbendjeddah.phonefortress` · this branch: versionCode **19**, versionName
+**1.1.4** · minSdk 24 / targetSdk 36 · Play Billing **9.1.0** · one-time non-consumable
+`phone_fortress_premium_lifetime`.
+
+**CI is the only compiler.** The development machine cannot build or test Android
+(no network to `dl.google.com`), so `.github/workflows/build-apk-aab.yml` is the sole
+verifier of "it compiles" and "it is signed". Nothing in this file is evidence of runtime
+behaviour.
+
+## Stages
+
+| # | Stage | State | Evidence |
+| --- | --- | --- | --- |
+| 1 | Audit the monetization code against the spec | DONE | `8725ed6` parent review; two hard compile errors found in code previously called "complete" |
+| 2 | Billing 9.1.0 API surface (`enablePendingPurchases`, `QueryProductDetailsResult`, `setProductDetailsParamsList`, no `intentSender`) | DONE | `ce16957`, `77f504a`; first successful compile of this module in run #104 |
+| 3 | Entitlement truth from Play only: acknowledge (never consume), cache seeded, single writer, offline keeps last confirmed value | DONE | `8725ed6`, `bba9286`; CI #104 green |
+| 4 | Tier enforcement: 3/50 monthly evidence, retries never re-charge, history 5 displayed / 50 stored, continuous protection premium-only | DONE | `8725ed6`, `ee4b59b`; pinned by `SecurityEventDistributorTest` |
+| 5 | Premium screen reachable, price owned by Play (no hard-coded `$4.99`), button disabled until Play returns a price | DONE | `d200d4a`, `08feabd`; `premium_unavailable` in all 17 locales |
+| 6 | Signed release APK + AAB with verified signature and package identity | DONE | runs #104–#110: `apksigner verify` v2 true, package `com.toufikbendjeddah.phonefortress` |
+| 7 | Unit + lint + i18n gates green | DONE | 25 `@Test` across 7 files (`BillingManagerTest` added in `8c00004`), `./gradlew lint` clean, 15/15 locale gates pass |
+| 8 | A green run's APK/AAB downloadable | **BLOCKED** | `Upload signed APK` red since #104 — account-wide Actions artifact storage quota, see below |
+| 9 | Upload the billing-enabled AAB (versionCode 19) to Play | TODO | blocked by stage 8; 18 is already live so a new code was required (`f6b8a50`) |
+| 10 | Create + activate `phone_fortress_premium_lifetime` in Play Console | TODO | Google only allows the product to be created after a billing-enabled AAB is uploaded |
+| 11 | On-device purchase verification | PAUSED by owner | paywall, purchase, acknowledgement, persistence across restart, restore, offline premium keeps cache, quota not consumed by retries |
+| 12 | Store submission | TODO | needs 9–11 |
+
+## Verification ledger
+
+Proven by CI:
+
+- the module compiles against Billing 9.1.0;
+- unit tests and Android lint pass;
+- `assembleRelease` and `bundleRelease` produce signed artifacts, `apksigner verify`
+  confirms the v2 scheme, and `aapt2 dump badging` confirms the package identity.
+
+Never executed anywhere (no device since the owner paused on-device checks):
+
+- any purchase, refund, restore or acknowledgement round-trip with Play;
+- the offline path on a real install;
+- quota counting under real capture conditions;
+- the 17-locale UI after the premium strings (`premium_unavailable` included) — compiled
+  and gate-validated, not eyeballed.
+
+## Blockers
+
+**Artifact upload (stage 8).** GitHub Actions artifact storage is shared across the whole
+account, not per repository. It saturated around 2026-09-30 when an unrelated project
+(`nabd-rebuild`) accumulated 347 artifacts / ~29.5 GB. On 2026-10-02, with the owner's
+approval, 343 of those and 125 in this repository were deleted (the 4 newest release
+bundles of each kept), freeing ~31 GB. `retention-days` in the workflow dropped from 30 to
+7 (`800cadd`) so this cannot recur unnoticed. **GitHub recalculates storage usage every
+6–12 hours**, so uploads keep failing after the deletion until the counter catches up —
+re-run the workflow rather than assuming the flush did not work.
+
+## Open decisions (owner, not code)
+
+- Contextual paywall when the monthly evidence quota runs out — not in the spec, so not
+  stubbed.
+- Real-time Developer Notifications / backend `Purchases.products:get` to revoke the
+  entitlement on refund. The spec requires handling voided purchases; there is no server
+  here yet, so revocation currently happens only on the next successful Play query.
+- `DeveloperInfoDialog` privacy link still points at the pre-rename repository name.
+- `exportSchema = false` in `SecurityDatabase` blocks Room migration testing.
+- Persisted history status line (`IntruderLogsCard`) is localized at capture time, so old
+  rows keep the language they were written in; fixing it needs a raw-reason column, i.e.
+  a Room migration.
