@@ -116,10 +116,13 @@ class SecurityPrefs private constructor(private val context: Context) {
         private const val GCM_TAG_LENGTH_BITS = 128
         private const val GCM_IV_LENGTH_BYTES = 12
         private const val MAX_SECURITY_EVENTS = 100
-        private const val FREE_HISTORY_LIMIT = 5
-        private const val PREMIUM_HISTORY_LIMIT = 50
-        private const val FREE_EVIDENCE_MONTHLY_LIMIT = 3
-        private const val PREMIUM_EVIDENCE_MONTHLY_LIMIT = 50
+
+        // The published tier numbers. Public because the paywall has to show the same
+        // figures the enforcement paths apply, and two copies drift apart.
+        const val FREE_HISTORY_LIMIT = 5
+        const val PREMIUM_HISTORY_LIMIT = 50
+        const val FREE_EVIDENCE_MONTHLY_LIMIT = 3
+        const val PREMIUM_EVIDENCE_MONTHLY_LIMIT = 50
         private const val EVENT_LEASE_TIMEOUT_MILLIS = 2 * 60 * 1000L
         private const val MAX_EVENT_RECOVERY_ATTEMPTS = 2
         private const val MAX_SEND_ATTEMPTS = 3
@@ -817,8 +820,13 @@ class SecurityPrefs private constructor(private val context: Context) {
         } else {
             currentLogs[existingIndex] = log.copy(id = currentLogs[existingIndex].id)
         }
-        // Keep max 50 logs
-        val trimmed = if (currentLogs.size > 50) currentLogs.take(50) else currentLogs
+        // Storage always keeps the premium-sized window so a refund cannot wipe history
+        // that was never the paying tier's to delete; the tier only bounds what is shown.
+        val trimmed = if (currentLogs.size > PREMIUM_HISTORY_LIMIT) {
+            currentLogs.take(PREMIUM_HISTORY_LIMIT)
+        } else {
+            currentLogs
+        }
         saveLogs(trimmed)
         if (isNewLog) {
             totalAttempts += 1

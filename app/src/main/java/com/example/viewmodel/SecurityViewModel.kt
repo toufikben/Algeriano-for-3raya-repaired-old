@@ -60,7 +60,6 @@ data class SecurityUiState(
     // Premium / Monetization fields
     val isPremium: Boolean = false,
     val evidenceUsage: Pair<Int, Int> = Pair(0, 3), // (current, limit)
-    val historyLimit: Int = 5,
     val localizedPrice: String? = null,
     val showPremiumScreen: Boolean = false
 )
@@ -91,8 +90,7 @@ class SecurityViewModel(application: Application) : AndroidViewModel(application
             countdownRemainingMillis = remainingCountdownMillis(),
             countdownAutoRestart = prefs.countdownAutoRestart,
             isPremium = prefs.isPremium,
-            evidenceUsage = prefs.getEvidenceUsage(),
-            historyLimit = prefs.getHistoryLimit()
+            evidenceUsage = prefs.getEvidenceUsage()
         )
     )
     val uiState: StateFlow<SecurityUiState> = _uiState.asStateFlow()
@@ -111,7 +109,6 @@ class SecurityViewModel(application: Application) : AndroidViewModel(application
                     _uiState.update {
                         it.copy(
                             isPremium = isPremium,
-                            historyLimit = prefs.getHistoryLimit(),
                             evidenceUsage = prefs.getEvidenceUsage(),
                             logs = prefs.getVisibleLogs()
                         )
@@ -513,8 +510,7 @@ class SecurityViewModel(application: Application) : AndroidViewModel(application
         _uiState.update { 
             it.copy(
                 showPremiumScreen = true,
-                evidenceUsage = prefs.getEvidenceUsage(),
-                historyLimit = prefs.getHistoryLimit()
+                evidenceUsage = prefs.getEvidenceUsage()
             )
         }
         // The unlock button stays disabled without a price from Play, so the screen that

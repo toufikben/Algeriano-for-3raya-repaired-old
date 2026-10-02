@@ -15,6 +15,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.R
+import com.example.data.SecurityPrefs
 
 /**
  * Premium upgrade screen showing Free vs Premium comparison.
@@ -25,7 +26,6 @@ fun PremiumScreen(
     isPremium: Boolean,
     localizedPrice: String?,
     evidenceUsage: Pair<Int, Int>, // (current, limit)
-    historyLimit: Int,
     onUnlockPremium: () -> Unit,
     onRestorePurchase: () -> Unit,
     onDismiss: () -> Unit
@@ -130,15 +130,17 @@ fun PremiumScreen(
                     freeValue = "✓",
                     premiumValue = "✓"
                 )
+                // Plain numbers: the row label already says "monthly" in every locale, so
+                // an English "/mo" here would be untranslated text in 16 languages.
                 PremiumFeatureRow(
                     feature = stringResource(R.string.premium_evidence_monthly),
-                    freeValue = "${evidenceUsage.second}/mo",
-                    premiumValue = "50/mo"
+                    freeValue = evidenceUsage.second.toString(),
+                    premiumValue = SecurityPrefs.PREMIUM_EVIDENCE_MONTHLY_LIMIT.toString()
                 )
                 PremiumFeatureRow(
                     feature = stringResource(R.string.premium_event_history),
-                    freeValue = "5",
-                    premiumValue = "50"
+                    freeValue = SecurityPrefs.FREE_HISTORY_LIMIT.toString(),
+                    premiumValue = SecurityPrefs.PREMIUM_HISTORY_LIMIT.toString()
                 )
                 PremiumFeatureRow(
                     feature = stringResource(R.string.premium_continuous_protection),

@@ -619,7 +619,6 @@ fun SecurityMainScreen(
                 isPremium = uiState.isPremium,
                 localizedPrice = uiState.localizedPrice,
                 evidenceUsage = uiState.evidenceUsage,
-                historyLimit = uiState.historyLimit,
                 onUnlockPremium = {
                     (context as? ComponentActivity)?.let { viewModel.launchPurchase(it) }
                 },
