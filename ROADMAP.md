@@ -25,8 +25,8 @@ behaviour.
 | 6 | Signed release APK + AAB with verified signature and package identity | DONE | runs #104–#110: `apksigner verify` v2 true, package `com.toufikbendjeddah.phonefortress` |
 | 7 | Unit + lint + i18n gates green | DONE | 26 `@Test` across 7 files (`BillingManagerTest` added in `8c00004`, reconnect case in `c817b09`), `./gradlew lint` clean, 15/15 locale gates pass |
 | 7b | Play reconnection: a dropped connection is retried with a bounded backoff and the entitlement and price are re-read on resume, on opening the paywall, on restore and on the unlock tap | DONE (compiles + unit-pinned) | `c817b09`, CI #114 green except the artifact upload below; **never observed against real Play** |
-| 8 | A green run's APK/AAB downloadable | IN PROGRESS | Each run now publishes a `build-<sha>` GitHub Release with the signed APK + AAB attached (release assets sit outside the artifact quota that kept `Upload signed APK` red in #104–#116); **not yet observed on a finished run** |
-| 9 | Upload the billing-enabled AAB (versionCode 19) to Play | TODO | blocked by stage 8; 18 is already live so a new code was required (`f6b8a50`) |
+| 8 | A green run's APK/AAB downloadable | DONE | run **#117** (`47b69bf`) completed green and published release `build-47b69bf` with `app-release.apk` (4 585 868 B, sha256 `5ebbcf9d…`) and `app-release.aab` (6 655 084 B, sha256 `262f95a7…`) attached. Release assets sit outside the artifact quota, which is still exhausted: both `Upload signed *` steps failed again in #117 and are non-gating (`continue-on-error`), so the Release is now the delivery path, not the artifacts |
+| 9 | Upload the billing-enabled AAB (versionCode 19) to Play | IN PROGRESS | source artifact proven available: `app-release.aab` from release `build-47b69bf`; 18 is already live so a new code was required (`f6b8a50`) |
 | 10 | Create + activate `phone_fortress_premium_lifetime` in Play Console | TODO | Google only allows the product to be created after a billing-enabled AAB is uploaded |
 | 11 | On-device purchase verification | PAUSED by owner | paywall, purchase, acknowledgement, persistence across restart, restore, offline premium keeps cache, quota not consumed by retries |
 | 12 | Store submission | TODO | needs 9–11 |
@@ -52,17 +52,18 @@ Never executed anywhere (no device since the owner paused on-device checks):
 
 ## Blockers
 
-**Artifact upload (stage 8).** GitHub Actions artifact storage is shared across the whole
-account, not per repository. It saturated around 2026-09-30 when an unrelated project
-(`nabd-rebuild`) accumulated 347 artifacts / ~29.5 GB. On 2026-10-02, with the owner's
-approval, 343 of those and 125 in this repository were deleted (the 4 newest release
-bundles of each kept), freeing ~31 GB. `retention-days` in the workflow dropped from 30 to
-7 (`800cadd`) so this cannot recur unnoticed. **GitHub recalculates storage usage every
-6–12 hours**, so uploads keep failing after the deletion until the counter catches up —
-re-run the workflow rather than assuming the flush did not work. Runs #111, #112, #114 and
-#115 (up to 2026-10-02 20:15 UTC) still report `Failed to CreateArtifact: Artifact storage
-quota has been hit`, which is the expected state before the recalculation lands. The next
-green upload needs only a re-run (`workflow_dispatch` is wired), not another code change.
+**Artifact upload (no longer blocks delivery).** GitHub Actions artifact storage is shared
+across the whole account, not per repository. It saturated around 2026-09-30 when an
+unrelated project (`nabd-rebuild`) accumulated 347 artifacts / ~29.5 GB. On 2026-10-02, with
+the owner's approval, 343 of those and 125 in this repository were deleted (the 4 newest
+release bundles of each kept), freeing ~31 GB. `retention-days` in the workflow dropped from
+30 to 7 (`800cadd`) so this cannot recur unnoticed. **GitHub recalculates storage usage every
+6–12 hours**, so uploads keep failing after a deletion until the counter catches up — runs
+#111, #112, #114, #115 and #117 all still report `Failed to CreateArtifact: Artifact storage
+quota has been hit`. Because those two steps are `continue-on-error`, a run is now judged on
+compile, tests, lint, signing and the Release upload instead of being turned red by an
+account-level billing state this repository cannot fix. If the quota ever frees, the artifact
+uploads are a convenience, not the plan.
 
 **A second run cannot start while one is running:** the workflow sets
 `concurrency.cancel-in-progress` (run #113 was cancelled by the push that followed it), so
@@ -87,5 +88,7 @@ batch pushes instead of stacking them.
   it. The policy is published at `https://toufikben.github.io/privacy-policies/phone-fortress/`
   (public Pages, alongside the other apps of this account) and `DeveloperInfoDialog` points there.
   The published text also covers the one-time purchase — payment handled by Google Play, entitlement
-  tied to the Google account, refund returning the app to Free — which the old file predated, and it
-  corrects the contact address (`www.` was glued to the email in the old copy).
+  tied to the Google account, refund returning the app to Free — which the old file predated.
+  Contact address left as the developer's Google account address, as in the old file; note that the
+  store listing publishes a different contact (`www.toufik155@gmail.com` in Play's developer-contact
+  field, `toufik.bendjeddah@gmail.com` in the app description) — an owner choice, not a code problem.
