@@ -276,7 +276,7 @@
     <string name="ui_status_failed">Не удалось</string>
     <string name="ui_status_not_sent">Не отправлено</string>
     <string name="ui_log_summary">Фото: %1$s; геолокация: %2$s; эл. почта: %3$s</string>
-    <string name="ui_separator">"; "</string>
+    <string name="ui_separator">\"; \"</string>
     <string name="ui_unexpected_event">FAILED_FINAL: Неожиданная ошибка при обработке события: %1$s</string>
     <string name="ui_recovered_events">Восстановлено отложенных оповещений: %1$d; проверьте журнал попыток</string>
     <string name="ui_map_query_label">Местоположение попытки разблокировки телефона</string>
@@ -294,4 +294,23 @@
     <string name="ui_privacy_disclosure_body">Phone Fortress использует камеру, геолокацию и уведомления, когда защита включена. После неудачной попытки разблокировки оно может снять фото, определить местоположение устройства и сохранить результат локально. Фото и местоположение могут быть приложены к письму, отправленному на выбранный вами адрес. Эти данные не передаются на сервер разработчика. Используйте приложение на своем устройстве или с согласия владельца. Вы можете отказаться от разрешений или отключить защиту в любое время.</string>
     <string name="ui_privacy_disclosure_accept">Я понимаю и хочу продолжить</string>
     <string name="ui_privacy_disclosure_not_now">Не сейчас</string>
+    <string name="premium_title">Phone Fortress Premium</string>
+    <string name="premium_active_title">Премиум активен ✓</string>
+    <string name="premium_active_text">У вас есть пожизненный доступ ко всем премиум-функциям.</string>
+    <string name="premium_feature">Функция</string>
+    <string name="premium_free">Бесплатно</string>
+    <string name="premium_premium">Премиум</string>
+    <string name="premium_core_protection">Базовая защита</string>
+    <string name="premium_photo_evidence">Фотодоказательства</string>
+    <string name="premium_location_evidence">Доказательства местоположения</string>
+    <string name="premium_email_alerts">Оповещения по электронной почте</string>
+    <string name="premium_evidence_monthly">Доказательных событий/мес</string>
+    <string name="premium_event_history">История событий</string>
+    <string name="premium_continuous_protection">Непрерывная защита</string>
+    <string name="premium_extended_retention">Расширенное хранение</string>
+    <string name="premium_current_usage">Текущее использование</string>
+    <string name="premium_events_this_month">событий в этом месяце</string>
+    <string name="premium_unlock">Разблокировать Премиум • %1$s</string>
+    <string name="premium_restore">Восстановить покупку</string>
+    <string name="premium_lifetime_text">Разовая покупка • Пожизненный доступ • Без рекламы</string>
 </resources>

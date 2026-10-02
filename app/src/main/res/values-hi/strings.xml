@@ -276,7 +276,7 @@
     <string name="ui_status_failed">विफल</string>
     <string name="ui_status_not_sent">नहीं भेजा गया</string>
     <string name="ui_log_summary">फ़ोटो: %1$s; स्थान: %2$s; ईमेल: %3$s</string>
-    <string name="ui_separator">"; "</string>
+    <string name="ui_separator">\"; \"</string>
     <string name="ui_unexpected_event">FAILED_FINAL: घटना संसाधित करते समय अप्रत्याशित त्रुटि: %1$s</string>
     <string name="ui_recovered_events">%1$d लंबित चेतावनियाँ पुनः प्राप्त हुईं; प्रयास लॉग देखें</string>
     <string name="ui_map_query_label">फ़ोन अनलॉक प्रयास का स्थान</string>
@@ -294,4 +294,23 @@
     <string name="ui_privacy_disclosure_body">Phone Fortress सुरक्षा चालू होने पर कैमरा, स्थान और सूचनाओं का उपयोग करता है। विफल अनलॉक प्रयास के बाद यह फ़ोटो ले सकता है, डिवाइस का स्थान निर्धारित कर सकता है और परिणाम डिवाइस पर सहेज सकता है। फ़ोटो और स्थान आपके चुने पते पर भेजे गए ईमेल के साथ संलग्न हो सकते हैं। यह डेटा डेवलपर के सर्वर पर नहीं भेजा जाता। ऐप के उपयोग अपने डिवाइस पर या मालिक की सहमति से करें। आप अनुमतियाँ देने से मना कर सकते हैं या कभी भी सुरक्षा रोक सकते हैं।</string>
     <string name="ui_privacy_disclosure_accept">मैं समझता हूँ और जारी रखना चाहता हूँ</string>
     <string name="ui_privacy_disclosure_not_now">अभी नहीं</string>
+    <string name="premium_title">Phone Fortress Premium</string>
+    <string name="premium_active_title">प्रीमियम सक्रिय ✓</string>
+    <string name="premium_active_text">आपके पास सभी प्रीमियम विशेषताओं तक आजीवन पहुँच है।</string>
+    <string name="premium_feature">विशेषता</string>
+    <string name="premium_free">निःशुल्क</string>
+    <string name="premium_premium">प्रीमियम</string>
+    <string name="premium_core_protection">मूल सुरक्षा</string>
+    <string name="premium_photo_evidence">फ़ोटो प्रमाण</string>
+    <string name="premium_location_evidence">स्थान प्रमाण</string>
+    <string name="premium_email_alerts">ईमेल चेतावनियाँ</string>
+    <string name="premium_evidence_monthly">प्रमाण घटनाएँ/महीना</string>
+    <string name="premium_event_history">घटना इतिहास</string>
+    <string name="premium_continuous_protection">सतत सुरक्षा</string>
+    <string name="premium_extended_retention">बढ़ाई गई संग्रहण अवधि</string>
+    <string name="premium_current_usage">वर्तमान उपयोग</string>
+    <string name="premium_events_this_month">इस महीने की घटनाएँ</string>
+    <string name="premium_unlock">प्रीमियम अनलॉक करें • %1$s</string>
+    <string name="premium_restore">खरीद पुनः प्राप्त करें</string>
+    <string name="premium_lifetime_text">एक बार की खरीद • आजीवन पहुँच • विज्ञापन मुक्त</string>
 </resources>

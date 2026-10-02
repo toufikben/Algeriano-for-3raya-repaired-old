@@ -276,7 +276,7 @@
     <string name="ui_status_failed">Gagal</string>
     <string name="ui_status_not_sent">Tidak terkirim</string>
     <string name="ui_log_summary">Foto: %1$s; lokasi: %2$s; email: %3$s</string>
-    <string name="ui_separator">"; "</string>
+    <string name="ui_separator">\"; \"</string>
     <string name="ui_unexpected_event">FAILED_FINAL: Galat tak terduga saat memproses acara: %1$s</string>
     <string name="ui_recovered_events">%1$d peringatan tertunda dipulihkan; tinjau log percobaan</string>
     <string name="ui_map_query_label">Lokasi percobaan pembukaan kunci telepon</string>
@@ -294,4 +294,23 @@
     <string name="ui_privacy_disclosure_body">Phone Fortress menggunakan kamera, lokasi, dan notifikasi saat perlindungan aktif. Setelah percobaan pembukaan kunci yang gagal, aplikasi dapat mengambil foto, menentukan lokasi perangkat, dan menyimpan hasilnya di perangkat. Foto dan lokasi dapat dilampirkan ke email yang dikirim ke alamat yang Anda pilih. Data ini tidak dikirim ke server pengembang. Gunakan aplikasi pada perangkat Anda sendiri atau dengan persetujuan pemiliknya. Anda dapat menolak izin atau menghentikan perlindungan kapan saja.</string>
     <string name="ui_privacy_disclosure_accept">Saya paham dan ingin melanjutkan</string>
     <string name="ui_privacy_disclosure_not_now">Nanti saja</string>
+    <string name="premium_title">Phone Fortress Premium</string>
+    <string name="premium_active_title">Premium aktif ✓</string>
+    <string name="premium_active_text">Anda memiliki akses seumur hidup ke semua fitur premium.</string>
+    <string name="premium_feature">Fitur</string>
+    <string name="premium_free">GRATIS</string>
+    <string name="premium_premium">Premium</string>
+    <string name="premium_core_protection">Perlindungan inti</string>
+    <string name="premium_photo_evidence">Bukti foto</string>
+    <string name="premium_location_evidence">Bukti lokasi</string>
+    <string name="premium_email_alerts">Email peringatan</string>
+    <string name="premium_evidence_monthly">Acara bukti/bulan</string>
+    <string name="premium_event_history">Riwayat acara</string>
+    <string name="premium_continuous_protection">Perlindungan berkelanjutan</string>
+    <string name="premium_extended_retention">Retensi diperpanjang</string>
+    <string name="premium_current_usage">Pemakaian saat ini</string>
+    <string name="premium_events_this_month">acara bulan ini</string>
+    <string name="premium_unlock">Aktifkan Premium • %1$s</string>
+    <string name="premium_restore">Pulihkan pembelian</string>
+    <string name="premium_lifetime_text">Pembelian sekali • Akses seumur hidup • Tanpa iklan</string>
 </resources>

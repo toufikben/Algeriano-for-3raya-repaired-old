@@ -276,7 +276,7 @@
     <string name="ui_status_failed">失败</string>
     <string name="ui_status_not_sent">未发送</string>
     <string name="ui_log_summary">照片：%1$s；位置：%2$s；邮件：%3$s</string>
-    <string name="ui_separator">"; "</string>
+    <string name="ui_separator">\"; \"</string>
     <string name="ui_unexpected_event">FAILED_FINAL: 处理事件时发生意外错误：%1$s</string>
     <string name="ui_recovered_events">已恢复 %1$d 条待处理提醒；请查看尝试记录</string>
     <string name="ui_map_query_label">手机解锁尝试的位置</string>
@@ -294,4 +294,23 @@
     <string name="ui_privacy_disclosure_body">Phone Fortress 在防护开启时会使用摄像头、位置与通知。在一次解锁失败后，它可能会拍摄照片、确定设备位置并在本机保存结果。照片与位置可能会附加到发送给您所选地址的邮件中。这些数据不会发送到开发者的服务器。请在您自己的设备上或在设备所有者同意下使用本应用。您可以随时拒绝授予权限或停止防护。</string>
     <string name="ui_privacy_disclosure_accept">我已了解并希望继续</string>
     <string name="ui_privacy_disclosure_not_now">暂不</string>
+    <string name="premium_title">Phone Fortress Premium</string>
+    <string name="premium_active_title">高级版已激活 ✓</string>
+    <string name="premium_active_text">您已获得全部高级版功能的终身使用权。</string>
+    <string name="premium_feature">功能</string>
+    <string name="premium_free">免费</string>
+    <string name="premium_premium">高级版</string>
+    <string name="premium_core_protection">核心防护</string>
+    <string name="premium_photo_evidence">照片证据</string>
+    <string name="premium_location_evidence">位置证据</string>
+    <string name="premium_email_alerts">邮件提醒</string>
+    <string name="premium_evidence_monthly">证据事件数/月</string>
+    <string name="premium_event_history">事件记录</string>
+    <string name="premium_continuous_protection">持续防护</string>
+    <string name="premium_extended_retention">延长保留</string>
+    <string name="premium_current_usage">当前用量</string>
+    <string name="premium_events_this_month">本月事件</string>
+    <string name="premium_unlock">解锁高级版 • %1$s</string>
+    <string name="premium_restore">恢复购买</string>
+    <string name="premium_lifetime_text">一次买断 • 终身使用 • 无广告</string>
 </resources>

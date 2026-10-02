@@ -61,11 +61,27 @@ object SecurityEventDistributor {
         status == SecurityEventStatus.SEND_PENDING ||
             status == SecurityEventStatus.FAILED_RETRYABLE
 
+    /**
+     * Statuses whose evidence has already been captured, so the monthly allowance
+     * for that event is already spent: re-delivering one must not re-pay for it.
+     */
+    internal fun evidenceAlreadyCaptured(status: SecurityEventStatus): Boolean =
+        status == SecurityEventStatus.CAPTURED || awaitingSend(status)
+
     fun enqueue(context: Context, eventId: String) {
         val prefs = SecurityPrefs.getInstance(context)
-        if (prefs.getPendingSecurityEvents().none { it.id == eventId }) return
+        val event = prefs.getPendingSecurityEvents().firstOrNull { it.id == eventId } ?: return
 
-        val event = prefs.getPendingSecurityEvents().first { it.id == eventId }
+        // The allowance is only charged to a capture that has not happened yet.
+        // Gating an event that already holds its photo would discard evidence the
+        // user already paid for with their quota, and would make every retry after
+        // the limit is reached fatal.
+        if (!evidenceAlreadyCaptured(event.status) && !prefs.canCreateEvidenceEvent()) {
+            android.util.Log.w("SecurityEventDistributor", "Monthly evidence limit reached for event $eventId")
+            prefs.failPendingSecurityEvent(eventId)
+            return
+        }
+
         // An event that already holds its evidence only needs the network to
         // finish, so it waits for connectivity instead of burning send attempts
         // during an outage. Capture work must stay unconstrained: a photo taken
@@ -97,6 +113,10 @@ object SecurityEventDistributor {
             ExistingWorkPolicy.KEEP,
             request
         )
+        
+        // Increment counter only when event actually starts processing
+        prefs.incrementEvidenceCounter()
+        
         scheduleRecovery(context)
     }
 

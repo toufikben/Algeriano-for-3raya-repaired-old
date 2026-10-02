@@ -276,7 +276,7 @@
     <string name="ui_status_failed">Falhou</string>
     <string name="ui_status_not_sent">Não enviado</string>
     <string name="ui_log_summary">Foto: %1$s; localização: %2$s; e-mail: %3$s</string>
-    <string name="ui_separator">"; "</string>
+    <string name="ui_separator">\"; \"</string>
     <string name="ui_unexpected_event">FAILED_FINAL: erro inesperado ao processar o evento: %1$s</string>
     <string name="ui_recovered_events">%1$d alertas pendentes recuperados; reveja o registo de tentativas</string>
     <string name="ui_map_query_label">Localização da tentativa de desbloqueio do telefone</string>
@@ -294,4 +294,23 @@
     <string name="ui_privacy_disclosure_body">O Phone Fortress utiliza a câmara, a localização e as notificações quando a proteção está ativa. Após uma tentativa de desbloqueio falhada, pode capturar uma foto, determinar a localização do dispositivo e guardar o resultado localmente. A foto e a localização podem ser anexadas a um e-mail enviado para o endereço que escolher. Estes dados não são enviados para o servidor do programador. Utilize a aplicação no seu próprio dispositivo ou com o consentimento do proprietário. Pode recusar as permissões ou desativar a proteção a qualquer momento.</string>
     <string name="ui_privacy_disclosure_accept">Compreendi e quero continuar</string>
     <string name="ui_privacy_disclosure_not_now">Agora não</string>
+    <string name="premium_title">Phone Fortress Premium</string>
+    <string name="premium_active_title">Premium ativo ✓</string>
+    <string name="premium_active_text">Tem acesso vitalício a todas as funcionalidades premium.</string>
+    <string name="premium_feature">Funcionalidade</string>
+    <string name="premium_free">Grátis</string>
+    <string name="premium_premium">Premium</string>
+    <string name="premium_core_protection">Proteção essencial</string>
+    <string name="premium_photo_evidence">Prova fotográfica</string>
+    <string name="premium_location_evidence">Prova de localização</string>
+    <string name="premium_email_alerts">Alertas de e-mail</string>
+    <string name="premium_evidence_monthly">Eventos de prova/mês</string>
+    <string name="premium_event_history">Histórico de eventos</string>
+    <string name="premium_continuous_protection">Proteção contínua</string>
+    <string name="premium_extended_retention">Retenção prolongada</string>
+    <string name="premium_current_usage">Utilização atual</string>
+    <string name="premium_events_this_month">eventos este mês</string>
+    <string name="premium_unlock">Desbloquear Premium • %1$s</string>
+    <string name="premium_restore">Restaurar compra</string>
+    <string name="premium_lifetime_text">Compra única • Acesso vitalício • Sem anúncios</string>
 </resources>

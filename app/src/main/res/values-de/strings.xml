@@ -276,7 +276,7 @@
     <string name="ui_status_failed">Fehlgeschlagen</string>
     <string name="ui_status_not_sent">Nicht gesendet</string>
     <string name="ui_log_summary">Foto: %1$s; Standort: %2$s; E-Mail: %3$s</string>
-    <string name="ui_separator">"; "</string>
+    <string name="ui_separator">\"; \"</string>
     <string name="ui_unexpected_event">FAILED_FINAL: Unerwarteter Fehler bei der Verarbeitung des Ereignisses: %1$s</string>
     <string name="ui_recovered_events">%1$d ausstehende Warnungen wiederhergestellt; prüfen Sie das Versuchsprotokoll</string>
     <string name="ui_map_query_label">Standort des Entsperrversuchs am Telefon</string>
@@ -294,4 +294,23 @@
     <string name="ui_privacy_disclosure_body">Phone Fortress verwendet Kamera, Standort und Benachrichtigungen, wenn der Schutz aktiviert ist. Nach einem fehlgeschlagenen Entsperrversuch kann die App ein Foto aufnehmen, den Standort des Geräts bestimmen und das Ergebnis lokal speichern. Foto und Standort können einer E-Mail angehängt werden, die an die von Ihnen gewählte Adresse gesendet wird. Diese Daten werden nicht an den Server des Entwicklers gesendet. Verwenden Sie die App auf Ihrem eigenen Gerät oder mit Zustimmung des Besitzers. Sie können Berechtigungen ablehnen oder den Schutz jederzeit beenden.</string>
     <string name="ui_privacy_disclosure_accept">Ich habe es verstanden und möchte fortfahren</string>
     <string name="ui_privacy_disclosure_not_now">Jetzt nicht</string>
+    <string name="premium_title">Phone Fortress Premium</string>
+    <string name="premium_active_title">Premium aktiv ✓</string>
+    <string name="premium_active_text">Sie haben lebenslangen Zugriff auf alle Premium-Funktionen.</string>
+    <string name="premium_feature">Funktion</string>
+    <string name="premium_free">Gratis</string>
+    <string name="premium_premium">Premium</string>
+    <string name="premium_core_protection">Kernschutz</string>
+    <string name="premium_photo_evidence">Foto-Beweise</string>
+    <string name="premium_location_evidence">Standort-Beweise</string>
+    <string name="premium_email_alerts">E-Mail-Benachrichtigungen</string>
+    <string name="premium_evidence_monthly">Beweisereignisse/Monat</string>
+    <string name="premium_event_history">Ereignisverlauf</string>
+    <string name="premium_continuous_protection">Kontinuierlicher Schutz</string>
+    <string name="premium_extended_retention">Erweiterte Speicherdauer</string>
+    <string name="premium_current_usage">Aktuelle Nutzung</string>
+    <string name="premium_events_this_month">Ereignisse diesen Monat</string>
+    <string name="premium_unlock">Premium freischalten • %1$s</string>
+    <string name="premium_restore">Kauf wiederherstellen</string>
+    <string name="premium_lifetime_text">Einmalkauf • Lebenslanger Zugriff • Keine Werbung</string>
 </resources>

@@ -108,11 +108,18 @@ class SecurityPrefs private constructor(private val context: Context) {
         private const val KEY_PIN_BLOCKED_UNTIL = "key_pin_blocked_until"
         private const val KEY_PIN_BLOCKED_UNTIL_REALTIME = "key_pin_blocked_until_realtime"
         private const val KEY_SECURITY_EVENTS_JSON = "key_security_events_json"
+        private const val KEY_PREMIUM_ENTITLEMENT = "key_premium_entitlement"
+        private const val KEY_EVIDENCE_MONTH_COUNTER = "key_evidence_month_counter"
+        private const val KEY_EVIDENCE_MONTH_TIMESTAMP = "key_evidence_month_timestamp"
         private const val KEYSTORE_ALIAS = "intruder_security_credentials"
         private const val ENCRYPTED_PREFIX = "v1:"
         private const val GCM_TAG_LENGTH_BITS = 128
         private const val GCM_IV_LENGTH_BYTES = 12
         private const val MAX_SECURITY_EVENTS = 100
+        private const val FREE_HISTORY_LIMIT = 5
+        private const val PREMIUM_HISTORY_LIMIT = 50
+        private const val FREE_EVIDENCE_MONTHLY_LIMIT = 3
+        private const val PREMIUM_EVIDENCE_MONTHLY_LIMIT = 50
         private const val EVENT_LEASE_TIMEOUT_MILLIS = 2 * 60 * 1000L
         private const val MAX_EVENT_RECOVERY_ATTEMPTS = 2
         private const val MAX_SEND_ATTEMPTS = 3
@@ -612,11 +619,9 @@ class SecurityPrefs private constructor(private val context: Context) {
         val active = events.filterNot { SecurityEventStateMachine.isTerminal(it.status) }
         val terminal = events.filter { SecurityEventStateMachine.isTerminal(it.status) }
         // Never evict retryable or in-flight work; bound only terminal history.
-        // FIX: terminal events are capped on their own (dropped oldest-first),
-        // so a burst of >MAX non-terminal events no longer wipes every terminal
-        // record via takeLast(0). All non-terminal events are always preserved.
-        // FIX: preserve chronological order (timestamp ASC) instead of
-        // active+terminal grouping which broke claimNext ordering.
+        // The bound is the storage window, NOT the tier history limit: trimming by
+        // entitlement here would destroy already-captured evidence the moment a
+        // premium user refunded or a billing query flipped the cached flag.
         val boundedTerminal = terminal.sortedBy { it.timestamp }
             .takeLast(MAX_SECURITY_EVENTS)
         val merged = (active + boundedTerminal).sortedBy { it.timestamp }
@@ -866,6 +871,12 @@ class SecurityPrefs private constructor(private val context: Context) {
 
     fun getLogs(): List<IntruderLog> = store.logs()
 
+    /**
+     * History window shown to the user: 5 entries on Free, 50 on Premium.
+     * Applied at the display boundary so storage keeps the full window either way.
+     */
+    fun getVisibleLogs(): List<IntruderLog> = getLogs().take(getHistoryLimit())
+
     @Synchronized
     fun clearPhotoReference(file: File) {
         val canonical = runCatching { file.canonicalPath }.getOrNull() ?: return
@@ -920,6 +931,90 @@ class SecurityPrefs private constructor(private val context: Context) {
         }
         totalAttempts = 0
         _logsFlow.value = emptyList()
+    }
+
+    // ==================== PREMIUM ENTITLEMENT ====================
+
+    /**
+     * Premium entitlement flag - source of truth for premium status.
+     * Set by BillingManager after purchase verification.
+     */
+    var isPremium: Boolean
+        get() = prefs.getBoolean(KEY_PREMIUM_ENTITLEMENT, false)
+        set(value) = prefs.edit().putBoolean(KEY_PREMIUM_ENTITLEMENT, value).apply()
+
+    /**
+     * Monthly evidence counter - tracks actual security events captured this month.
+     * Resets monthly based on timestamp.
+     */
+    private var evidenceMonthCounter: Int
+        get() = prefs.getInt(KEY_EVIDENCE_MONTH_COUNTER, 0)
+        set(value) = prefs.edit().putInt(KEY_EVIDENCE_MONTH_COUNTER, value).apply()
+
+    private var evidenceMonthTimestamp: Long
+        get() = prefs.getLong(KEY_EVIDENCE_MONTH_TIMESTAMP, 0L)
+        set(value) = prefs.edit().putLong(KEY_EVIDENCE_MONTH_TIMESTAMP, value).apply()
+
+    /**
+     * Get evidence monthly limit based on premium status.
+     * FREE: 3 events/month
+     * PREMIUM: 50 events/month
+     */
+    fun getEvidenceMonthlyLimit(): Int {
+        return if (isPremium) PREMIUM_EVIDENCE_MONTHLY_LIMIT else FREE_EVIDENCE_MONTHLY_LIMIT
+    }
+
+    /**
+     * Get history limit based on premium status.
+     * FREE: 5 events
+     * PREMIUM: 50 events
+     */
+    fun getHistoryLimit(): Int {
+        return if (isPremium) PREMIUM_HISTORY_LIMIT else FREE_HISTORY_LIMIT
+    }
+
+    /**
+     * Check if user can create a new evidence event this month.
+     * Returns true if under limit, false if limit reached.
+     */
+    @Synchronized
+    fun canCreateEvidenceEvent(): Boolean {
+        resetMonthlyCounterIfNeeded()
+        return evidenceMonthCounter < getEvidenceMonthlyLimit()
+    }
+
+    /**
+     * Increment evidence counter when a new event is created.
+     * Must be called only when canCreateEvidenceEvent() returns true.
+     */
+    @Synchronized
+    fun incrementEvidenceCounter() {
+        resetMonthlyCounterIfNeeded()
+        evidenceMonthCounter++
+    }
+
+    /**
+     * Reset monthly counter if a new month has started.
+     * Uses wall-clock time (not device clock dependent for security).
+     */
+    private fun resetMonthlyCounterIfNeeded() {
+        val now = System.currentTimeMillis()
+        val lastReset = evidenceMonthTimestamp
+
+        // If no previous timestamp or more than 30 days have passed, reset
+        if (lastReset == 0L || (now - lastReset) > 30L * 24 * 60 * 60 * 1000) {
+            evidenceMonthCounter = 0
+            evidenceMonthTimestamp = now
+        }
+    }
+
+    /**
+     * Get current evidence usage for display.
+     * Returns Pair(current_count, monthly_limit)
+     */
+    fun getEvidenceUsage(): Pair<Int, Int> {
+        resetMonthlyCounterIfNeeded()
+        return Pair(evidenceMonthCounter, getEvidenceMonthlyLimit())
     }
 
 }

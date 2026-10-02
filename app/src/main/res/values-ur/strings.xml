@@ -276,7 +276,7 @@
     <string name="ui_status_failed">ناکام</string>
     <string name="ui_status_not_sent">نہیں بھیجا گیا</string>
     <string name="ui_log_summary">تصویر: %1$s؛ مقام: %2$s؛ ای میل: %3$s</string>
-    <string name="ui_separator">"; "</string>
+    <string name="ui_separator">\"; \"</string>
     <string name="ui_unexpected_event">FAILED_FINAL: واقعہ کی کارروائی کے دوران غیر متوقع خرابی: %1$s</string>
     <string name="ui_recovered_events">%1$d زیر التواء انتباہات بحال ہوئے؛ کوششوں کا لاگ دیکھیں</string>
     <string name="ui_map_query_label">فون غیر مقفل کرنے کی کوشش کا مقام</string>
@@ -294,4 +294,23 @@
     <string name="ui_privacy_disclosure_body">Phone Fortress تحفظ فعال ہونے پر کیمرا، مقام اور معلومات استعمال کرتا ہے۔ ناکام غیر مقفل کرنے کی کوشش کے بعد یہ تصویر کھینچ سکتا ہے، ڈیوائس کا مقام طے کر سکتا ہے اور نتیجہ فون میں محفوظ کر سکتا ہے۔ تصویر اور مقام آپ کے منتخب کردہ پتے پر بھیجے گئے ای میل کے ساتھ ہو سکتے ہیں۔ یہ ڈیٹا ڈویلپر کے سرور پر نہیں بھیجا جاتا۔ ایپ اپنے ڈیوائس پر یا مالک کی اجازت سے استعمال کریں۔ آپ اجازتیں دینے سے انکار کر سکتے ہیں یا کسی بھی وقت تحفظ روک سکتے ہیں۔</string>
     <string name="ui_privacy_disclosure_accept">میں سمجھ گیا اور جاری رکھنا چاہتا ہوں</string>
     <string name="ui_privacy_disclosure_not_now">ابھی نہیں</string>
+    <string name="premium_title">Phone Fortress Premium</string>
+    <string name="premium_active_title">پریمیم فعال ✓</string>
+    <string name="premium_active_text">آپ کے پاس تمام پریمیم خصوصیات تک تادم عمر رسائی ہے۔</string>
+    <string name="premium_feature">خصوصیت</string>
+    <string name="premium_free">مفت</string>
+    <string name="premium_premium">پریمیم</string>
+    <string name="premium_core_protection">بنیادی تحفظ</string>
+    <string name="premium_photo_evidence">تصویر بطور ثبوت</string>
+    <string name="premium_location_evidence">مقام بطور ثبوت</string>
+    <string name="premium_email_alerts">ای میل انتباہات</string>
+    <string name="premium_evidence_monthly">ثبوت کے واقعات/ماہ</string>
+    <string name="premium_event_history">واقعات کی تاریخ</string>
+    <string name="premium_continuous_protection">مسلسل تحفظ</string>
+    <string name="premium_extended_retention">توسیع شدہ محفوظ مدت</string>
+    <string name="premium_current_usage">موجودہ استعمال</string>
+    <string name="premium_events_this_month">اس ماہ کے واقعات</string>
+    <string name="premium_unlock">پریمیم غیر مقفل کریں • %1$s</string>
+    <string name="premium_restore">خریداری بحال کریں</string>
+    <string name="premium_lifetime_text">ایک بار کی خریداری • تادم عمر رسائی • اشتہارات کے بغیر</string>
 </resources>

@@ -276,7 +276,7 @@
     <string name="ui_status_failed">ব্যর্থ</string>
     <string name="ui_status_not_sent">পাঠানো হয়নি</string>
     <string name="ui_log_summary">ছবি: %1$s; অবস্থান: %2$s; ইমেইল: %3$s</string>
-    <string name="ui_separator">"; "</string>
+    <string name="ui_separator">\"; \"</string>
     <string name="ui_unexpected_event">FAILED_FINAL: ঘটনা প্রক্রিয়া করার সময় অপ্রত্যাশিত ত্রুটি: %1$s</string>
     <string name="ui_recovered_events">%1$d টি মুলতুবি সতর্কতা পুনরুদ্ধার হয়েছে; প্রচেষ্টার লগ দেখুন</string>
     <string name="ui_map_query_label">ফোন আনলক প্রচেষ্টার অবস্থান</string>
@@ -294,4 +294,23 @@
     <string name="ui_privacy_disclosure_body">Phone Fortress সুরক্ষা চালু থাকলে ক্যামেরা, অবস্থান ও বিজ্ঞপ্তি ব্যবহার করে। ব্যর্থ আনলক প্রচেষ্টার পর এটি ছবি তুলতে পারে, ডিভাইসের অবস্থান নির্ধারণ করতে পারে এবং ফলাফল ডিভাইসে সংরক্ষণ করতে পারে। ছবি ও অবস্থান আপনি বেছে নেওয়া ঠিকানায় পাঠানো ইমেইলের সাথে যুক্ত হতে পারে। এই তথ্য ডেভেলপারের সার্ভারে পাঠানো হয় না। নিজের ডিভাইসে বা মালিকের সম্মতিতে অ্যাপটি ব্যবহার করুন। আপনি যেকোনো সময় অনুমতি দিতে অস্বীকার করতে পারেন বা সুরক্ষা থামাতে পারেন।</string>
     <string name="ui_privacy_disclosure_accept">আমি বুঝেছি এবং চালিয়ে যেতে চাই</string>
     <string name="ui_privacy_disclosure_not_now">এখন নয়</string>
+    <string name="premium_title">Phone Fortress Premium</string>
+    <string name="premium_active_title">প্রিমিয়াম সক্রিয় ✓</string>
+    <string name="premium_active_text">আপনার সকল প্রিমিয়াম বৈশিষ্ট্যে আজীবন প্রবেশাধিকার রয়েছে।</string>
+    <string name="premium_feature">বৈশিষ্ট্য</string>
+    <string name="premium_free">বিনামূল্যে</string>
+    <string name="premium_premium">প্রিমিয়াম</string>
+    <string name="premium_core_protection">মূল সুরক্ষা</string>
+    <string name="premium_photo_evidence">ছবির প্রমাণ</string>
+    <string name="premium_location_evidence">অবস্থানের প্রমাণ</string>
+    <string name="premium_email_alerts">ইমেইল সতর্কতা</string>
+    <string name="premium_evidence_monthly">প্রমাণ ঘটনা/মাস</string>
+    <string name="premium_event_history">ঘটনার ইতিহাস</string>
+    <string name="premium_continuous_protection">অবিরত সুরক্ষা</string>
+    <string name="premium_extended_retention">বর্ধিত সংরক্ষণ</string>
+    <string name="premium_current_usage">বর্তমান ব্যবহার</string>
+    <string name="premium_events_this_month">এ মাসের ঘটনা</string>
+    <string name="premium_unlock">প্রিমিয়াম আনলক করুন • %1$s</string>
+    <string name="premium_restore">ক্রয় পুনরুদ্ধার করুন</string>
+    <string name="premium_lifetime_text">এককালীন ক্রয় • আজীবন প্রবেশাধিকার • বিজ্ঞাপনমুক্ত</string>
 </resources>

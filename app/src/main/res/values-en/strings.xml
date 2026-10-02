@@ -294,4 +294,25 @@
     <string name="ui_privacy_disclosure_body">Phone Fortress uses the camera, location, and notifications when protection is enabled. After a failed unlock attempt, it may capture a photo, determine the device location, and store the result locally. The photo and location may be attached to an email sent to the address you choose. These data are not sent to the developer\'s server. Use the app on your own device or with the owner\'s consent. You can refuse permissions or stop protection at any time.</string>
     <string name="ui_privacy_disclosure_accept">I understand and want to continue</string>
     <string name="ui_privacy_disclosure_not_now">Not now</string>
+    
+    <!-- Premium / Monetization strings -->
+    <string name="premium_title">Phone Fortress Premium</string>
+    <string name="premium_active_title">Premium Active ✓</string>
+    <string name="premium_active_text">You have lifetime access to all premium features.</string>
+    <string name="premium_feature">Feature</string>
+    <string name="premium_free">FREE</string>
+    <string name="premium_premium">PREMIUM</string>
+    <string name="premium_core_protection">Core protection</string>
+    <string name="premium_photo_evidence">Photo evidence</string>
+    <string name="premium_location_evidence">Location evidence</string>
+    <string name="premium_email_alerts">Email alerts</string>
+    <string name="premium_evidence_monthly">Evidence events/month</string>
+    <string name="premium_event_history">Event history</string>
+    <string name="premium_continuous_protection">Continuous Protection</string>
+    <string name="premium_extended_retention">Extended retention</string>
+    <string name="premium_current_usage">Current usage</string>
+    <string name="premium_events_this_month">events this month</string>
+    <string name="premium_unlock">Unlock Premium • %1$s</string>
+    <string name="premium_restore">Restore Purchase</string>
+    <string name="premium_lifetime_text">One-time purchase • Lifetime access • No ads</string>
 </resources>

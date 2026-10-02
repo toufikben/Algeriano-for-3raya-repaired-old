@@ -276,7 +276,7 @@
     <string name="ui_status_failed">Başarısız</string>
     <string name="ui_status_not_sent">Gönderilmedi</string>
     <string name="ui_log_summary">Fotoğraf: %1$s; konum: %2$s; e-posta: %3$s</string>
-    <string name="ui_separator">"; "</string>
+    <string name="ui_separator">\"; \"</string>
     <string name="ui_unexpected_event">FAILED_FINAL: Olay işlenirken beklenmeyen hata: %1$s</string>
     <string name="ui_recovered_events">%1$d bekleyen uyarı kurtarıldı; deneme günlüğünü inceleyin</string>
     <string name="ui_map_query_label">Telefon kilit açma denemesinin konumu</string>
@@ -294,4 +294,23 @@
     <string name="ui_privacy_disclosure_body">Phone Fortress, koruma etkinken kamera, konum ve bildirimleri kullanır. Başarısız bir kilit açma denemesinden sonra bir fotoğraf çekebilir, cihazın konumunu belirleyebilir ve sonucu cihazda saklayabilir. Fotoğraf ve konum, seçtiğiniz adrese gönderilen bir e-postaya eklenebilir. Bu veriler geliştiricinin sunucusuna gönderilmez. Uygulamayı kendi cihazınızda veya sahibinin onayıyla kullanın. İzinleri reddedebilir veya korumayı istediğiniz zaman durdurabilirsiniz.</string>
     <string name="ui_privacy_disclosure_accept">Anladım ve devam etmek istiyorum</string>
     <string name="ui_privacy_disclosure_not_now">Şimdi değil</string>
+    <string name="premium_title">Phone Fortress Premium</string>
+    <string name="premium_active_title">Premium etkin ✓</string>
+    <string name="premium_active_text">Tüm premium özelliklere ömür boyu erişiminiz var.</string>
+    <string name="premium_feature">Özellik</string>
+    <string name="premium_free">ÜCRETSİZ</string>
+    <string name="premium_premium">Premium</string>
+    <string name="premium_core_protection">Temel koruma</string>
+    <string name="premium_photo_evidence">Fotoğraf kanıtı</string>
+    <string name="premium_location_evidence">Konum kanıtı</string>
+    <string name="premium_email_alerts">E-posta uyarıları</string>
+    <string name="premium_evidence_monthly">Kanıt olayı/ay</string>
+    <string name="premium_event_history">Olay geçmişi</string>
+    <string name="premium_continuous_protection">Kesintisiz koruma</string>
+    <string name="premium_extended_retention">Uzatılmış saklama</string>
+    <string name="premium_current_usage">Mevcut kullanım</string>
+    <string name="premium_events_this_month">bu ayki olaylar</string>
+    <string name="premium_unlock">Premium\'u etkinleştir • %1$s</string>
+    <string name="premium_restore">Satın almayı geri yükle</string>
+    <string name="premium_lifetime_text">Tek seferlik satın alma • Ömür boyu erişim • Reklamsız</string>
 </resources>

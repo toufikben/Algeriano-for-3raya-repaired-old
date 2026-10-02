@@ -303,8 +303,13 @@ class CameraForegroundService : Service() {
             SecurityEventStatus.FAILED_RETRYABLE
         ) && !existingEvent?.photoPath.isNullOrBlank()
 
+        // Automatic countdown restart is the paid "continuous protection": Free
+        // stops after one cycle. Gating it here keeps a single restart path, so it
+        // cannot leak to Free through the toggle nor skip Premium when the toggle is
+        // off, and a Premium user who turned the toggle off is not overridden.
         val autoRestartCountdown = isCountdownCapture &&
             prefs.countdownAutoRestart &&
+            prefs.isPremium &&
             prefs.isTrackingEnabled
         val capturedCountdownEndTime = if (isCountdownCapture) prefs.countdownEndTime else 0L
         // FIX(#19): the next cycle used to be started *before* this capture touched
@@ -428,6 +433,8 @@ class CameraForegroundService : Service() {
                         longitude = lng,
                         locationTimestamp = location?.time
                     )
+                    // Increment monthly evidence counter for successful captures
+                    prefs.incrementEvidenceCounter()
                 }
                 if (!isTest && eventId != null) {
                     prefs.moveCapturedEventToSendPending(eventId)
@@ -570,6 +577,8 @@ class CameraForegroundService : Service() {
                 if (isCountdownCapture && !autoRestartCountdown &&
                     prefs.countdownEndTime == capturedCountdownEndTime
                 ) {
+                    // One cycle only: the tier that restarts is handled by
+                    // restartCycle() in the finally block.
                     prefs.clearCountdown()
                 }
             } catch (e: Exception) {

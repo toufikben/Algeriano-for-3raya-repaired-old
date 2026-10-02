@@ -276,7 +276,7 @@
     <string name="ui_status_failed">Non riuscito</string>
     <string name="ui_status_not_sent">Non inviato</string>
     <string name="ui_log_summary">Foto: %1$s; posizione: %2$s; email: %3$s</string>
-    <string name="ui_separator">"; "</string>
+    <string name="ui_separator">\"; \"</string>
     <string name="ui_unexpected_event">FAILED_FINAL: errore imprevisto durante l\'elaborazione dell\'evento: %1$s</string>
     <string name="ui_recovered_events">%1$d avvisi in sospeso recuperati; consulta il registro dei tentativi</string>
     <string name="ui_map_query_label">Posizione del tentativo di sblocco del telefono</string>
@@ -294,4 +294,23 @@
     <string name="ui_privacy_disclosure_body">Phone Fortress utilizza fotocamera, posizione e notifiche quando la protezione è attiva. Dopo un tentativo di sblocco errato può scattare una foto, determinare la posizione del dispositivo e salvare il risultato localmente. Foto e posizione possono essere allegate a un\'email inviata all\'indirizzo da te scelto. Questi dati non vengono inviati al server dello sviluppatore. Usa l\'app sul tuo dispositivo o con il consenso del proprietario. Puoi rifiutare le autorizzazioni o disattivare la protezione in qualsiasi momento.</string>
     <string name="ui_privacy_disclosure_accept">Ho capito e voglio continuare</string>
     <string name="ui_privacy_disclosure_not_now">Non ora</string>
+    <string name="premium_title">Phone Fortress Premium</string>
+    <string name="premium_active_title">Premium attivo ✓</string>
+    <string name="premium_active_text">Hai l’accesso a vita a tutte le funzionalità premium.</string>
+    <string name="premium_feature">Funzionalità</string>
+    <string name="premium_free">Gratis</string>
+    <string name="premium_premium">Premium</string>
+    <string name="premium_core_protection">Protezione base</string>
+    <string name="premium_photo_evidence">Prove fotografiche</string>
+    <string name="premium_location_evidence">Prove di posizione</string>
+    <string name="premium_email_alerts">Avvisi e-mail</string>
+    <string name="premium_evidence_monthly">Eventi di prova/mese</string>
+    <string name="premium_event_history">Cronologia eventi</string>
+    <string name="premium_continuous_protection">Protezione continua</string>
+    <string name="premium_extended_retention">Conservazione estesa</string>
+    <string name="premium_current_usage">Utilizzo attuale</string>
+    <string name="premium_events_this_month">eventi questo mese</string>
+    <string name="premium_unlock">Sblocca Premium • %1$s</string>
+    <string name="premium_restore">Ripristina acquisto</string>
+    <string name="premium_lifetime_text">Acquisto una tantum • Accesso a vita • Senza pubblicità</string>
 </resources>

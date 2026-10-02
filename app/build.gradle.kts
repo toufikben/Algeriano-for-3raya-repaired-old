@@ -119,6 +119,7 @@ dependencies {
   implementation(libs.androidx.room.runtime)
   implementation(libs.coil.compose)
   implementation(libs.play.services.location)
+  implementation(libs.play.services.billing)
   implementation(libs.android.mail)
   implementation(libs.android.activation)
   implementation(libs.kotlinx.coroutines.android)

@@ -276,7 +276,7 @@
     <string name="ui_status_failed">失敗</string>
     <string name="ui_status_not_sent">未送信</string>
     <string name="ui_log_summary">写真: %1$s; 位置情報: %2$s; メール: %3$s</string>
-    <string name="ui_separator">"; "</string>
+    <string name="ui_separator">\"; \"</string>
     <string name="ui_unexpected_event">FAILED_FINAL: イベントの処理中に予期しないエラーが発生しました: %1$s</string>
     <string name="ui_recovered_events">保留中の警告 %1$d 件を復旧しました。試行ログを確認してください</string>
     <string name="ui_map_query_label">スマホ解錠試行の位置</string>
@@ -294,4 +294,23 @@
     <string name="ui_privacy_disclosure_body">Phone Fortress は保護が有効なとき、カメラ、位置情報、通知を使用します。解錠の失敗後、写真を撮影し、端末の位置を特定し、結果を端末内に保存することがあります。写真と位置情報は、あなたが選んだあて先に送信されるメールに添付されることがあります。これらのデータは開発者のサーバーには送信されません。ご自身の端末で、または所有者の同意を得てアプリをご利用ください。権限を拒否したり、いつでも保護を停止したりできます。</string>
     <string name="ui_privacy_disclosure_accept">理解しました。続行します</string>
     <string name="ui_privacy_disclosure_not_now">あとで</string>
+    <string name="premium_title">Phone Fortress Premium</string>
+    <string name="premium_active_title">プレミアム有効 ✓</string>
+    <string name="premium_active_text">すべてのプレミアム機能を生涯にわたって利用できます。</string>
+    <string name="premium_feature">機能</string>
+    <string name="premium_free">無料</string>
+    <string name="premium_premium">プレミアム</string>
+    <string name="premium_core_protection">基本保護</string>
+    <string name="premium_photo_evidence">写真による証拠</string>
+    <string name="premium_location_evidence">位置情報の証拠</string>
+    <string name="premium_email_alerts">メール警告</string>
+    <string name="premium_evidence_monthly">証拠イベント/月</string>
+    <string name="premium_event_history">イベント履歴</string>
+    <string name="premium_continuous_protection">継続保護</string>
+    <string name="premium_extended_retention">保存期間の延長</string>
+    <string name="premium_current_usage">現在の使用量</string>
+    <string name="premium_events_this_month">今月のイベント</string>
+    <string name="premium_unlock">プレミアムを解錠 • %1$s</string>
+    <string name="premium_restore">購入を復元</string>
+    <string name="premium_lifetime_text">買い切り • 生涯利用 • 広告なし</string>
 </resources>

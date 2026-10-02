@@ -44,6 +44,7 @@ import androidx.compose.material.icons.filled.Language
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Shield
 import androidx.compose.material.icons.filled.Warning
+import androidx.compose.material.icons.filled.Work
 import androidx.compose.material3.Card
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -82,6 +83,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
@@ -95,6 +98,7 @@ import com.example.ui.components.DeveloperInfoDialog
 import com.example.ui.components.IntruderLogsCard
 import com.example.ui.components.PermissionsStatusCard
 import com.example.ui.components.PinManagementDialog
+import com.example.ui.components.PremiumScreen
 import com.example.ui.components.ProtectionToggleCard
 import com.example.ui.components.SecurityStatusCard
 import com.example.ui.theme.CyanAccent
@@ -244,6 +248,7 @@ fun SecurityMainScreen(
         val observer = LifecycleEventObserver { _, event ->
             if (event == Lifecycle.Event.ON_RESUME) {
                 viewModel.refreshStatuses()
+                viewModel.refreshEntitlement()
             }
         }
         lifecycleOwner.lifecycle.addObserver(observer)
@@ -345,6 +350,16 @@ fun SecurityMainScreen(
                     }
                 },
                 actions = {
+                    IconButton(
+                        onClick = { viewModel.showPremiumScreen() },
+                        modifier = Modifier.testTag("premium_button")
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.Work,
+                            contentDescription = tr(com.example.R.string.premium_title),
+                            tint = if (uiState.isPremium) MaterialTheme.colorScheme.primary else CyanAccent
+                        )
+                    }
                     IconButton(
                         onClick = { showLanguagePicker = true },
                         modifier = Modifier.testTag("language_picker_button")
@@ -594,6 +609,24 @@ fun SecurityMainScreen(
             },
             onDismiss = { showLanguagePicker = false }
         )
+    }
+    if (uiState.showPremiumScreen) {
+        Dialog(
+            onDismissRequest = { viewModel.dismissPremiumScreen() },
+            properties = DialogProperties(usePlatformDefaultWidth = false)
+        ) {
+            PremiumScreen(
+                isPremium = uiState.isPremium,
+                localizedPrice = uiState.localizedPrice,
+                evidenceUsage = uiState.evidenceUsage,
+                historyLimit = uiState.historyLimit,
+                onUnlockPremium = {
+                    (context as? ComponentActivity)?.let { viewModel.launchPurchase(it) }
+                },
+                onRestorePurchase = { viewModel.restorePurchases() },
+                onDismiss = { viewModel.dismissPremiumScreen() }
+            )
+        }
     }
 }
 

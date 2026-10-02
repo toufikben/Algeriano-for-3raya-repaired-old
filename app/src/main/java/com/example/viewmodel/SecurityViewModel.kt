@@ -19,6 +19,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.data.IntruderLog
 import com.example.data.SecurityEventStateMachine
 import com.example.data.SecurityPrefs
+import com.example.billing.BillingManager
 import java.io.File
 import com.example.receiver.CountdownScheduler
 import com.example.receiver.MyDeviceAdminReceiver
@@ -55,12 +56,22 @@ data class SecurityUiState(
     val countdownEndTime: Long = 0L,
     val countdownDurationMillis: Long = 60 * 60 * 1000L,
     val countdownRemainingMillis: Long = 0L,
-    val countdownAutoRestart: Boolean = false
+    val countdownAutoRestart: Boolean = false,
+    // Premium / Monetization fields
+    val isPremium: Boolean = false,
+    val evidenceUsage: Pair<Int, Int> = Pair(0, 3), // (current, limit)
+    val historyLimit: Int = 5,
+    val localizedPrice: String = "$4.99",
+    val billingAvailable: Boolean = true,
+    val showPremiumScreen: Boolean = false
 )
 
 class SecurityViewModel(application: Application) : AndroidViewModel(application) {
 
     private val context = application.applicationContext
+    
+    // Billing manager for premium entitlement
+    private val billingManager = BillingManager(context)
 
     private val prefs = SecurityPrefs.getInstance(context)
 
@@ -73,16 +84,50 @@ class SecurityViewModel(application: Application) : AndroidViewModel(application
             email = prefs.email,
             hasPassword = prefs.password.isNotEmpty(),
             isTrackingEnabled = prefs.isTrackingEnabled,
-            logs = prefs.getLogs(),
+            logs = prefs.getVisibleLogs(),
             totalAttempts = prefs.totalAttempts,
             countdownEnabled = prefs.countdownEnabled,
             countdownEndTime = prefs.countdownEndTime,
             countdownDurationMillis = prefs.countdownDurationMillis,
             countdownRemainingMillis = remainingCountdownMillis(),
-            countdownAutoRestart = prefs.countdownAutoRestart
+            countdownAutoRestart = prefs.countdownAutoRestart,
+            isPremium = prefs.isPremium,
+            evidenceUsage = prefs.getEvidenceUsage(),
+            historyLimit = prefs.getHistoryLimit()
         )
     )
     val uiState: StateFlow<SecurityUiState> = _uiState.asStateFlow()
+
+    init {
+        // Initialize billing and listen for premium entitlement changes
+        viewModelScope.launch {
+            billingManager.initialize()
+            
+            // Collect premium status updates from BillingManager
+            launch {
+                billingManager.isPremium.collect { isPremium ->
+                    // UI mirror only: BillingManager owns the cached entitlement, so
+                    // writing prefs here would overwrite it with an unverified value.
+                    // The tier also re-bounds the visible history and the quota row.
+                    _uiState.update {
+                        it.copy(
+                            isPremium = isPremium,
+                            historyLimit = prefs.getHistoryLimit(),
+                            evidenceUsage = prefs.getEvidenceUsage(),
+                            logs = prefs.getVisibleLogs()
+                        )
+                    }
+                }
+            }
+            
+            // Collect billing availability
+            launch {
+                billingManager.billingAvailable.collect { available ->
+                    _uiState.update { it.copy(billingAvailable = available) }
+                }
+            }
+        }
+    }
 
     /** Live-remaining ticker; only alive while a countdown is enabled. */
     private var countdownTickerJob: Job? = null
@@ -107,7 +152,10 @@ class SecurityViewModel(application: Application) : AndroidViewModel(application
                 // together, so refreshing both here keeps the hero counter
                 // exact instead of frozen at the 50-log display cap.
                 _uiState.update {
-                    it.copy(logs = logList, totalAttempts = prefs.totalAttempts)
+                    it.copy(
+                        logs = logList.take(prefs.getHistoryLimit()),
+                        totalAttempts = prefs.totalAttempts
+                    )
                 }
             }
         }
@@ -448,12 +496,64 @@ class SecurityViewModel(application: Application) : AndroidViewModel(application
     }
 
     fun setCountdownAutoRestart(enabled: Boolean) {
+        // Enabling is the paid continuous-protection switch; disabling is always
+        // allowed so an expired entitlement can never trap the user in it.
+        if (enabled && !prefs.isPremium) return
         prefs.countdownAutoRestart = enabled
         _uiState.update { it.copy(countdownAutoRestart = enabled) }
     }
 
     fun dismissBanner() {
         _uiState.update { it.copy(bannerMessage = null) }
+    }
+    
+    // ==================== PREMIUM / MONETIZATION METHODS ====================
+    
+    /** Show premium screen */
+    fun showPremiumScreen() {
+        _uiState.update { 
+            it.copy(
+                showPremiumScreen = true,
+                evidenceUsage = prefs.getEvidenceUsage(),
+                historyLimit = prefs.getHistoryLimit(),
+                localizedPrice = billingManager.getLocalizedPrice()
+            )
+        }
+    }
+    
+    /** Dismiss premium screen */
+    fun dismissPremiumScreen() {
+        _uiState.update { it.copy(showPremiumScreen = false) }
+    }
+    
+    /** Launch purchase flow - must be called from Activity with context */
+    fun launchPurchase(activity: androidx.activity.ComponentActivity) {
+        viewModelScope.launch {
+            billingManager.launchPurchase(activity)
+        }
+    }
+    
+    /** Restore previous purchases */
+    fun restorePurchases() {
+        viewModelScope.launch {
+            billingManager.restorePurchases()
+        }
+    }
+    
+    /** Clear billing errors */
+    fun clearBillingError() {
+        billingManager.clearError()
+    }
+
+    /**
+     * Re-read the entitlement from Google Play. Kept out of [refreshStatuses], which
+     * is a documented passive read path; Play asks for a purchase query on every
+     * resume so a purchase completed outside the app is picked up without a restart.
+     */
+    fun refreshEntitlement() {
+        viewModelScope.launch {
+            billingManager.queryPremiumEntitlement()
+        }
     }
 
     fun refreshStatuses() {
@@ -505,5 +605,10 @@ class SecurityViewModel(application: Application) : AndroidViewModel(application
             )
         }
         syncCountdownTicker()
+    }
+    
+    override fun onCleared() {
+        super.onCleared()
+        billingManager.destroy()
     }
 }

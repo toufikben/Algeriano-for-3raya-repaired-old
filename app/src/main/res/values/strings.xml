@@ -294,4 +294,23 @@
     <string name="ui_privacy_disclosure_body">يستخدم Phone Fortress الكاميرا والموقع والإشعارات عند تفعيل الحماية. بعد محاولة فتح خاطئة، قد تُلتقط صورة ويُحدَّد موقع الجهاز وتُحفظ النتائج محلياً، وقد تُرفق الصورة والموقع برسالة بريد إلى العنوان الذي تختاره. لا تُرسل هذه البيانات إلى خادم المطور. استخدم التطبيق على جهازك أو بموافقة مالكه، ويمكنك رفض الصلاحيات أو إيقاف الحماية من داخل التطبيق.</string>
     <string name="ui_privacy_disclosure_accept">فهمت وأوافق على المتابعة</string>
     <string name="ui_privacy_disclosure_not_now">ليس الآن</string>
+    <string name="premium_title">Phone Fortress Premium</string>
+    <string name="premium_active_title">النسخة المدفوعة مفعّلة ✓</string>
+    <string name="premium_active_text">لديك وصول مدى الحياة إلى جميع الميزات المدفوعة.</string>
+    <string name="premium_feature">الميزة</string>
+    <string name="premium_free">مجاني</string>
+    <string name="premium_premium">مميّز</string>
+    <string name="premium_core_protection">الحماية الأساسية</string>
+    <string name="premium_photo_evidence">دليل الصور</string>
+    <string name="premium_location_evidence">دليل الموقع</string>
+    <string name="premium_email_alerts">تنبيهات البريد</string>
+    <string name="premium_evidence_monthly">أحداث الإثبات شهرياً</string>
+    <string name="premium_event_history">سجل الأحداث</string>
+    <string name="premium_continuous_protection">حماية مستمرة</string>
+    <string name="premium_extended_retention">احتفاظ ممتد</string>
+    <string name="premium_current_usage">الاستخدام الحالي</string>
+    <string name="premium_events_this_month">حدث هذا الشهر</string>
+    <string name="premium_unlock">فتح النسخة المدفوعة • %1$s</string>
+    <string name="premium_restore">استعادة الشراء</string>
+    <string name="premium_lifetime_text">شراء واحد • وصول مدى الحياة • بدون إعلانات</string>
 </resources>
