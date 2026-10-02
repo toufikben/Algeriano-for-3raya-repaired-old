@@ -14,11 +14,19 @@ import com.android.billingclient.api.PurchasesUpdatedListener
 import com.android.billingclient.api.QueryProductDetailsParams
 import com.android.billingclient.api.QueryPurchasesParams
 import com.example.data.SecurityPrefs
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
+import kotlin.math.min
 
 /**
  * Google Play Billing manager for Phone Fortress Premium lifetime purchase.
@@ -32,10 +40,24 @@ class BillingManager(private val context: Context) {
     companion object {
         private const val TAG = "PhoneFortress::BillingManager"
         const val PREMIUM_PRODUCT_ID = "phone_fortress_premium_lifetime"
+
+        // Play's own service dies (low memory, Play update, background limits) and never
+        // restarts itself, so reconnection is the caller's job. Short bursts only: a
+        // device without Play must not spin on a timer for the whole app session.
+        private const val RECONNECT_MIN_DELAY_MILLIS = 500L
+        private const val RECONNECT_MAX_DELAY_MILLIS = 8_000L
+        private const val RECONNECT_MAX_ATTEMPTS = 5
     }
 
     private var billingClient: BillingClient? = null
     private var productDetails: ProductDetails? = null
+
+    // Play answers the connection callbacks on a binder thread.
+    @Volatile
+    private var connected = false
+    private var reconnectAttempts = 0
+    private var reconnectJob: Job? = null
+    private val billingScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
 
     // A flow, not a field: the price usually lands after the Premium screen is
     // already open, and a snapshot taken at that moment would leave the unlock
@@ -95,31 +117,89 @@ class BillingManager(private val context: Context) {
                 )
                 .build()
 
-            connectToBillingService()
-            queryPremiumEntitlement()
-            queryProductDetails()
+            // A failed setup is not a Free user: querying now would only fail again and
+            // the cache already holds the last Play-confirmed value. The reconnect burst
+            // re-queries instead.
+            if (connectToBillingService()) {
+                queryPremiumEntitlement()
+                queryProductDetails()
+            } else {
+                scheduleReconnect()
+            }
         } catch (e: Exception) {
             Log.e(TAG, "Failed to initialize billing", e)
         }
     }
 
-    private suspend fun connectToBillingService() {
-        suspendCoroutine<Unit> { continuation ->
-            billingClient?.startConnection(object : BillingClientStateListener {
-                override fun onBillingSetupFinished(billingResult: BillingResult) {
-                    if (billingResult.responseCode == BillingClient.BillingResponseCode.OK) {
-                        Log.d(TAG, "Billing connected")
-                    } else {
-                        Log.e(TAG, "Billing setup failed: ${billingResult.debugMessage}")
+    private suspend fun connectToBillingService(): Boolean =
+        suspendCoroutine { continuation ->
+            val client = billingClient
+            if (client == null) {
+                continuation.resume(false)
+            } else {
+                client.startConnection(object : BillingClientStateListener {
+                    override fun onBillingSetupFinished(billingResult: BillingResult) {
+                        val ok = billingResult.responseCode == BillingClient.BillingResponseCode.OK
+                        if (ok) {
+                            Log.d(TAG, "Billing connected")
+                        } else {
+                            Log.e(TAG, "Billing setup failed: ${billingResult.debugMessage}")
+                        }
+                        connected = ok
+                        continuation.resume(ok)
                     }
-                    continuation.resume(Unit)
-                }
 
-                override fun onBillingServiceDisconnected() {
-                    Log.w(TAG, "Billing disconnected")
-                }
-            }) ?: continuation.resume(Unit)
+                    override fun onBillingServiceDisconnected() {
+                        Log.w(TAG, "Billing disconnected")
+                        connected = false
+                        scheduleReconnect()
+                    }
+                })
+            }
         }
+
+    /**
+     * Reconnect with a short exponential burst, then re-read both the entitlement and the
+     * price. Giving up is safe because every entry point that needs Play (resume, opening
+     * the paywall, tapping unlock) asks for a connection again.
+     */
+    private fun scheduleReconnect() {
+        if (billingClient == null || connected || reconnectJob?.isActive == true) return
+        if (reconnectAttempts >= RECONNECT_MAX_ATTEMPTS) {
+            Log.w(TAG, "Giving up reconnecting after $reconnectAttempts attempts")
+            return
+        }
+        val backoff = min(
+            RECONNECT_MIN_DELAY_MILLIS shl reconnectAttempts,
+            RECONNECT_MAX_DELAY_MILLIS
+        )
+        reconnectAttempts++
+        reconnectJob = billingScope.launch {
+            delay(backoff)
+            if (connectToBillingService()) {
+                reconnectAttempts = 0
+                queryPremiumEntitlement()
+                queryProductDetails()
+            } else {
+                scheduleReconnect()
+            }
+        }
+    }
+
+    /**
+     * Ask Play for the current state after the app came back to the foreground. A
+     * disconnected client is reconnected first, so a Play process that died while the app
+     * was closed does not leave the paywall stuck on "premium unavailable".
+     */
+    suspend fun refreshFromPlay() {
+        if (!connected) {
+            reconnectAttempts = 0
+            reconnectJob?.cancel()
+            reconnectJob = null
+            if (!connectToBillingService()) return
+        }
+        queryPremiumEntitlement()
+        queryProductDetails()
     }
 
     /**
@@ -229,7 +309,13 @@ class BillingManager(private val context: Context) {
      * Must be called from an Activity context.
      */
     suspend fun launchPurchase(activity: androidx.activity.ComponentActivity) {
-        val details = productDetails
+        var details = productDetails
+        if (details == null) {
+            // The tap means the user wants the product now, so ask Play once more
+            // instead of leaving a stale "premium unavailable" screen.
+            refreshFromPlay()
+            details = productDetails
+        }
         val offerToken = details?.oneTimePurchaseOfferDetails?.offerToken
         if (details == null || offerToken == null) {
             Log.e(TAG, "Product not loaded yet")
@@ -266,7 +352,7 @@ class BillingManager(private val context: Context) {
      */
     suspend fun restorePurchases() {
         Log.d(TAG, "Restoring purchases...")
-        queryPremiumEntitlement()
+        refreshFromPlay()
     }
 
     /**
@@ -314,6 +400,7 @@ class BillingManager(private val context: Context) {
      * End billing connection.
      */
     fun destroy() {
+        billingScope.cancel()
         try {
             billingClient?.endConnection()
             billingClient = null

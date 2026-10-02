@@ -517,6 +517,9 @@ class SecurityViewModel(application: Application) : AndroidViewModel(application
                 historyLimit = prefs.getHistoryLimit()
             )
         }
+        // The unlock button stays disabled without a price from Play, so the screen that
+        // shows it asks again rather than trusting a response from app start.
+        refreshEntitlement()
     }
     
     /** Dismiss premium screen */
@@ -545,7 +548,7 @@ class SecurityViewModel(application: Application) : AndroidViewModel(application
      */
     fun refreshEntitlement() {
         viewModelScope.launch {
-            billingManager.queryPremiumEntitlement()
+            billingManager.refreshFromPlay()
         }
     }
 

@@ -57,4 +57,18 @@ class BillingManagerTest {
             manager.localizedPrice.value
         )
     }
+
+    @Test
+    fun `a resume with no Play connection changes nothing`() {
+        prefs.isPremium = true
+        val manager = BillingManager(context)
+
+        // onResume and the paywall both go through this path; with no client it must
+        // neither crash nor downgrade the user nor guess a price.
+        runBlocking { manager.refreshFromPlay() }
+
+        assertTrue(manager.isPremium.value)
+        assertTrue(prefs.isPremium)
+        assertNull(manager.localizedPrice.value)
+    }
 }
