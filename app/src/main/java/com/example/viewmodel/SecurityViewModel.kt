@@ -126,6 +126,13 @@ class SecurityViewModel(application: Application) : AndroidViewModel(application
                     _uiState.update { it.copy(billingAvailable = available) }
                 }
             }
+
+            // Play answers later than the screen opens, so the price arrives here.
+            launch {
+                billingManager.localizedPrice.collect { price ->
+                    _uiState.update { it.copy(localizedPrice = price) }
+                }
+            }
         }
     }
 
@@ -515,8 +522,7 @@ class SecurityViewModel(application: Application) : AndroidViewModel(application
             it.copy(
                 showPremiumScreen = true,
                 evidenceUsage = prefs.getEvidenceUsage(),
-                historyLimit = prefs.getHistoryLimit(),
-                localizedPrice = billingManager.getLocalizedPrice()
+                historyLimit = prefs.getHistoryLimit()
             )
         }
     }

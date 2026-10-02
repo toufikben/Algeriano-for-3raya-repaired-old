@@ -36,7 +36,12 @@ class BillingManager(private val context: Context) {
 
     private var billingClient: BillingClient? = null
     private var productDetails: ProductDetails? = null
-    private var localizedPrice: String? = null
+
+    // A flow, not a field: the price usually lands after the Premium screen is
+    // already open, and a snapshot taken at that moment would leave the unlock
+    // button disabled forever.
+    private val _localizedPrice = MutableStateFlow<String?>(null)
+    val localizedPrice: StateFlow<String?> = _localizedPrice.asStateFlow()
 
     // Seeded from the last Google-confirmed value: an unknown entitlement must not
     // be reported as "free", or an offline premium user would lose their cache
@@ -224,8 +229,8 @@ class BillingManager(private val context: Context) {
                     // Billing 9 hands back a result wrapper, not the list: products Play
                     // could not find are reported separately as unfetched.
                     productDetails = result.productDetailsList?.firstOrNull()
-                    localizedPrice = productDetails?.oneTimePurchaseOfferDetails?.formattedPrice
-                    Log.d(TAG, "Product found: $localizedPrice")
+                    _localizedPrice.value = productDetails?.oneTimePurchaseOfferDetails?.formattedPrice
+                    Log.d(TAG, "Product found: ${_localizedPrice.value}")
                 } else {
                     Log.e(TAG, "Query product failed: ${billingResult.debugMessage}")
                 }
@@ -322,14 +327,6 @@ class BillingManager(private val context: Context) {
                 Log.w(TAG, "Purchase in unspecified state - not granting premium")
             }
         }
-    }
-
-    /**
-     * Price as Play reported it, or null while Play has not answered. Never a
-     * made-up figure: the store localizes the price per country (§15.3).
-     */
-    fun getLocalizedPrice(): String? {
-        return localizedPrice
     }
 
     /**
