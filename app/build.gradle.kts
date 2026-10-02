@@ -14,8 +14,10 @@ android {
     applicationId = "com.toufikbendjeddah.phonefortress"
     minSdk = 24
     targetSdk = 36
-    versionCode = 18
-    versionName = "1.1.3"
+    // Play refuses a second AAB on the versionCode already live (18 = the 1.1.3
+    // build from run #100), and the billing AAB has to be uploaded as a new version.
+    versionCode = 19
+    versionName = "1.1.4"
 
     testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
   }
