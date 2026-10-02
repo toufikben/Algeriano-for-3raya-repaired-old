@@ -10,7 +10,7 @@ concurrency:
   cancel-in-progress: true
 
 permissions:
-  contents: read
+  contents: write
 
 env:
   JDK_VERSION: 21
@@ -122,7 +122,32 @@ jobs:
           sha256sum "$AAB"
           echo "Signed release artifacts verified for $EXPECTED_PACKAGE"
 
+      - name: Publish the signed build as a GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          BUILD_TOOLS_VERSION="$(ls -1 "$ANDROID_HOME/build-tools" | sort -V | tail -n 1)"
+          AAPT2="$ANDROID_HOME/build-tools/$BUILD_TOOLS_VERSION/aapt2"
+          APK="app/build/outputs/apk/release/app-release.apk"
+          AAB="app/build/outputs/bundle/release/app-release.aab"
+
+          # Release assets are not counted against the Actions artifact budget, so this is
+          # the download path that survives the account-wide storage quota the upload steps
+          # below keep hitting.
+          VERSION="$("$AAPT2" dump badging "$APK" | sed -nE "s/.*versionCode='([^']*)' versionName='([^']*)'.*/\\1 (\\2)/p")"
+          test -n "$VERSION"
+          TAG="build-${GITHUB_SHA::7}"
+          gh release view "$TAG" >/dev/null 2>&1 || gh release create "$TAG" \
+            --title "Phone Fortress $VERSION — run #${{ github.run_number }}" \
+            --notes "Signed release build from run #${{ github.run_number }}. Upload the **.aab** to Play Console; the **.apk** is for installing on a test device."
+          gh release upload "$TAG" "$APK" "$AAB" --clobber
+          gh release view "$TAG" --json tagName,assets --jq '"Released \(.tagName) with: \([.assets[].name] | join(", "))"'
+
+      # Kept as a convenience copy only: the account-wide artifact quota must not turn a
+      # fully verified build into a red run, so these steps do not gate the verdict.
       - name: Upload signed APK
+        continue-on-error: true
         uses: actions/upload-artifact@v4
         with:
           name: phone-fortress-release-apk-${{ github.run_number }}
@@ -134,6 +159,7 @@ jobs:
           retention-days: 7
 
       - name: Upload signed AAB
+        continue-on-error: true
         uses: actions/upload-artifact@v4
         with:
           name: phone-fortress-release-aab-${{ github.run_number }}
