@@ -112,6 +112,10 @@ jobs:
             exit 1
           fi
 
+          # Recorded so each run states which version it could have submitted: Play
+          # rejects a bundle whose versionCode is already live, and nothing else here prints it.
+          "$AAPT2" dump badging "$APK" | grep -oE "version(Code|Name)='[^']*'" | head -2
+
           echo "APK SHA-256:"
           sha256sum "$APK"
           echo "AAB SHA-256:"
