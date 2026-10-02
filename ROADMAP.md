@@ -4,7 +4,7 @@ Single place to see what is proven, what is pending, and what is blocked. Update
 stage table and the ledger after every pushed stage; do not mark a stage `DONE` without
 naming the CI run that proved it.
 
-App: `com.toufikbendjeddah.phonefortress` · this branch: versionCode **19**, versionName
+App: `com.toufikbendjeddah.phonefortress` · this branch: versionCode **27**, versionName
 **1.1.4** · minSdk 24 / targetSdk 36 · Play Billing **9.1.0** · one-time non-consumable
 `phone_fortress_premium_lifetime`.
 
@@ -26,7 +26,7 @@ behaviour.
 | 7 | Unit + lint + i18n gates green | DONE | 26 `@Test` across 7 files (`BillingManagerTest` added in `8c00004`, reconnect case in `c817b09`), `./gradlew lint` clean, 15/15 locale gates pass |
 | 7b | Play reconnection: a dropped connection is retried with a bounded backoff and the entitlement and price are re-read on resume, on opening the paywall, on restore and on the unlock tap | DONE (compiles + unit-pinned) | `c817b09`, CI #114 green except the artifact upload below; **never observed against real Play** |
 | 8 | A green run's APK/AAB downloadable | DONE | run **#117** (`47b69bf`) completed green and published release `build-47b69bf` with `app-release.apk` (4 585 868 B, sha256 `5ebbcf9d…`) and `app-release.aab` (6 655 084 B, sha256 `262f95a7…`) attached. Release assets sit outside the artifact quota, which is still exhausted: both `Upload signed *` steps failed again in #117 and are non-gating (`continue-on-error`), so the Release is now the delivery path, not the artifacts |
-| 9 | Upload the billing-enabled AAB (versionCode 19) to Play | IN PROGRESS | source artifact proven available: `app-release.aab` from release `build-47b69bf`; 18 is already live so a new code was required (`f6b8a50`) |
+| 9 | Upload the billing-enabled AAB (versionCode 27) to Play | IN PROGRESS | Console's internal-testing track already holds a release named "Phone Fortress 1.0.0 (**26**)", so this repository's 19 — bumped over run #100's 18 — would have been refused by Play. Raised to 27; the AAB's own `base/manifest/AndroidManifest.xml` was dumped locally and contains `com.toufikbendjeddah.phonefortress` + `com.android.vending.BILLING` |
 | 10 | Create + activate `phone_fortress_premium_lifetime` in Play Console | TODO | Google only allows the product to be created after a billing-enabled AAB is uploaded |
 | 11 | On-device purchase verification | PAUSED by owner | paywall, purchase, acknowledgement, persistence across restart, restore, offline premium keeps cache, quota not consumed by retries |
 | 12 | Store submission | TODO | needs 9–11 |
