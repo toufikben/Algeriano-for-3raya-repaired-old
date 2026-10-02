@@ -40,6 +40,7 @@ class SecurityEventDistributorTest {
 
     @After
     fun tearDown() {
+        prefs.isPremium = false
         workManager.cancelAllWork().result.get()
     }
 
@@ -58,6 +59,36 @@ class SecurityEventDistributorTest {
         // A capture still needs the camera, so it must never be gated on network.
         assertTrue(!SecurityEventDistributor.awaitingSend(com.example.data.SecurityEventStatus.PENDING))
         assertTrue(!SecurityEventDistributor.awaitingSend(com.example.data.SecurityEventStatus.DEFERRED))
+    }
+
+    @Test
+    fun `an event that already holds its evidence is never charged again`() {
+        val alreadyPaid = com.example.data.SecurityEventStatus.entries.filter {
+            SecurityEventDistributor.evidenceAlreadyCaptured(it)
+        }
+        assertEquals(
+            setOf(
+                com.example.data.SecurityEventStatus.CAPTURED,
+                com.example.data.SecurityEventStatus.SEND_PENDING,
+                com.example.data.SecurityEventStatus.FAILED_RETRYABLE
+            ),
+            alreadyPaid.toSet()
+        )
+        // A capture that has not happened yet is the only thing the allowance pays for.
+        assertTrue(!SecurityEventDistributor.evidenceAlreadyCaptured(com.example.data.SecurityEventStatus.PENDING))
+        assertTrue(!SecurityEventDistributor.evidenceAlreadyCaptured(com.example.data.SecurityEventStatus.DEFERRED))
+        assertTrue(!SecurityEventDistributor.evidenceAlreadyCaptured(com.example.data.SecurityEventStatus.IN_PROGRESS))
+    }
+
+    @Test
+    fun `tier limits match the numbers published on the store listing`() {
+        prefs.isPremium = false
+        assertEquals(3, prefs.getEvidenceMonthlyLimit())
+        assertEquals(5, prefs.getHistoryLimit())
+
+        prefs.isPremium = true
+        assertEquals(50, prefs.getEvidenceMonthlyLimit())
+        assertEquals(50, prefs.getHistoryLimit())
     }
 
     @Test
