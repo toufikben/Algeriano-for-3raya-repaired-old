@@ -311,6 +311,7 @@
     <string name="premium_current_usage">Mevcut kullanım</string>
     <string name="premium_events_this_month">bu ayki olaylar</string>
     <string name="premium_unlock">Premium\'u etkinleştir • %1$s</string>
+    <string name="premium_unavailable">Premium şu anda kullanılamıyor. Daha sonra tekrar deneyin.</string>
     <string name="premium_restore">Satın almayı geri yükle</string>
     <string name="premium_lifetime_text">Tek seferlik satın alma • Ömür boyu erişim • Reklamsız</string>
 </resources>

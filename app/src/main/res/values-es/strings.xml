@@ -311,6 +311,7 @@
     <string name="premium_current_usage">Uso actual</string>
     <string name="premium_events_this_month">eventos este mes</string>
     <string name="premium_unlock">Desbloquea Premium • %1$s</string>
+    <string name="premium_unavailable">Premium no está disponible ahora. Inténtalo de nuevo más tarde.</string>
     <string name="premium_restore">Restaurar compra</string>
     <string name="premium_lifetime_text">Compra única • Acceso de por vida • Sin anuncios</string>
 </resources>

@@ -311,6 +311,7 @@
     <string name="premium_current_usage">当前用量</string>
     <string name="premium_events_this_month">本月事件</string>
     <string name="premium_unlock">解锁高级版 • %1$s</string>
+    <string name="premium_unavailable">高级版目前不可用。请稍后重试。</string>
     <string name="premium_restore">恢复购买</string>
     <string name="premium_lifetime_text">一次买断 • 终身使用 • 无广告</string>
 </resources>

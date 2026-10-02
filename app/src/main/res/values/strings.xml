@@ -311,6 +311,7 @@
     <string name="premium_current_usage">الاستخدام الحالي</string>
     <string name="premium_events_this_month">حدث هذا الشهر</string>
     <string name="premium_unlock">فتح النسخة المدفوعة • %1$s</string>
+    <string name="premium_unavailable">النسخة المدفوعة غير متاحة الآن. حاول مرة أخرى لاحقاً.</string>
     <string name="premium_restore">استعادة الشراء</string>
     <string name="premium_lifetime_text">شراء واحد • وصول مدى الحياة • بدون إعلانات</string>
 </resources>

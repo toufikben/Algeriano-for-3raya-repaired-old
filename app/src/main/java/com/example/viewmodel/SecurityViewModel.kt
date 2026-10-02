@@ -61,7 +61,7 @@ data class SecurityUiState(
     val isPremium: Boolean = false,
     val evidenceUsage: Pair<Int, Int> = Pair(0, 3), // (current, limit)
     val historyLimit: Int = 5,
-    val localizedPrice: String = "$4.99",
+    val localizedPrice: String? = null,
     val billingAvailable: Boolean = true,
     val showPremiumScreen: Boolean = false
 )

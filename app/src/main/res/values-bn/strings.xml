@@ -311,6 +311,7 @@
     <string name="premium_current_usage">বর্তমান ব্যবহার</string>
     <string name="premium_events_this_month">এ মাসের ঘটনা</string>
     <string name="premium_unlock">প্রিমিয়াম আনলক করুন • %1$s</string>
+    <string name="premium_unavailable">Premium এখন উপলব্ধ নয়। পরে আবার চেষ্টা করুন।</string>
     <string name="premium_restore">ক্রয় পুনরুদ্ধার করুন</string>
     <string name="premium_lifetime_text">এককালীন ক্রয় • আজীবন প্রবেশাধিকার • বিজ্ঞাপনমুক্ত</string>
 </resources>

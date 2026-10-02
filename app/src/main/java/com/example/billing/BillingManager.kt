@@ -325,10 +325,11 @@ class BillingManager(private val context: Context) {
     }
 
     /**
-     * Get localized price string for display.
+     * Price as Play reported it, or null while Play has not answered. Never a
+     * made-up figure: the store localizes the price per country (§15.3).
      */
-    fun getLocalizedPrice(): String {
-        return localizedPrice ?: "$4.99"
+    fun getLocalizedPrice(): String? {
+        return localizedPrice
     }
 
     /**

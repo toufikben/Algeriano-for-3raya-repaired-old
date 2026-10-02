@@ -311,6 +311,7 @@
     <string name="premium_current_usage">現在の使用量</string>
     <string name="premium_events_this_month">今月のイベント</string>
     <string name="premium_unlock">プレミアムを解錠 • %1$s</string>
+    <string name="premium_unavailable">Premium は現在利用できません。後でもう一度お試しください。</string>
     <string name="premium_restore">購入を復元</string>
     <string name="premium_lifetime_text">買い切り • 生涯利用 • 広告なし</string>
 </resources>

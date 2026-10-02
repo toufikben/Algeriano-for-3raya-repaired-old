@@ -23,7 +23,7 @@ import com.example.R
 @Composable
 fun PremiumScreen(
     isPremium: Boolean,
-    localizedPrice: String,
+    localizedPrice: String?,
     evidenceUsage: Pair<Int, Int>, // (current, limit)
     historyLimit: Int,
     onUnlockPremium: () -> Unit,
@@ -188,8 +188,13 @@ fun PremiumScreen(
 
         // CTA Buttons
         if (!isPremium) {
+            val price = localizedPrice
+            // Play owns the price. Rendering an invented one would mislead the user,
+            // and that is exactly what every Free user sees until the product exists
+            // in the Console - so the button waits for the real figure instead.
             Button(
                 onClick = onUnlockPremium,
+                enabled = price != null,
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(56.dp),
@@ -198,7 +203,11 @@ fun PremiumScreen(
                 )
             ) {
                 Text(
-                    text = stringResource(R.string.premium_unlock, localizedPrice),
+                    text = if (price != null) {
+                        stringResource(R.string.premium_unlock, price)
+                    } else {
+                        stringResource(R.string.premium_unavailable)
+                    },
                     fontSize = 18.sp,
                     fontWeight = FontWeight.Bold
                 )

@@ -311,6 +311,7 @@
     <string name="premium_current_usage">Pemakaian saat ini</string>
     <string name="premium_events_this_month">acara bulan ini</string>
     <string name="premium_unlock">Aktifkan Premium • %1$s</string>
+    <string name="premium_unavailable">Premium saat ini tidak tersedia. Coba lagi nanti.</string>
     <string name="premium_restore">Pulihkan pembelian</string>
     <string name="premium_lifetime_text">Pembelian sekali • Akses seumur hidup • Tanpa iklan</string>
 </resources>
