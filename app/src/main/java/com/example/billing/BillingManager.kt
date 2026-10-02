@@ -24,7 +24,7 @@ import kotlin.coroutines.suspendCoroutine
  * Google Play Billing manager for Phone Fortress Premium lifetime purchase.
  * 
  * Product ID: phone_fortress_premium_lifetime
- * Price: $4.99 USD (localized by Play Store)
+ * Price: whatever Play reports for the user's market and currency
  * Type: One-time non-consumable lifetime entitlement
  */
 class BillingManager(private val context: Context) {
