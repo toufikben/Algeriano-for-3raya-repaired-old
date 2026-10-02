@@ -52,9 +52,6 @@ class BillingManager(private val context: Context) {
     private val _billingAvailable = MutableStateFlow(true)
     val billingAvailable: StateFlow<Boolean> = _billingAvailable.asStateFlow()
 
-    private val _purchaseError = MutableStateFlow<String?>(null)
-    val purchaseError: StateFlow<String?> = _purchaseError.asStateFlow()
-
     private fun readCachedPremium(): Boolean = try {
         SecurityPrefs.getInstance(context).isPremium
     } catch (e: Exception) {
@@ -81,11 +78,9 @@ class BillingManager(private val context: Context) {
             }
             BillingClient.BillingResponseCode.USER_CANCELED -> {
                 Log.d(TAG, "User canceled purchase")
-                _purchaseError.value = "cancelled"
             }
             else -> {
                 Log.e(TAG, "Purchase error: ${billingResult.debugMessage}")
-                _purchaseError.value = billingResult.debugMessage
             }
         }
     }
@@ -249,7 +244,6 @@ class BillingManager(private val context: Context) {
         val offerToken = details?.oneTimePurchaseOfferDetails?.offerToken
         if (details == null || offerToken == null) {
             Log.e(TAG, "Product not loaded yet")
-            _purchaseError.value = "Product not available"
             return
         }
 
@@ -270,12 +264,10 @@ class BillingManager(private val context: Context) {
             val result = billingClient?.launchBillingFlow(activity, flowParams)
             if (result != null && result.responseCode != BillingClient.BillingResponseCode.OK) {
                 Log.e(TAG, "launchBillingFlow: ${result.debugMessage}")
-                _purchaseError.value = "Cannot start purchase"
             }
             Log.d(TAG, "Purchase flow launched")
         } catch (e: Exception) {
             Log.e(TAG, "Failed to launch purchase", e)
-            _purchaseError.value = "Cannot start purchase"
         }
     }
 
@@ -327,13 +319,6 @@ class BillingManager(private val context: Context) {
                 Log.w(TAG, "Purchase in unspecified state - not granting premium")
             }
         }
-    }
-
-    /**
-     * Clear error state.
-     */
-    fun clearError() {
-        _purchaseError.value = null
     }
 
     /**

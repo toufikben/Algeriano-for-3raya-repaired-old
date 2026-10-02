@@ -546,11 +546,6 @@ class SecurityViewModel(application: Application) : AndroidViewModel(application
         }
     }
     
-    /** Clear billing errors */
-    fun clearBillingError() {
-        billingManager.clearError()
-    }
-
     /**
      * Re-read the entitlement from Google Play. Kept out of [refreshStatuses], which
      * is a documented passive read path; Play asks for a purchase query on every
