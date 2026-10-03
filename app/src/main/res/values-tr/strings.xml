@@ -35,7 +35,7 @@
     <string name="ui_29cc79599c5c">Uygulama PIN kodunu değiştir</string>
     <string name="ui_c2d7f7559f21">Kurulum rehberi</string>
     <string name="ui_cd24acb10110">Geliştirici bilgileri</string>
-    <string name="ui_9eb289360bce">Geliştirici ve uygulama hakkında (sürüm 1.1.0)</string>
+    <string name="ui_9eb289360bce">Geliştirici ve uygulama hakkında (sürüm %1$s)</string>
     <string name="ui_5bf826c5e57c">Kapat</string>
     <string name="ui_51ae4e30735b">Telefon Güvenlik Kalkanı</string>
     <string name="ui_6239de7ab740">Koruma etkin ve cihazı izliyor</string>
@@ -156,7 +156,7 @@
     <string name="ui_a5b4472cdfcd">Ayarları kaydet</string>
     <string name="ui_bde567ded26b">Uygulama ve geliştirici hakkında</string>
     <string name="ui_4194b339b21b">Telefon koruma ve izinsiz erişim dedektörü uygulaması</string>
-    <string name="ui_ed3327bec79e">Sürüm: 1.1.0 (en güncel sürüm)</string>
+    <string name="ui_ed3327bec79e">Sürüm: %1$s</string>
     <string name="ui_235dd7facf19">Cihaz Yöneticisi izni için çözüm (Android 13 ve üzeri):</string>
     <string name="ui_c03a47548c0a">Cihaz Yöneticisini etkinleştirmeye çalışırken „Uygulamaya erişim engellendi” mesajı görürseniz:&#10;</string>
     <string name="ui_08eecf918378">1. Telefonunuzun Ayarlar (Settings) ⬅️ Uygulamalar (Apps) bölümünü açın.&#10;</string>

@@ -35,7 +35,7 @@
     <string name="ui_29cc79599c5c">修改应用 PIN 码</string>
     <string name="ui_c2d7f7559f21">设置指南</string>
     <string name="ui_cd24acb10110">开发者信息</string>
-    <string name="ui_9eb289360bce">关于开发者与应用（v1.1.0）</string>
+    <string name="ui_9eb289360bce">关于开发者与应用（v%1$s）</string>
     <string name="ui_5bf826c5e57c">关闭</string>
     <string name="ui_51ae4e30735b">手机安全防护</string>
     <string name="ui_6239de7ab740">防护已开启并正在监控设备</string>
@@ -156,7 +156,7 @@
     <string name="ui_a5b4472cdfcd">保存设置</string>
     <string name="ui_bde567ded26b">关于应用与开发者</string>
     <string name="ui_4194b339b21b">手机防护与入侵检测应用</string>
-    <string name="ui_ed3327bec79e">版本：1.1.0（最新版本）</string>
+    <string name="ui_ed3327bec79e">版本：%1$s</string>
     <string name="ui_235dd7facf19">设备管理员权限的解决办法（Android 13 及以上）：</string>
     <string name="ui_c03a47548c0a">如果在尝试开启设备管理员时看到“已拒绝该应用访问”的提示：&#10;</string>
     <string name="ui_08eecf918378">1. 打开手机的 Settings（设置）⬅️ Apps（应用）。&#10;</string>

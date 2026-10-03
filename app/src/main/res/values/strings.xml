@@ -35,7 +35,7 @@
     <string name="ui_29cc79599c5c">تغيير PIN التطبيق</string>
     <string name="ui_c2d7f7559f21">دليل الإعداد</string>
     <string name="ui_cd24acb10110">معلومات المبرمج</string>
-    <string name="ui_9eb289360bce">معلومات عن المبرمج والتطبيق (v1.1.0)</string>
+    <string name="ui_9eb289360bce">معلومات عن المبرمج والتطبيق (v%1$s)</string>
     <string name="ui_5bf826c5e57c">إغلاق</string>
     <string name="ui_51ae4e30735b">غلاف أمان الهاتف</string>
     <string name="ui_6239de7ab740">نظام الحماية فعال ويراقب الجهاز</string>
@@ -156,7 +156,7 @@
     <string name="ui_a5b4472cdfcd">حفظ الإعدادات</string>
     <string name="ui_bde567ded26b">معلومات عن التطبيق والمبرمج</string>
     <string name="ui_4194b339b21b">تطبيق حماية الهاتف وكاشف المتسللين</string>
-    <string name="ui_ed3327bec79e">الإصدار: 1.1.0 (أحدث إصدار)</string>
+    <string name="ui_ed3327bec79e">الإصدار: %1$s</string>
     <string name="ui_235dd7facf19">حل مشكلة صلاحية مدير الجهاز (أندرويد 13 فما فوق):</string>
     <string name="ui_c03a47548c0a">إذا ظهرت لك رسالة «App was denied access» عند محاولة تفعيل مدير الجهاز:&#10;</string>
     <string name="ui_08eecf918378">1. افتح إعدادات هاتفك (Settings) ⬅️ التطبيقات (Apps).&#10;</string>

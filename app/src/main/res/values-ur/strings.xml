@@ -35,7 +35,7 @@
     <string name="ui_29cc79599c5c">ایپ کا PIN تبدیل کریں</string>
     <string name="ui_c2d7f7559f21">قائم کرنے کی رہنمائی</string>
     <string name="ui_cd24acb10110">ڈویلپر کی معلومات</string>
-    <string name="ui_9eb289360bce">ڈویلپر اور ایپ کے بارے میں (ورژن 1.1.0)</string>
+    <string name="ui_9eb289360bce">ڈویلپر اور ایپ کے بارے میں (ورژن %1$s)</string>
     <string name="ui_5bf826c5e57c">بند کریں</string>
     <string name="ui_51ae4e30735b">فون سیکیورٹی شیلڈ</string>
     <string name="ui_6239de7ab740">تحفظ فعال ہے اور ڈیوائس کی نگرانی کر رہا ہے</string>
@@ -156,7 +156,7 @@
     <string name="ui_a5b4472cdfcd">ترتیبات محفوظ کریں</string>
     <string name="ui_bde567ded26b">ایپ اور ڈویلپر کے بارے میں</string>
     <string name="ui_4194b339b21b">فون تحفظ اور گھس پیٹھ ڈیٹیکٹر ایپ</string>
-    <string name="ui_ed3327bec79e">ورژن: 1.1.0 (تازہ ترین ورژن)</string>
+    <string name="ui_ed3327bec79e">ورژن: %1$s</string>
     <string name="ui_235dd7facf19">ڈیوائس ایڈمن اجازت کے لیے اصلاح (اینڈرائیڈ 13 اور اس سے اوپر):</string>
     <string name="ui_c03a47548c0a">اگر ڈیوائس ایڈمن فعال کرتے وقت „ایپ کو رسائی سے انکار کیا گیا” پیغام نظر آئے:&#10;</string>
     <string name="ui_08eecf918378">1. اپنے فون کی Settings (Settings) ⬅️ Apps (Apps) کھولیں۔&#10;</string>

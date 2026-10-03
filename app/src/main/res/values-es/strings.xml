@@ -35,7 +35,7 @@
     <string name="ui_29cc79599c5c">Cambiar el PIN de la aplicación</string>
     <string name="ui_c2d7f7559f21">Guía de configuración</string>
     <string name="ui_cd24acb10110">Información del desarrollador</string>
-    <string name="ui_9eb289360bce">Sobre el desarrollador y la aplicación (v1.1.0)</string>
+    <string name="ui_9eb289360bce">Sobre el desarrollador y la aplicación (v%1$s)</string>
     <string name="ui_5bf826c5e57c">Cerrar</string>
     <string name="ui_51ae4e30735b">Escudo de seguridad del teléfono</string>
     <string name="ui_6239de7ab740">La protección está activa y supervisando el dispositivo</string>
@@ -156,7 +156,7 @@
     <string name="ui_a5b4472cdfcd">Guardar los ajustes</string>
     <string name="ui_bde567ded26b">Sobre la aplicación y el desarrollador</string>
     <string name="ui_4194b339b21b">Aplicación de protección del teléfono y detector de intrusos</string>
-    <string name="ui_ed3327bec79e">Versión: 1.1.0 (última versión)</string>
+    <string name="ui_ed3327bec79e">Versión: %1$s</string>
     <string name="ui_235dd7facf19">Solución para el permiso de administrador del dispositivo (Android 13 o superior):</string>
     <string name="ui_c03a47548c0a">Si al activar el administrador del dispositivo ves el mensaje «Se denegó el acceso a la aplicación»:&#10;</string>
     <string name="ui_08eecf918378">1. Abre los ajustes de tu teléfono (Ajustes) ⬅️ Aplicaciones (Apps).&#10;</string>

@@ -35,7 +35,7 @@
     <string name="ui_29cc79599c5c">App-PIN ändern</string>
     <string name="ui_c2d7f7559f21">Einrichtungsanleitung</string>
     <string name="ui_cd24acb10110">Entwicklerinfos</string>
-    <string name="ui_9eb289360bce">Über den Entwickler und die App (v1.1.0)</string>
+    <string name="ui_9eb289360bce">Über den Entwickler und die App (v%1$s)</string>
     <string name="ui_5bf826c5e57c">Schließen</string>
     <string name="ui_51ae4e30735b">Telefon-Sicherheitsschild</string>
     <string name="ui_6239de7ab740">Der Schutz ist aktiv und überwacht das Gerät</string>
@@ -156,7 +156,7 @@
     <string name="ui_a5b4472cdfcd">Einstellungen speichern</string>
     <string name="ui_bde567ded26b">Über App und Entwickler</string>
     <string name="ui_4194b339b21b">App für Telefonschutz und Eindringlingserkennung</string>
-    <string name="ui_ed3327bec79e">Version: 1.1.0 (neueste Version)</string>
+    <string name="ui_ed3327bec79e">Version: %1$s</string>
     <string name="ui_235dd7facf19">Korrektur der Geräteadministrator-Berechtigung (Android 13 und höher):</string>
     <string name="ui_c03a47548c0a">Wenn beim Versuch, den Geräteadministrator zu aktivieren, die Meldung „Der Zugriff auf die App wurde verweigert” erscheint:&#10;</string>
     <string name="ui_08eecf918378">1. Öffnen Sie die Einstellungen (Settings) ⬅️ Apps (Apps) Ihres Telefons.&#10;</string>

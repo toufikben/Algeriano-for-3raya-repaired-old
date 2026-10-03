@@ -35,7 +35,7 @@
     <string name="ui_29cc79599c5c">Cambia il PIN dell\'app</string>
     <string name="ui_c2d7f7559f21">Guida di configurazione</string>
     <string name="ui_cd24acb10110">Informazioni sullo sviluppatore</string>
-    <string name="ui_9eb289360bce">Informazioni sullo sviluppatore e sull\'app (v1.1.0)</string>
+    <string name="ui_9eb289360bce">Informazioni sullo sviluppatore e sull\'app (v%1$s)</string>
     <string name="ui_5bf826c5e57c">Chiudi</string>
     <string name="ui_51ae4e30735b">Scudo di sicurezza del telefono</string>
     <string name="ui_6239de7ab740">Protezione attiva: il dispositivo è monitorato</string>
@@ -156,7 +156,7 @@
     <string name="ui_a5b4472cdfcd">Salva impostazioni</string>
     <string name="ui_bde567ded26b">Informazioni sull\'app e sullo sviluppatore</string>
     <string name="ui_4194b339b21b">App di protezione del telefono e rilevamento intrusi</string>
-    <string name="ui_ed3327bec79e">Versione: 1.1.0 (ultima versione)</string>
+    <string name="ui_ed3327bec79e">Versione: %1$s</string>
     <string name="ui_235dd7facf19">Soluzione per l\'autorizzazione Device Admin (Android 13 e versioni successive):</string>
     <string name="ui_c03a47548c0a">Se quando provi ad attivare Device Admin compare il messaggio «Accesso negato all\'app»:&#10;</string>
     <string name="ui_08eecf918378">1. Apri le impostazioni del telefono ⬅️ App.&#10;</string>

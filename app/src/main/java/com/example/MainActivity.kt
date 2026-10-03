@@ -572,7 +572,7 @@ fun SecurityMainScreen(
                         )
                         Spacer(modifier = Modifier.width(6.dp))
                         Text(
-                            text = tr(com.example.R.string.ui_9eb289360bce),
+                            text = stringResource(com.example.R.string.ui_9eb289360bce, BuildConfig.VERSION_NAME),
                             color = CyanAccent,
                             fontSize = 13.sp,
                             fontWeight = FontWeight.Medium

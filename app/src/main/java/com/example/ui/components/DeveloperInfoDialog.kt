@@ -159,7 +159,8 @@ fun DeveloperInfoDialog(
                 Spacer(modifier = Modifier.height(4.dp))
 
                 Text(
-                    text = context.getString(com.example.R.string.ui_ed3327bec79e),
+                    // Read from the build, so the dialog can never lag behind the installed version.
+                    text = context.getString(com.example.R.string.ui_ed3327bec79e, com.example.BuildConfig.VERSION_NAME),
                     fontSize = 12.sp,
                     color = EmeraldActive,
                     fontWeight = FontWeight.Medium
