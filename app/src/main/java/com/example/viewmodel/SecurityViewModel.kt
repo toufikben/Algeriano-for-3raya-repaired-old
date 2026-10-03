@@ -20,6 +20,7 @@ import com.example.data.IntruderLog
 import com.example.data.SecurityEventStateMachine
 import com.example.data.SecurityPrefs
 import com.example.billing.BillingManager
+import com.example.billing.PurchaseEvent
 import java.io.File
 import com.example.receiver.CountdownScheduler
 import com.example.receiver.MyDeviceAdminReceiver
@@ -61,15 +62,17 @@ data class SecurityUiState(
     val isPremium: Boolean = false,
     val evidenceUsage: Pair<Int, Int> = Pair(0, 3), // (current, limit)
     val localizedPrice: String? = null,
-    val showPremiumScreen: Boolean = false
+    val showPremiumScreen: Boolean = false,
+    // Shown inside the paywall dialog, which would otherwise cover the snackbar.
+    val premiumMessage: String? = null
 )
 
 class SecurityViewModel(application: Application) : AndroidViewModel(application) {
 
     private val context = application.applicationContext
     
-    // Billing manager for premium entitlement
-    private val billingManager = BillingManager(context)
+    // Process-wide: a purchase that completes after this screen is gone must still land.
+    private val billingManager = BillingManager.getInstance(context)
 
     private val prefs = SecurityPrefs.getInstance(context)
 
@@ -120,6 +123,23 @@ class SecurityViewModel(application: Application) : AndroidViewModel(application
             launch {
                 billingManager.localizedPrice.collect { price ->
                     _uiState.update { it.copy(localizedPrice = price) }
+                }
+            }
+        }
+        viewModelScope.launch {
+            billingManager.purchaseEvents.collect { event ->
+                val message = context.getString(
+                    when (event) {
+                        PurchaseEvent.PURCHASED -> R.string.premium_purchase_success
+                        PurchaseEvent.PENDING -> R.string.premium_purchase_pending
+                        PurchaseEvent.FAILED -> R.string.premium_purchase_error
+                        PurchaseEvent.RESTORED -> R.string.premium_restore_success
+                        PurchaseEvent.NOTHING_TO_RESTORE -> R.string.premium_restore_none
+                    }
+                )
+                _uiState.update {
+                    if (it.showPremiumScreen) it.copy(premiumMessage = message)
+                    else it.copy(bannerMessage = message)
                 }
             }
         }
@@ -493,8 +513,15 @@ class SecurityViewModel(application: Application) : AndroidViewModel(application
 
     fun setCountdownAutoRestart(enabled: Boolean) {
         // Enabling is the paid continuous-protection switch; disabling is always
-        // allowed so an expired entitlement can never trap the user in it.
-        if (enabled && !prefs.isPremium) return
+        // allowed so an expired entitlement can never trap the user in it. A Free
+        // tap opens the paywall instead of a switch that silently does nothing.
+        if (enabled && !prefs.isPremium) {
+            showPremiumScreen()
+            _uiState.update {
+                it.copy(premiumMessage = context.getString(R.string.premium_auto_restart_locked))
+            }
+            return
+        }
         prefs.countdownAutoRestart = enabled
         _uiState.update { it.copy(countdownAutoRestart = enabled) }
     }
@@ -510,6 +537,7 @@ class SecurityViewModel(application: Application) : AndroidViewModel(application
         _uiState.update { 
             it.copy(
                 showPremiumScreen = true,
+                premiumMessage = null,
                 evidenceUsage = prefs.getEvidenceUsage()
             )
         }
@@ -520,7 +548,7 @@ class SecurityViewModel(application: Application) : AndroidViewModel(application
     
     /** Dismiss premium screen */
     fun dismissPremiumScreen() {
-        _uiState.update { it.copy(showPremiumScreen = false) }
+        _uiState.update { it.copy(showPremiumScreen = false, premiumMessage = null) }
     }
     
     /** Launch purchase flow - must be called from Activity with context */
@@ -599,8 +627,4 @@ class SecurityViewModel(application: Application) : AndroidViewModel(application
         syncCountdownTicker()
     }
     
-    override fun onCleared() {
-        super.onCleared()
-        billingManager.destroy()
-    }
 }

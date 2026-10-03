@@ -314,4 +314,15 @@
     <string name="premium_unavailable">Premium is not available right now. Try again later.</string>
     <string name="premium_restore">Restore Purchase</string>
     <string name="premium_lifetime_text">One-time purchase • Lifetime access • No ads</string>
+    <string name="evidence_limit_log">Monthly evidence limit reached (%1$d): no photo or location was captured for this attempt. Upgrade to Premium for more.</string>
+    <string name="evidence_limit_notification_title">Failed unlock detected</string>
+    <string name="evidence_limit_notification_text">Your evidence allowance for this month is used up, so no photo was taken. Open the app to upgrade.</string>
+    <string name="evidence_limit_email_subject">Phone Fortress: failed unlock at %1$s</string>
+    <string name="evidence_limit_email_body">A failed unlock attempt was detected at %1$s.\n\nYour free monthly evidence allowance (%2$d) is used up, so no photo or location was captured this time. Upgrade to Premium in the app to keep capturing evidence.</string>
+    <string name="premium_purchase_success">Premium unlocked. Thank you!</string>
+    <string name="premium_purchase_pending">Payment pending. Premium unlocks once Google Play confirms it.</string>
+    <string name="premium_purchase_error">The purchase could not be completed. Please try again.</string>
+    <string name="premium_restore_success">Purchase restored.</string>
+    <string name="premium_restore_none">No previous purchase was found for this Google account.</string>
+    <string name="premium_auto_restart_locked">Automatic restart is a Premium feature.</string>
 </resources>

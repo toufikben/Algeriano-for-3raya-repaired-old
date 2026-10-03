@@ -26,6 +26,7 @@ fun PremiumScreen(
     isPremium: Boolean,
     localizedPrice: String?,
     evidenceUsage: Pair<Int, Int>, // (current, limit)
+    message: String? = null,
     onUnlockPremium: () -> Unit,
     onRestorePurchase: () -> Unit,
     onDismiss: () -> Unit
@@ -184,6 +185,24 @@ fun PremiumScreen(
                         fontSize = 12.sp
                     )
                 }
+            }
+            Spacer(modifier = Modifier.height(16.dp))
+        }
+
+        // Purchase / restore outcome, or why the paywall opened.
+        if (message != null) {
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.secondaryContainer
+                )
+            ) {
+                Text(
+                    text = message,
+                    modifier = Modifier.padding(12.dp),
+                    color = MaterialTheme.colorScheme.onSecondaryContainer,
+                    textAlign = TextAlign.Center
+                )
             }
             Spacer(modifier = Modifier.height(16.dp))
         }

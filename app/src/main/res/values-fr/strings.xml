@@ -314,4 +314,15 @@
     <string name="premium_unavailable">L\'option Premium est indisponible pour le moment. Réessayez plus tard.</string>
     <string name="premium_restore">Restaurer l\'achat</string>
     <string name="premium_lifetime_text">Achat unique • Accès à vie • Sans publicité</string>
+    <string name="evidence_limit_log">Limite mensuelle de preuves atteinte (%1$d) : aucune photo ni position n\'a été capturée pour cette tentative. Passez à Premium pour en obtenir plus.</string>
+    <string name="evidence_limit_notification_title">Tentative de déverrouillage détectée</string>
+    <string name="evidence_limit_notification_text">Votre quota de preuves de ce mois est épuisé, aucune photo n\'a donc été prise. Ouvrez l\'application pour passer à Premium.</string>
+    <string name="evidence_limit_email_subject">Phone Fortress : échec de déverrouillage à %1$s</string>
+    <string name="evidence_limit_email_body">Une tentative de déverrouillage échouée a été détectée à %1$s.\n\nVotre quota mensuel gratuit de preuves (%2$d) est épuisé : aucune photo ni position n\'a été capturée cette fois. Passez à Premium dans l\'application pour continuer à capturer des preuves.</string>
+    <string name="premium_purchase_success">Premium activé. Merci !</string>
+    <string name="premium_purchase_pending">Paiement en attente. Premium sera activé dès que Google Play l\'aura confirmé.</string>
+    <string name="premium_purchase_error">L\'achat n\'a pas pu aboutir. Veuillez réessayer.</string>
+    <string name="premium_restore_success">Achat restauré.</string>
+    <string name="premium_restore_none">Aucun achat précédent n\'a été trouvé pour ce compte Google.</string>
+    <string name="premium_auto_restart_locked">Le redémarrage automatique est une fonctionnalité Premium.</string>
 </resources>

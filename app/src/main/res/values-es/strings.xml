@@ -314,4 +314,15 @@
     <string name="premium_unavailable">Premium no está disponible ahora. Inténtalo de nuevo más tarde.</string>
     <string name="premium_restore">Restaurar compra</string>
     <string name="premium_lifetime_text">Compra única • Acceso de por vida • Sin anuncios</string>
+    <string name="evidence_limit_log">Se alcanzó el límite mensual de pruebas (%1$d): no se capturó foto ni ubicación en este intento. Pásate a Premium para obtener más.</string>
+    <string name="evidence_limit_notification_title">Intento de desbloqueo fallido detectado</string>
+    <string name="evidence_limit_notification_text">Has agotado las pruebas de este mes, así que no se tomó ninguna foto. Abre la app para mejorar a Premium.</string>
+    <string name="evidence_limit_email_subject">Phone Fortress: desbloqueo fallido a las %1$s</string>
+    <string name="evidence_limit_email_body">Se detectó un intento de desbloqueo fallido a las %1$s.\n\nTu cupo mensual gratuito de pruebas (%2$d) se ha agotado, por lo que esta vez no se capturó foto ni ubicación. Mejora a Premium en la app para seguir capturando pruebas.</string>
+    <string name="premium_purchase_success">Premium activado. ¡Gracias!</string>
+    <string name="premium_purchase_pending">Pago pendiente. Premium se activará cuando Google Play lo confirme.</string>
+    <string name="premium_purchase_error">No se pudo completar la compra. Inténtalo de nuevo.</string>
+    <string name="premium_restore_success">Compra restaurada.</string>
+    <string name="premium_restore_none">No se encontró ninguna compra anterior para esta cuenta de Google.</string>
+    <string name="premium_auto_restart_locked">El reinicio automático es una función Premium.</string>
 </resources>

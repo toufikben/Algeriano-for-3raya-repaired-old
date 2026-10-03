@@ -77,8 +77,7 @@ object SecurityEventDistributor {
         // user already paid for with their quota, and would make every retry after
         // the limit is reached fatal.
         if (!evidenceAlreadyCaptured(event.status) && !prefs.canCreateEvidenceEvent()) {
-            android.util.Log.w("SecurityEventDistributor", "Monthly evidence limit reached for event $eventId")
-            prefs.failPendingSecurityEvent(eventId)
+            EvidenceLimitNotice.handleExhausted(context, eventId)
             return
         }
 

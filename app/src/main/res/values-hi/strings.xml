@@ -314,4 +314,15 @@
     <string name="premium_unavailable">Premium अभी उपलब्ध नहीं है। बाद में पुनः प्रयास करें।</string>
     <string name="premium_restore">खरीद पुनः प्राप्त करें</string>
     <string name="premium_lifetime_text">एक बार की खरीद • आजीवन पहुँच • विज्ञापन मुक्त</string>
+    <string name="evidence_limit_log">मासिक साक्ष्य सीमा पूरी हो गई (%1$d): इस प्रयास के लिए कोई फ़ोटो या लोकेशन कैप्चर नहीं हुई। अधिक के लिए Premium लें।</string>
+    <string name="evidence_limit_notification_title">असफल अनलॉक का पता चला</string>
+    <string name="evidence_limit_notification_text">इस महीने की साक्ष्य सीमा खत्म हो गई है, इसलिए कोई फ़ोटो नहीं ली गई। अपग्रेड करने के लिए ऐप खोलें।</string>
+    <string name="evidence_limit_email_subject">Phone Fortress: %1$s पर असफल अनलॉक</string>
+    <string name="evidence_limit_email_body">%1$s पर एक असफल अनलॉक प्रयास का पता चला।\n\nआपकी मुफ़्त मासिक साक्ष्य सीमा (%2$d) खत्म हो गई है, इसलिए इस बार कोई फ़ोटो या लोकेशन कैप्चर नहीं हुई। साक्ष्य कैप्चर करते रहने के लिए ऐप में Premium पर अपग्रेड करें।</string>
+    <string name="premium_purchase_success">Premium चालू हो गया। धन्यवाद!</string>
+    <string name="premium_purchase_pending">भुगतान लंबित है। Google Play की पुष्टि होते ही Premium चालू हो जाएगा।</string>
+    <string name="premium_purchase_error">खरीदारी पूरी नहीं हो सकी। कृपया फिर से कोशिश करें।</string>
+    <string name="premium_restore_success">खरीदारी बहाल कर दी गई।</string>
+    <string name="premium_restore_none">इस Google खाते के लिए कोई पिछली खरीदारी नहीं मिली।</string>
+    <string name="premium_auto_restart_locked">स्वचालित पुनः आरंभ एक Premium सुविधा है।</string>
 </resources>

@@ -314,4 +314,15 @@
     <string name="premium_unavailable">Premium şu anda kullanılamıyor. Daha sonra tekrar deneyin.</string>
     <string name="premium_restore">Satın almayı geri yükle</string>
     <string name="premium_lifetime_text">Tek seferlik satın alma • Ömür boyu erişim • Reklamsız</string>
+    <string name="evidence_limit_log">Aylık kanıt sınırına ulaşıldı (%1$d): bu deneme için fotoğraf veya konum alınmadı. Daha fazlası için Premium\'a geçin.</string>
+    <string name="evidence_limit_notification_title">Başarısız kilit açma algılandı</string>
+    <string name="evidence_limit_notification_text">Bu ayki kanıt hakkınız doldu, bu yüzden fotoğraf çekilmedi. Yükseltmek için uygulamayı açın.</string>
+    <string name="evidence_limit_email_subject">Phone Fortress: %1$s saatinde başarısız kilit açma</string>
+    <string name="evidence_limit_email_body">%1$s saatinde başarısız bir kilit açma denemesi algılandı.\n\nÜcretsiz aylık kanıt hakkınız (%2$d) doldu, bu yüzden bu kez fotoğraf veya konum alınmadı. Kanıt toplamaya devam etmek için uygulamada Premium\'a geçin.</string>
+    <string name="premium_purchase_success">Premium etkinleştirildi. Teşekkürler!</string>
+    <string name="premium_purchase_pending">Ödeme bekleniyor. Google Play onayladığında Premium açılacak.</string>
+    <string name="premium_purchase_error">Satın alma tamamlanamadı. Lütfen tekrar deneyin.</string>
+    <string name="premium_restore_success">Satın alma geri yüklendi.</string>
+    <string name="premium_restore_none">Bu Google hesabı için önceki bir satın alma bulunamadı.</string>
+    <string name="premium_auto_restart_locked">Otomatik yeniden başlatma bir Premium özelliğidir.</string>
 </resources>

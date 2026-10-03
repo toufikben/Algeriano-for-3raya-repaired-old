@@ -314,4 +314,15 @@
     <string name="premium_unavailable">Premium недоступен сейчас. Повторите попытку позже.</string>
     <string name="premium_restore">Восстановить покупку</string>
     <string name="premium_lifetime_text">Разовая покупка • Пожизненный доступ • Без рекламы</string>
+    <string name="evidence_limit_log">Достигнут месячный лимит доказательств (%1$d): для этой попытки фото и местоположение не сохранены. Перейдите на Premium, чтобы получить больше.</string>
+    <string name="evidence_limit_notification_title">Обнаружена неудачная разблокировка</string>
+    <string name="evidence_limit_notification_text">Лимит доказательств на этот месяц исчерпан, поэтому фото не сделано. Откройте приложение, чтобы перейти на Premium.</string>
+    <string name="evidence_limit_email_subject">Phone Fortress: неудачная разблокировка в %1$s</string>
+    <string name="evidence_limit_email_body">В %1$s обнаружена неудачная попытка разблокировки.\n\nВаш бесплатный месячный лимит доказательств (%2$d) исчерпан, поэтому в этот раз фото и местоположение не сохранены. Перейдите на Premium в приложении, чтобы продолжать собирать доказательства.</string>
+    <string name="premium_purchase_success">Premium активирован. Спасибо!</string>
+    <string name="premium_purchase_pending">Платёж обрабатывается. Premium откроется, как только Google Play его подтвердит.</string>
+    <string name="premium_purchase_error">Не удалось завершить покупку. Повторите попытку.</string>
+    <string name="premium_restore_success">Покупка восстановлена.</string>
+    <string name="premium_restore_none">Для этого аккаунта Google не найдено предыдущих покупок.</string>
+    <string name="premium_auto_restart_locked">Автоматический перезапуск доступен в Premium.</string>
 </resources>

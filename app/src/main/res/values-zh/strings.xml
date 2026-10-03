@@ -314,4 +314,15 @@
     <string name="premium_unavailable">高级版目前不可用。请稍后重试。</string>
     <string name="premium_restore">恢复购买</string>
     <string name="premium_lifetime_text">一次买断 • 终身使用 • 无广告</string>
+    <string name="evidence_limit_log">已达到本月证据上限（%1$d）：此次尝试未拍摄照片，也未获取位置。升级到 Premium 可获得更多次数。</string>
+    <string name="evidence_limit_notification_title">检测到解锁失败</string>
+    <string name="evidence_limit_notification_text">本月证据次数已用完，因此未拍摄照片。打开应用即可升级。</string>
+    <string name="evidence_limit_email_subject">Phone Fortress：%1$s 解锁失败</string>
+    <string name="evidence_limit_email_body">在 %1$s 检测到一次解锁失败。\n\n您每月的免费证据次数（%2$d）已用完，因此本次未拍摄照片，也未获取位置。在应用中升级到 Premium 即可继续记录证据。</string>
+    <string name="premium_purchase_success">Premium 已解锁。谢谢！</string>
+    <string name="premium_purchase_pending">付款处理中。Google Play 确认后将解锁 Premium。</string>
+    <string name="premium_purchase_error">无法完成购买，请重试。</string>
+    <string name="premium_restore_success">已恢复购买。</string>
+    <string name="premium_restore_none">未找到此 Google 帐号的以往购买记录。</string>
+    <string name="premium_auto_restart_locked">自动重启是 Premium 功能。</string>
 </resources>

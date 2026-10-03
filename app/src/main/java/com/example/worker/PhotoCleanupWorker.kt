@@ -16,8 +16,9 @@ class PhotoCleanupWorker(
         val directory = applicationContext.getExternalFilesDir(null)?.resolve(PHOTO_DIRECTORY)
             ?: return Result.success()
         if (!directory.isDirectory) return Result.success()
-        val cutoff = System.currentTimeMillis() - TimeUnit.DAYS.toMillis(RETENTION_DAYS)
         val prefs = SecurityPrefs.getInstance(applicationContext)
+        // Premium's "extended retention" is this window: 7 days on Free, 30 on Premium.
+        val cutoff = System.currentTimeMillis() - TimeUnit.DAYS.toMillis(prefs.getPhotoRetentionDays())
         var failures = 0
         directory.listFiles()?.forEach { file ->
             if (!file.isFile || file.lastModified() >= cutoff) return@forEach
@@ -34,7 +35,6 @@ class PhotoCleanupWorker(
     companion object {
         const val WORK_NAME = "weekly_photo_cleanup"
         private const val PHOTO_DIRECTORY = "intruder_photos"
-        private const val RETENTION_DAYS = 7L
         private const val TAG = "PhotoCleanupWorker"
     }
 }

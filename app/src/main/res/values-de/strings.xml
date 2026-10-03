@@ -314,4 +314,15 @@
     <string name="premium_unavailable">Premium ist derzeit nicht verfügbar. Versuchen Sie es später erneut.</string>
     <string name="premium_restore">Kauf wiederherstellen</string>
     <string name="premium_lifetime_text">Einmalkauf • Lebenslanger Zugriff • Keine Werbung</string>
+    <string name="evidence_limit_log">Monatliches Beweislimit erreicht (%1$d): Für diesen Versuch wurden weder Foto noch Standort erfasst. Mit Premium erhalten Sie mehr.</string>
+    <string name="evidence_limit_notification_title">Fehlgeschlagene Entsperrung erkannt</string>
+    <string name="evidence_limit_notification_text">Ihr Beweiskontingent für diesen Monat ist aufgebraucht, daher wurde kein Foto aufgenommen. Öffnen Sie die App für ein Upgrade.</string>
+    <string name="evidence_limit_email_subject">Phone Fortress: fehlgeschlagene Entsperrung um %1$s</string>
+    <string name="evidence_limit_email_body">Um %1$s wurde ein fehlgeschlagener Entsperrversuch erkannt.\n\nIhr kostenloses monatliches Beweiskontingent (%2$d) ist aufgebraucht, daher wurden diesmal weder Foto noch Standort erfasst. Wechseln Sie in der App zu Premium, um weiterhin Beweise zu erfassen.</string>
+    <string name="premium_purchase_success">Premium freigeschaltet. Vielen Dank!</string>
+    <string name="premium_purchase_pending">Zahlung ausstehend. Premium wird freigeschaltet, sobald Google Play sie bestätigt.</string>
+    <string name="premium_purchase_error">Der Kauf konnte nicht abgeschlossen werden. Bitte versuchen Sie es erneut.</string>
+    <string name="premium_restore_success">Kauf wiederhergestellt.</string>
+    <string name="premium_restore_none">Für dieses Google-Konto wurde kein früherer Kauf gefunden.</string>
+    <string name="premium_auto_restart_locked">Der automatische Neustart ist eine Premium-Funktion.</string>
 </resources>
