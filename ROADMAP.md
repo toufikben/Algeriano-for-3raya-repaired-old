@@ -86,7 +86,6 @@ batch pushes instead of stacking them.
 
 ## Open decisions (owner, not code)
 
-- **Play licensing key** for `PurchaseVerifier.PLAY_LICENSE_PUBLIC_KEY` (see audit fixes).
 - **Data safety form still says "No data collected".** Photos, precise location and the
   owner's email address leave the device through Gmail SMTP, and Google's definition of
   "collect" is "transmitting data from your app off a user's device"; with billing, Play
@@ -138,9 +137,10 @@ batch pushes instead of stacking them.
   separately, so a failed acknowledge no longer reads as Free; purchase / pending / error /
   restore outcomes are shown in the paywall; a Free tap on auto-restart opens the paywall.
 - **Purchase signature check** (`PurchaseVerifier`, SHA1withRSA against the Play licensing
-  key). `PLAY_LICENSE_PUBLIC_KEY` is still empty: until the key from Play Console
-  (Monetization setup → Licensing) is pasted in, the check is skipped with a warning.
+  key read from Console → Monetization setup → Licensing on 2026-10-03, RSA-2048).
   Google's recommended verification is server-side; this is the layer possible without one.
+- **Paywall had no background** on a real device (RMX3910, Android 16): the full-width
+  Dialog drew nothing behind `PremiumScreen`, so the main screen showed through.
 
 ## Resolved
 

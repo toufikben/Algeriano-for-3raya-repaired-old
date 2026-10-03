@@ -25,7 +25,8 @@ object PurchaseVerifier {
      * "Base64-encoded RSA public key" for com.toufikbendjeddah.phonefortress.
      * It is a public key, not a secret. Empty means "not configured yet".
      */
-    const val PLAY_LICENSE_PUBLIC_KEY = ""
+    const val PLAY_LICENSE_PUBLIC_KEY =
+        "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAwcGfC0MovLSLGIfbe+zPKsl0kHNOyV0ioqfrmTF/LZE6ZftkCoL3nvq17sGv9rfAGHaWV7OB9s7TKCUKvf1862Dx11CGeG87L+pDmkFTN6kR/ypdg9PYsODi1GDnpHWazowUUhcn6b07KhtMZIaudjOWRw8m+oft/iLgMtRQjGLUS7NTo1qWsc74zrV19q7VB8IZUyQmjudTjEgMfzA6SBs9pQ1uQowTr0Yt2nwrwolsYZho2oQPD3BIVDPlgKnrrWixJciI5GvyyX8EST8SC2w3CEYvM9+bR0HrCUm2S/u4GP4AQxhdHQtbHaNn24Mlj5JkYQ9DpnRG3pUKt0QhgwIDAQAB"
 
     fun isSignatureValid(
         signedData: String,
