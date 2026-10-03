@@ -92,7 +92,14 @@ batch pushes instead of stacking them.
   also asks to disclose purchase history the app receives. Must be updated before the
   billing build reaches production.
 - **Production store listing** presents countdown auto-restart as a general feature; with
-  versionCode 28 it is Premium-only and the listing must say so.
+  versionCode 28 it is Premium-only. The Premium wording (auto-restart line tagged "Premium:"
+  plus a "Free and Premium" paragraph) was written into the en-US full description on
+  2026-10-03; whether it is sent for review before or together with the production rollout
+  of 28 is the owner's call, since production (14) has no Premium yet.
+- **Privacy policy** (2026-10-03): Console's URL pointed at a 404 raw.githubusercontent link and
+  was switched to the Pages URL; the policy text was corrected (7/30-day automatic photo
+  deletion, countdown captures, capture-time location, monthly allowance). `privacy-policy.html`
+  in this repo is a copy of `toufikben/privacy-policies/phone-fortress/index.html`.
 
 - Contextual paywall when the monthly evidence quota runs out — not in the spec, so not
   stubbed.
