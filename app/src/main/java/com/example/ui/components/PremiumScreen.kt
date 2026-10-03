@@ -33,6 +33,12 @@ fun PremiumScreen(
 ) {
     val scrollState = rememberScrollState()
 
+    // The paywall is shown in a full-width Dialog, which draws no background of its
+    // own: without this surface the main screen showed through the table and buttons.
+    Surface(
+        modifier = Modifier.fillMaxSize(),
+        color = MaterialTheme.colorScheme.background
+    ) {
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -261,6 +267,7 @@ fun PremiumScreen(
         TextButton(onClick = onDismiss) {
             Text(text = stringResource(android.R.string.cancel))
         }
+    }
     }
 }
 
