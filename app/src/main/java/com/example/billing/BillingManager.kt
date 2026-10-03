@@ -16,47 +16,53 @@ import com.android.billingclient.api.QueryPurchasesParams
 import com.example.data.SecurityPrefs
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.cancel
-import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
-import kotlin.math.min
+
+/** Outcomes the paywall reports to the user. A cancelled purchase is not one of them. */
+enum class PurchaseEvent { PURCHASED, PENDING, FAILED, RESTORED, NOTHING_TO_RESTORE }
 
 /**
  * Google Play Billing manager for Phone Fortress Premium lifetime purchase.
- * 
+ *
  * Product ID: phone_fortress_premium_lifetime
  * Price: whatever Play reports for the user's market and currency
  * Type: One-time non-consumable lifetime entitlement
+ *
+ * One instance per process: the purchase listener has to outlive any screen, because
+ * Play delivers a purchase that completes after the paywall (or its ViewModel) is gone.
  */
-class BillingManager(private val context: Context) {
+class BillingManager private constructor(private val context: Context) {
 
     companion object {
         private const val TAG = "PhoneFortress::BillingManager"
         const val PREMIUM_PRODUCT_ID = "phone_fortress_premium_lifetime"
 
-        // Play's own service dies (low memory, Play update, background limits) and never
-        // restarts itself, so reconnection is the caller's job. Short bursts only: a
-        // device without Play must not spin on a timer for the whole app session.
-        private const val RECONNECT_MIN_DELAY_MILLIS = 500L
-        private const val RECONNECT_MAX_DELAY_MILLIS = 8_000L
-        private const val RECONNECT_MAX_ATTEMPTS = 5
+        @Volatile
+        private var INSTANCE: BillingManager? = null
+
+        fun getInstance(context: Context): BillingManager =
+            INSTANCE ?: synchronized(this) {
+                INSTANCE ?: BillingManager(context.applicationContext).also { INSTANCE = it }
+            }
+
+        /** Unit tests build a manager without a Play client (the offline path). */
+        internal fun createForTest(context: Context): BillingManager = BillingManager(context)
     }
 
     private var billingClient: BillingClient? = null
     private var productDetails: ProductDetails? = null
-
-    // Play answers the connection callbacks on a binder thread.
-    @Volatile
-    private var connected = false
-    private var reconnectAttempts = 0
-    private var reconnectJob: Job? = null
+    private val connectMutex = Mutex()
     private val billingScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
 
     // A flow, not a field: the price usually lands after the Premium screen is
@@ -70,6 +76,9 @@ class BillingManager(private val context: Context) {
     // before the first Play response arrives.
     private val _isPremium = MutableStateFlow(readCachedPremium())
     val isPremium: StateFlow<Boolean> = _isPremium.asStateFlow()
+
+    private val _purchaseEvents = MutableSharedFlow<PurchaseEvent>(extraBufferCapacity = 4)
+    val purchaseEvents: SharedFlow<PurchaseEvent> = _purchaseEvents.asSharedFlow()
 
     private fun readCachedPremium(): Boolean = try {
         SecurityPrefs.getInstance(context).isPremium
@@ -91,113 +100,90 @@ class BillingManager(private val context: Context) {
         when (billingResult.responseCode) {
             BillingClient.BillingResponseCode.OK -> {
                 Log.d(TAG, "Purchase updated: ${purchases?.size} purchases")
-                purchases?.forEach { purchase ->
-                    handlePurchase(purchase)
+                billingScope.launch {
+                    purchases?.forEach { purchase -> handleNewPurchase(purchase) }
+                }
+            }
+            BillingClient.BillingResponseCode.ITEM_ALREADY_OWNED -> {
+                // Bought earlier (another device, a reinstall): read it back from Play.
+                billingScope.launch {
+                    queryPremiumEntitlement()
+                    if (_isPremium.value) _purchaseEvents.tryEmit(PurchaseEvent.RESTORED)
                 }
             }
             BillingClient.BillingResponseCode.USER_CANCELED -> {
                 Log.d(TAG, "User canceled purchase")
             }
             else -> {
-                Log.e(TAG, "Purchase error: ${billingResult.debugMessage}")
+                Log.e(TAG, "Purchase error ${billingResult.responseCode}: ${billingResult.debugMessage}")
+                _purchaseEvents.tryEmit(PurchaseEvent.FAILED)
             }
         }
     }
 
     /**
-     * Initialize billing client and check premium entitlement.
-     * Call this from Application.onCreate() or when needed.
+     * Creates the Play client once per process and reads the entitlement and price.
+     * Safe to call from every screen that needs Play; only the first call connects.
      */
     suspend fun initialize() {
         try {
-            billingClient = BillingClient.newBuilder(context)
-                .setListener(purchasesUpdatedListener)
-                .enablePendingPurchases(
-                    PendingPurchasesParams.newBuilder().enableOneTimeProducts().build()
-                )
-                .build()
-
-            // A failed setup is not a Free user: querying now would only fail again and
-            // the cache already holds the last Play-confirmed value. The reconnect burst
-            // re-queries instead.
-            if (connectToBillingService()) {
-                queryPremiumEntitlement()
-                queryProductDetails()
-            } else {
-                scheduleReconnect()
+            if (billingClient == null) {
+                synchronized(this) {
+                    if (billingClient == null) {
+                        billingClient = BillingClient.newBuilder(context)
+                            .setListener(purchasesUpdatedListener)
+                            .enablePendingPurchases(
+                                PendingPurchasesParams.newBuilder().enableOneTimeProducts().build()
+                            )
+                            // Billing 8+: a call made while Play's service is down
+                            // reconnects by itself, replacing a hand-written retry loop.
+                            .enableAutoServiceReconnection()
+                            .build()
+                    }
+                }
             }
+            refreshFromPlay()
         } catch (e: Exception) {
             Log.e(TAG, "Failed to initialize billing", e)
         }
     }
 
-    private suspend fun connectToBillingService(): Boolean =
+    /**
+     * Makes sure the first setup ran. After that, automatic service reconnection
+     * handles a Play process that died; this only re-runs setup when the first one
+     * never succeeded (Play missing, updating, or signed out at app start).
+     */
+    private suspend fun ensureConnected(): Boolean = connectMutex.withLock {
+        val client = billingClient ?: return@withLock false
+        if (client.isReady) return@withLock true
         suspendCoroutine { continuation ->
-            val client = billingClient
-            if (client == null) {
-                continuation.resume(false)
-            } else {
-                client.startConnection(object : BillingClientStateListener {
-                    override fun onBillingSetupFinished(billingResult: BillingResult) {
-                        val ok = billingResult.responseCode == BillingClient.BillingResponseCode.OK
-                        if (ok) {
-                            Log.d(TAG, "Billing connected")
-                        } else {
-                            Log.e(TAG, "Billing setup failed: ${billingResult.debugMessage}")
-                        }
-                        connected = ok
+            var resumed = false
+            client.startConnection(object : BillingClientStateListener {
+                override fun onBillingSetupFinished(billingResult: BillingResult) {
+                    val ok = billingResult.responseCode == BillingClient.BillingResponseCode.OK
+                    if (!ok) Log.e(TAG, "Billing setup failed: ${billingResult.debugMessage}")
+                    // The listener may be called again on a later reconnect; the
+                    // continuation can only be resumed once.
+                    if (!resumed) {
+                        resumed = true
                         continuation.resume(ok)
                     }
+                }
 
-                    override fun onBillingServiceDisconnected() {
-                        Log.w(TAG, "Billing disconnected")
-                        connected = false
-                        scheduleReconnect()
-                    }
-                })
-            }
-        }
-
-    /**
-     * Reconnect with a short exponential burst, then re-read both the entitlement and the
-     * price. Giving up is safe because every entry point that needs Play (resume, opening
-     * the paywall, tapping unlock) asks for a connection again.
-     */
-    private fun scheduleReconnect() {
-        if (billingClient == null || connected || reconnectJob?.isActive == true) return
-        if (reconnectAttempts >= RECONNECT_MAX_ATTEMPTS) {
-            Log.w(TAG, "Giving up reconnecting after $reconnectAttempts attempts")
-            return
-        }
-        val backoff = min(
-            RECONNECT_MIN_DELAY_MILLIS shl reconnectAttempts,
-            RECONNECT_MAX_DELAY_MILLIS
-        )
-        reconnectAttempts++
-        reconnectJob = billingScope.launch {
-            delay(backoff)
-            if (connectToBillingService()) {
-                reconnectAttempts = 0
-                queryPremiumEntitlement()
-                queryProductDetails()
-            } else {
-                scheduleReconnect()
-            }
+                override fun onBillingServiceDisconnected() {
+                    // Automatic service reconnection is enabled.
+                    Log.w(TAG, "Billing disconnected")
+                }
+            })
         }
     }
 
     /**
-     * Ask Play for the current state after the app came back to the foreground. A
-     * disconnected client is reconnected first, so a Play process that died while the app
-     * was closed does not leave the paywall stuck on "premium unavailable".
+     * Ask Play for the current state: on resume, when the paywall opens, on restore and
+     * on the unlock tap. Without a connection the cached entitlement stays untouched.
      */
     suspend fun refreshFromPlay() {
-        if (!connected) {
-            reconnectAttempts = 0
-            reconnectJob?.cancel()
-            reconnectJob = null
-            if (!connectToBillingService()) return
-        }
+        if (!ensureConnected()) return
         queryPremiumEntitlement()
         queryProductDetails()
     }
@@ -233,18 +219,20 @@ class BillingManager(private val context: Context) {
             return
         }
 
-        // A PURCHASED-but-unacknowledged record is not yet an entitlement: Google
-        // refunds and revokes anything left unacknowledged after three days, so it
-        // must be acknowledged here rather than left to the update listener, which
-        // never fires when the process died between purchase and callback.
+        // A verified PURCHASED record is the entitlement. Acknowledgement is a separate
+        // duty: Google refunds anything left unacknowledged for three days, so it is
+        // retried here on every query, but a failed acknowledge (no network) must not
+        // take Premium away from a user who has just paid.
         var entitled = false
         purchases?.forEach { purchase ->
             if (!purchase.products.contains(PREMIUM_PRODUCT_ID) ||
-                purchase.purchaseState != Purchase.PurchaseState.PURCHASED
+                purchase.purchaseState != Purchase.PurchaseState.PURCHASED ||
+                !PurchaseVerifier.isSignatureValid(purchase.originalJson, purchase.signature)
             ) {
                 return@forEach
             }
-            entitled = purchase.isAcknowledged || acknowledge(purchase.purchaseToken)
+            entitled = true
+            if (!purchase.isAcknowledged) acknowledge(purchase.purchaseToken)
         }
 
         setPremium(entitled)
@@ -273,9 +261,11 @@ class BillingManager(private val context: Context) {
         }
 
     /**
-     * Query product details from Play Store to get localized price.
+     * Query product details from Play Store to get localized price. Suspends until
+     * Play answers, so a caller can use the result right after it returns.
      */
     suspend fun queryProductDetails() {
+        val client = billingClient ?: return
         try {
             val params = QueryProductDetailsParams.newBuilder()
                 .setProductList(
@@ -288,15 +278,18 @@ class BillingManager(private val context: Context) {
                 )
                 .build()
 
-            billingClient?.queryProductDetailsAsync(params) { billingResult, result ->
-                if (billingResult.responseCode == BillingClient.BillingResponseCode.OK) {
-                    // Billing 9 hands back a result wrapper, not the list: products Play
-                    // could not find are reported separately as unfetched.
-                    productDetails = result.productDetailsList?.firstOrNull()
-                    _localizedPrice.value = productDetails?.oneTimePurchaseOfferDetails?.formattedPrice
-                    Log.d(TAG, "Product found: ${_localizedPrice.value}")
-                } else {
-                    Log.e(TAG, "Query product failed: ${billingResult.debugMessage}")
+            suspendCoroutine<Unit> { continuation ->
+                client.queryProductDetailsAsync(params) { billingResult, result ->
+                    if (billingResult.responseCode == BillingClient.BillingResponseCode.OK) {
+                        // Billing 9 hands back a result wrapper, not the list: products Play
+                        // could not find are reported separately as unfetched.
+                        productDetails = result.productDetailsList?.firstOrNull()
+                        _localizedPrice.value = productDetails?.oneTimePurchaseOfferDetails?.formattedPrice
+                        Log.d(TAG, "Product found: ${_localizedPrice.value}")
+                    } else {
+                        Log.e(TAG, "Query product failed: ${billingResult.debugMessage}")
+                    }
+                    continuation.resume(Unit)
                 }
             }
         } catch (e: Exception) {
@@ -309,16 +302,16 @@ class BillingManager(private val context: Context) {
      * Must be called from an Activity context.
      */
     suspend fun launchPurchase(activity: androidx.activity.ComponentActivity) {
-        var details = productDetails
-        if (details == null) {
+        if (productDetails == null) {
             // The tap means the user wants the product now, so ask Play once more
             // instead of leaving a stale "premium unavailable" screen.
             refreshFromPlay()
-            details = productDetails
         }
+        val details = productDetails
         val offerToken = details?.oneTimePurchaseOfferDetails?.offerToken
         if (details == null || offerToken == null) {
             Log.e(TAG, "Product not loaded yet")
+            _purchaseEvents.tryEmit(PurchaseEvent.FAILED)
             return
         }
 
@@ -337,75 +330,65 @@ class BillingManager(private val context: Context) {
             // Billing 9 removed BillingFlowParams.intentSender: launchBillingFlow starts
             // the Play screen itself and reports only whether that request went out.
             val result = billingClient?.launchBillingFlow(activity, flowParams)
-            if (result != null && result.responseCode != BillingClient.BillingResponseCode.OK) {
-                Log.e(TAG, "launchBillingFlow: ${result.debugMessage}")
+            if (result == null || result.responseCode != BillingClient.BillingResponseCode.OK) {
+                Log.e(TAG, "launchBillingFlow: ${result?.debugMessage}")
+                if (result?.responseCode == BillingClient.BillingResponseCode.ITEM_ALREADY_OWNED) {
+                    restorePurchases()
+                } else {
+                    _purchaseEvents.tryEmit(PurchaseEvent.FAILED)
+                }
+                return
             }
             Log.d(TAG, "Purchase flow launched")
         } catch (e: Exception) {
             Log.e(TAG, "Failed to launch purchase", e)
+            _purchaseEvents.tryEmit(PurchaseEvent.FAILED)
         }
     }
 
     /**
-     * Restore previous purchases (for reinstall/device change).
-     * Calls queryPremiumEntitlement internally.
+     * Restore previous purchases (for reinstall/device change) and tell the user
+     * whether anything was found.
      */
     suspend fun restorePurchases() {
         Log.d(TAG, "Restoring purchases...")
-        refreshFromPlay()
+        if (!ensureConnected()) {
+            _purchaseEvents.tryEmit(PurchaseEvent.FAILED)
+            return
+        }
+        queryPremiumEntitlement()
+        _purchaseEvents.tryEmit(
+            if (_isPremium.value) PurchaseEvent.RESTORED else PurchaseEvent.NOTHING_TO_RESTORE
+        )
     }
 
     /**
-     * Handle a purchase and acknowledge it.
-     * Called straight from the Billing callback, so it must stay non-suspending.
-     * Premium is granted only once acknowledgement has succeeded.
+     * A purchase Play just delivered. Premium is granted once the purchase is verified
+     * as PURCHASED; acknowledgement follows and is retried by the next query if it fails.
      */
-    private fun handlePurchase(purchase: Purchase) {
+    private suspend fun handleNewPurchase(purchase: Purchase) {
         if (!purchase.products.contains(PREMIUM_PRODUCT_ID)) return
 
         when (purchase.purchaseState) {
             Purchase.PurchaseState.PURCHASED -> {
-                if (purchase.isAcknowledged) {
-                    Log.d(TAG, "Purchase already acknowledged - granting premium")
-                    setPremium(true)
-                } else {
-                    val ackParams = AcknowledgePurchaseParams.newBuilder()
-                        .setPurchaseToken(purchase.purchaseToken)
-                        .build()
-
-                    billingClient?.acknowledgePurchase(ackParams) { billingResult ->
-                        if (billingResult.responseCode == BillingClient.BillingResponseCode.OK) {
-                            Log.d(TAG, "Purchase acknowledged - granting premium")
-                            setPremium(true)
-                        } else {
-                            // An unacknowledged purchase is refunded and revoked by
-                            // Google after three days, so it is not an entitlement yet.
-                            Log.e(TAG, "Acknowledge failed: ${billingResult.debugMessage}")
-                        }
-                    }
+                if (!PurchaseVerifier.isSignatureValid(purchase.originalJson, purchase.signature)) {
+                    Log.e(TAG, "Purchase signature did not verify - not granting premium")
+                    _purchaseEvents.tryEmit(PurchaseEvent.FAILED)
+                    return
                 }
+                setPremium(true)
+                _purchaseEvents.tryEmit(PurchaseEvent.PURCHASED)
+                if (!purchase.isAcknowledged) acknowledge(purchase.purchaseToken)
             }
             Purchase.PurchaseState.PENDING -> {
-                // enablePendingPurchases() is on: the receipt only becomes PURCHASED
-                // later, and queryPremiumEntitlement picks it up on the next start.
+                // enablePendingPurchases() is on: the listener fires again when the
+                // payment completes, and queryPremiumEntitlement picks it up on resume.
                 Log.d(TAG, "Purchase pending - not granting premium")
+                _purchaseEvents.tryEmit(PurchaseEvent.PENDING)
             }
-            Purchase.PurchaseState.UNSPECIFIED_STATE -> {
+            else -> {
                 Log.w(TAG, "Purchase in unspecified state - not granting premium")
             }
-        }
-    }
-
-    /**
-     * End billing connection.
-     */
-    fun destroy() {
-        billingScope.cancel()
-        try {
-            billingClient?.endConnection()
-            billingClient = null
-        } catch (e: Exception) {
-            Log.e(TAG, "Error destroying billing", e)
         }
     }
 }

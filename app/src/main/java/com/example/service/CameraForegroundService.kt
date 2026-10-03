@@ -351,7 +351,18 @@ class CameraForegroundService : Service() {
             return
         }
 
+        // The allowance is taken here, on the one path every capture goes through:
+        // the failed-unlock receiver hands its event straight to this service and
+        // never passes the durable queue's check. Reserving (check + take in one
+        // step) also keeps two unlock attempts a second apart from both slipping in.
+        var evidenceSlotHeld = false
         if (!isTest && eventId != null && !sendOnly) {
+            if (!prefs.tryReserveEvidenceSlot()) {
+                captureInProgress.set(false)
+                com.example.worker.EvidenceLimitNotice.handleExhausted(applicationContext, eventId)
+                return
+            }
+            evidenceSlotHeld = true
             prefs.markCapturePending(eventId)
         }
 
@@ -433,8 +444,12 @@ class CameraForegroundService : Service() {
                         longitude = lng,
                         locationTimestamp = location?.time
                     )
-                    // Increment monthly evidence counter for successful captures
-                    prefs.incrementEvidenceCounter()
+                    // A capture that produced neither a photo nor a location gave the
+                    // owner no evidence, so it does not count against the allowance.
+                    if (!photoCaptured && !locationCaptured) {
+                        prefs.releaseEvidenceSlot()
+                        evidenceSlotHeld = false
+                    }
                 }
                 if (!isTest && eventId != null) {
                     prefs.moveCapturedEventToSendPending(eventId)
@@ -584,6 +599,13 @@ class CameraForegroundService : Service() {
             } catch (e: Exception) {
                 Log.e(TAG, "Error in processIntruderCapture", e)
                 if (!isTest && eventId != null) {
+                    val crashedEvent = prefs.getSecurityEvent(eventId)
+                    if (evidenceSlotHeld && crashedEvent?.photoPath.isNullOrBlank() &&
+                        crashedEvent?.latitude == null
+                    ) {
+                        prefs.releaseEvidenceSlot()
+                        evidenceSlotHeld = false
+                    }
                     prefs.completeSecurityEvent(eventId, SecurityEventStatus.FAILED_FINAL)
                     if (!logSaved) {
                         val failedEvent = prefs.getSecurityEvent(eventId)

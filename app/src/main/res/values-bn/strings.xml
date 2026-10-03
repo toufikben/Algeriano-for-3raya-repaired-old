@@ -314,4 +314,15 @@
     <string name="premium_unavailable">Premium এখন উপলব্ধ নয়। পরে আবার চেষ্টা করুন।</string>
     <string name="premium_restore">ক্রয় পুনরুদ্ধার করুন</string>
     <string name="premium_lifetime_text">এককালীন ক্রয় • আজীবন প্রবেশাধিকার • বিজ্ঞাপনমুক্ত</string>
+    <string name="evidence_limit_log">মাসিক প্রমাণের সীমা পূর্ণ হয়েছে (%1$d): এই চেষ্টার জন্য কোনো ছবি বা অবস্থান ধরা হয়নি। আরও পেতে Premium নিন।</string>
+    <string name="evidence_limit_notification_title">ব্যর্থ আনলক শনাক্ত হয়েছে</string>
+    <string name="evidence_limit_notification_text">এই মাসের প্রমাণের সীমা শেষ, তাই কোনো ছবি তোলা হয়নি। আপগ্রেড করতে অ্যাপ খুলুন।</string>
+    <string name="evidence_limit_email_subject">Phone Fortress: %1$s-এ ব্যর্থ আনলক</string>
+    <string name="evidence_limit_email_body">%1$s-এ একটি ব্যর্থ আনলক চেষ্টা শনাক্ত হয়েছে।\n\nআপনার বিনামূল্যের মাসিক প্রমাণের সীমা (%2$d) শেষ হয়ে গেছে, তাই এবার কোনো ছবি বা অবস্থান ধরা হয়নি। প্রমাণ সংগ্রহ চালিয়ে যেতে অ্যাপে Premium-এ আপগ্রেড করুন।</string>
+    <string name="premium_purchase_success">Premium চালু হয়েছে। ধন্যবাদ!</string>
+    <string name="premium_purchase_pending">পেমেন্ট অপেক্ষমাণ। Google Play নিশ্চিত করলেই Premium চালু হবে।</string>
+    <string name="premium_purchase_error">কেনাকাটা সম্পন্ন করা যায়নি। আবার চেষ্টা করুন।</string>
+    <string name="premium_restore_success">কেনাকাটা পুনরুদ্ধার হয়েছে।</string>
+    <string name="premium_restore_none">এই Google অ্যাকাউন্টের জন্য আগের কোনো কেনাকাটা পাওয়া যায়নি।</string>
+    <string name="premium_auto_restart_locked">স্বয়ংক্রিয় পুনরায় চালু একটি Premium বৈশিষ্ট্য।</string>
 </resources>

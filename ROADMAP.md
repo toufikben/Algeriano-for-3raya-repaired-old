@@ -4,8 +4,8 @@ Single place to see what is proven, what is pending, and what is blocked. Update
 stage table and the ledger after every pushed stage; do not mark a stage `DONE` without
 naming the CI run that proved it.
 
-App: `com.toufikbendjeddah.phonefortress` · this branch: versionCode **27**, versionName
-**1.1.4** · minSdk 24 / targetSdk 36 · Play Billing **9.1.0** · one-time non-consumable
+App: `com.toufikbendjeddah.phonefortress` · this branch: versionCode **28**, versionName
+**1.1.5** · minSdk 24 / targetSdk 36 · Play Billing **9.1.0** · one-time non-consumable
 `phone_fortress_premium_lifetime`.
 
 **CI is the only compiler.** The development machine cannot build or test Android
@@ -86,6 +86,14 @@ batch pushes instead of stacking them.
 
 ## Open decisions (owner, not code)
 
+- **Data safety form still says "No data collected".** Photos, precise location and the
+  owner's email address leave the device through Gmail SMTP, and Google's definition of
+  "collect" is "transmitting data from your app off a user's device"; with billing, Play
+  also asks to disclose purchase history the app receives. Must be updated before the
+  billing build reaches production.
+- **Production store listing** presents countdown auto-restart as a general feature; with
+  versionCode 28 it is Premium-only and the listing must say so.
+
 - Contextual paywall when the monthly evidence quota runs out — not in the spec, so not
   stubbed.
 - Real-time Developer Notifications / backend `Purchases.products:get` to revoke the
@@ -108,6 +116,31 @@ batch pushes instead of stacking them.
   yet; this is the first thing stage 11 needs from the owner.
 - **Product icon.** Optional and left empty (a 512×512+ 32-bit PNG with no text or branding
   was never produced).
+
+## Audit fixes (2026-10-03, versionCode 28)
+
+- **Allowance bypass.** The failed-unlock receiver sends its event straight to the camera
+  service, which never checked the monthly allowance — Free captured without limit while
+  the counter climbed past 3/3. The service now reserves a slot (check + take, one
+  synchronized step) before the camera opens; the durable queue keeps its read-only check.
+- **A capture with no photo and no location is refunded**, instead of costing a slot.
+- **A spent allowance no longer drops the attempt.** `EvidenceLimitNotice` fails the event
+  once, writes a log row, posts a notification and sends a text-only email (network-
+  constrained worker). Camera and location stay off — that is the tier.
+- **Extended retention existed only on the paywall.** `PhotoCleanupWorker` deleted after 7
+  days for everyone; it now keeps 30 days on Premium (`getPhotoRetentionDays`).
+- **Allowance resets on the calendar month**, and a clock moved back keeps the count.
+- **Billing:** one process-wide `BillingManager` (the purchase listener no longer dies with
+  the ViewModel); `enableAutoServiceReconnection()` replaces the hand-written retry burst;
+  `queryProductDetails` suspends until Play answers (the unlock-tap retry now works);
+  Premium is granted on a verified PURCHASED record and acknowledgement is retried
+  separately, so a failed acknowledge no longer reads as Free; purchase / pending / error /
+  restore outcomes are shown in the paywall; a Free tap on auto-restart opens the paywall.
+- **Purchase signature check** (`PurchaseVerifier`, SHA1withRSA against the Play licensing
+  key read from Console → Monetization setup → Licensing on 2026-10-03, RSA-2048).
+  Google's recommended verification is server-side; this is the layer possible without one.
+- **Paywall had no background** on a real device (RMX3910, Android 16): the full-width
+  Dialog drew nothing behind `PremiumScreen`, so the main screen showed through.
 
 ## Resolved
 

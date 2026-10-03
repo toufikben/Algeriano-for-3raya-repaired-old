@@ -314,4 +314,15 @@
     <string name="premium_unavailable">Premium tidak tersedia sekarang. Cuba lagi kemudian.</string>
     <string name="premium_restore">Pulihkan pembelian</string>
     <string name="premium_lifetime_text">Pembelian sekali • Akses seumur hidup • Tiada iklan</string>
+    <string name="evidence_limit_log">Had bukti bulanan dicapai (%1$d): tiada foto atau lokasi diambil untuk cubaan ini. Naik taraf ke Premium untuk lebih banyak.</string>
+    <string name="evidence_limit_notification_title">Cubaan buka kunci gagal dikesan</string>
+    <string name="evidence_limit_notification_text">Kuota bukti bulan ini telah habis, jadi tiada foto diambil. Buka apl untuk naik taraf.</string>
+    <string name="evidence_limit_email_subject">Phone Fortress: buka kunci gagal pada %1$s</string>
+    <string name="evidence_limit_email_body">Cubaan buka kunci yang gagal dikesan pada %1$s.\n\nKuota bukti bulanan percuma anda (%2$d) telah habis, jadi kali ini tiada foto atau lokasi diambil. Naik taraf ke Premium dalam apl untuk terus mengambil bukti.</string>
+    <string name="premium_purchase_success">Premium diaktifkan. Terima kasih!</string>
+    <string name="premium_purchase_pending">Pembayaran belum selesai. Premium akan dibuka sebaik sahaja Google Play mengesahkannya.</string>
+    <string name="premium_purchase_error">Pembelian tidak dapat diselesaikan. Sila cuba lagi.</string>
+    <string name="premium_restore_success">Pembelian dipulihkan.</string>
+    <string name="premium_restore_none">Tiada pembelian terdahulu ditemui untuk akaun Google ini.</string>
+    <string name="premium_auto_restart_locked">Mula semula automatik ialah ciri Premium.</string>
 </resources>

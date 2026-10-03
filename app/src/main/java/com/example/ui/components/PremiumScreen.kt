@@ -26,12 +26,19 @@ fun PremiumScreen(
     isPremium: Boolean,
     localizedPrice: String?,
     evidenceUsage: Pair<Int, Int>, // (current, limit)
+    message: String? = null,
     onUnlockPremium: () -> Unit,
     onRestorePurchase: () -> Unit,
     onDismiss: () -> Unit
 ) {
     val scrollState = rememberScrollState()
 
+    // The paywall is shown in a full-width Dialog, which draws no background of its
+    // own: without this surface the main screen showed through the table and buttons.
+    Surface(
+        modifier = Modifier.fillMaxSize(),
+        color = MaterialTheme.colorScheme.background
+    ) {
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -188,6 +195,24 @@ fun PremiumScreen(
             Spacer(modifier = Modifier.height(16.dp))
         }
 
+        // Purchase / restore outcome, or why the paywall opened.
+        if (message != null) {
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.secondaryContainer
+                )
+            ) {
+                Text(
+                    text = message,
+                    modifier = Modifier.padding(12.dp),
+                    color = MaterialTheme.colorScheme.onSecondaryContainer,
+                    textAlign = TextAlign.Center
+                )
+            }
+            Spacer(modifier = Modifier.height(16.dp))
+        }
+
         // CTA Buttons
         if (!isPremium) {
             val price = localizedPrice
@@ -242,6 +267,7 @@ fun PremiumScreen(
         TextButton(onClick = onDismiss) {
             Text(text = stringResource(android.R.string.cancel))
         }
+    }
     }
 }
 

@@ -314,4 +314,15 @@
     <string name="premium_unavailable">النسخة المدفوعة غير متاحة الآن. حاول مرة أخرى لاحقاً.</string>
     <string name="premium_restore">استعادة الشراء</string>
     <string name="premium_lifetime_text">شراء واحد • وصول مدى الحياة • بدون إعلانات</string>
+    <string name="evidence_limit_log">تم بلوغ حدّ الإثبات الشهري (%1$d): لم تُلتقط صورة ولا موقع لهذه المحاولة. رقِّ إلى النسخة المميّزة للمزيد.</string>
+    <string name="evidence_limit_notification_title">تم رصد محاولة فتح خاطئة</string>
+    <string name="evidence_limit_notification_text">انتهى رصيد الإثبات لهذا الشهر، لذلك لم تُلتقط صورة. افتح التطبيق للترقية.</string>
+    <string name="evidence_limit_email_subject">Phone Fortress: محاولة فتح خاطئة في %1$s</string>
+    <string name="evidence_limit_email_body">تم رصد محاولة فتح خاطئة في %1$s.\n\nانتهى رصيدك الشهري المجاني من الإثباتات (%2$d)، لذلك لم تُلتقط صورة ولا موقع هذه المرة. رقِّ إلى النسخة المميّزة من التطبيق لمواصلة التقاط الإثباتات.</string>
+    <string name="premium_purchase_success">تم تفعيل النسخة المميّزة. شكراً لك!</string>
+    <string name="premium_purchase_pending">الدفع قيد المعالجة. ستُفعَّل النسخة المميّزة عندما يؤكّد Google Play العملية.</string>
+    <string name="premium_purchase_error">تعذّر إتمام الشراء. حاول مرة أخرى.</string>
+    <string name="premium_restore_success">تمت استعادة الشراء.</string>
+    <string name="premium_restore_none">لم يُعثر على شراء سابق لحساب Google هذا.</string>
+    <string name="premium_auto_restart_locked">إعادة التشغيل التلقائي ميزة في النسخة المميّزة.</string>
 </resources>

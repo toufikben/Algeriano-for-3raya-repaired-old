@@ -314,4 +314,15 @@
     <string name="premium_unavailable">Premium을 현재 사용할 수 없습니다. 나중에 다시 시도해 주세요.</string>
     <string name="premium_restore">구매 복원</string>
     <string name="premium_lifetime_text">일회성 구매 • 평생 사용 • 광고 없음</string>
+    <string name="evidence_limit_log">이번 달 증거 한도(%1$d건)에 도달했습니다. 이번 시도에서는 사진과 위치를 기록하지 않았습니다. 더 많이 기록하려면 Premium으로 업그레이드하세요.</string>
+    <string name="evidence_limit_notification_title">잠금 해제 실패가 감지되었습니다</string>
+    <string name="evidence_limit_notification_text">이번 달 증거 한도를 모두 사용해 사진을 찍지 않았습니다. 앱을 열어 업그레이드하세요.</string>
+    <string name="evidence_limit_email_subject">Phone Fortress: %1$s 잠금 해제 실패</string>
+    <string name="evidence_limit_email_body">%1$s에 잠금 해제 실패 시도가 감지되었습니다.\n\n무료 월간 증거 한도(%2$d건)를 모두 사용해 이번에는 사진과 위치를 기록하지 않았습니다. 계속 증거를 기록하려면 앱에서 Premium으로 업그레이드하세요.</string>
+    <string name="premium_purchase_success">Premium이 활성화되었습니다. 감사합니다!</string>
+    <string name="premium_purchase_pending">결제 대기 중입니다. Google Play에서 확인되면 Premium이 활성화됩니다.</string>
+    <string name="premium_purchase_error">구매를 완료하지 못했습니다. 다시 시도해 주세요.</string>
+    <string name="premium_restore_success">구매가 복원되었습니다.</string>
+    <string name="premium_restore_none">이 Google 계정에서 이전 구매 내역을 찾을 수 없습니다.</string>
+    <string name="premium_auto_restart_locked">자동 재시작은 Premium 기능입니다.</string>
 </resources>

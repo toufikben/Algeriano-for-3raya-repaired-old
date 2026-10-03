@@ -110,7 +110,7 @@ class SecurityPrefs private constructor(private val context: Context) {
         private const val KEY_SECURITY_EVENTS_JSON = "key_security_events_json"
         private const val KEY_PREMIUM_ENTITLEMENT = "key_premium_entitlement"
         private const val KEY_EVIDENCE_MONTH_COUNTER = "key_evidence_month_counter"
-        private const val KEY_EVIDENCE_MONTH_TIMESTAMP = "key_evidence_month_timestamp"
+        private const val KEY_EVIDENCE_MONTH_INDEX = "key_evidence_month_index"
         private const val KEYSTORE_ALIAS = "intruder_security_credentials"
         private const val ENCRYPTED_PREFIX = "v1:"
         private const val GCM_TAG_LENGTH_BITS = 128
@@ -123,6 +123,8 @@ class SecurityPrefs private constructor(private val context: Context) {
         const val PREMIUM_HISTORY_LIMIT = 50
         const val FREE_EVIDENCE_MONTHLY_LIMIT = 3
         const val PREMIUM_EVIDENCE_MONTHLY_LIMIT = 50
+        const val FREE_PHOTO_RETENTION_DAYS = 7L
+        const val PREMIUM_PHOTO_RETENTION_DAYS = 30L
         private const val EVENT_LEASE_TIMEOUT_MILLIS = 2 * 60 * 1000L
         private const val MAX_EVENT_RECOVERY_ATTEMPTS = 2
         private const val MAX_SEND_ATTEMPTS = 3
@@ -502,8 +504,10 @@ class SecurityPrefs private constructor(private val context: Context) {
         return changed
     }
 
+    /** Returns true only for the call that actually moved the event to a failed state. */
     @Synchronized
-    fun failPendingSecurityEvent(id: String) {
+    fun failPendingSecurityEvent(id: String): Boolean {
+        var changed = false
         updateSecurityEventsInRoom { events ->
             events.map {
                 if (it.id == id) {
@@ -520,10 +524,13 @@ class SecurityPrefs private constructor(private val context: Context) {
                         )
                     ) SecurityEventStatus.FAILED_FINAL
                     else return@map it
+                    if (target == it.status) return@map it
+                    changed = true
                     it.copy(status = target, updatedAt = System.currentTimeMillis())
                 } else it
             }
         }
+        return changed
     }
 
     // FIX: both predicates now derive from SecurityEventStateMachine.isPendingWork
@@ -952,16 +959,18 @@ class SecurityPrefs private constructor(private val context: Context) {
         set(value) = prefs.edit().putBoolean(KEY_PREMIUM_ENTITLEMENT, value).apply()
 
     /**
-     * Monthly evidence counter - tracks actual security events captured this month.
-     * Resets monthly based on timestamp.
+     * Evidence captured in the current calendar month. A slot is reserved before
+     * the camera opens and refunded when the capture produced nothing, so the
+     * published allowance counts evidence the user actually received.
      */
     private var evidenceMonthCounter: Int
         get() = prefs.getInt(KEY_EVIDENCE_MONTH_COUNTER, 0)
-        set(value) = prefs.edit().putInt(KEY_EVIDENCE_MONTH_COUNTER, value).apply()
+        set(value) = prefs.edit().putInt(KEY_EVIDENCE_MONTH_COUNTER, value.coerceAtLeast(0)).apply()
 
-    private var evidenceMonthTimestamp: Long
-        get() = prefs.getLong(KEY_EVIDENCE_MONTH_TIMESTAMP, 0L)
-        set(value) = prefs.edit().putLong(KEY_EVIDENCE_MONTH_TIMESTAMP, value).apply()
+    /** Calendar month the counter belongs to, as year * 12 + month (0 = not set yet). */
+    private var evidenceMonthIndex: Int
+        get() = prefs.getInt(KEY_EVIDENCE_MONTH_INDEX, 0)
+        set(value) = prefs.edit().putInt(KEY_EVIDENCE_MONTH_INDEX, value).apply()
 
     /**
      * Get evidence monthly limit based on premium status.
@@ -981,9 +990,14 @@ class SecurityPrefs private constructor(private val context: Context) {
         return if (isPremium) PREMIUM_HISTORY_LIMIT else FREE_HISTORY_LIMIT
     }
 
+    /** Days an evidence photo stays on the device before the weekly cleanup removes it. */
+    fun getPhotoRetentionDays(): Long {
+        return if (isPremium) PREMIUM_PHOTO_RETENTION_DAYS else FREE_PHOTO_RETENTION_DAYS
+    }
+
     /**
-     * Check if user can create a new evidence event this month.
-     * Returns true if under limit, false if limit reached.
+     * Read-only check for callers that do not start a capture themselves (the
+     * durable queue). The capture itself goes through [tryReserveEvidenceSlot].
      */
     @Synchronized
     fun canCreateEvidenceEvent(): Boolean {
@@ -992,27 +1006,43 @@ class SecurityPrefs private constructor(private val context: Context) {
     }
 
     /**
-     * Increment evidence counter when a new event is created.
-     * Must be called only when canCreateEvidenceEvent() returns true.
+     * Checks the allowance and takes one slot in a single step: two failed unlocks
+     * a second apart must not both pass a separate check-then-increment.
      */
     @Synchronized
-    fun incrementEvidenceCounter() {
+    fun tryReserveEvidenceSlot(): Boolean {
         resetMonthlyCounterIfNeeded()
-        evidenceMonthCounter++
+        if (evidenceMonthCounter >= getEvidenceMonthlyLimit()) return false
+        evidenceMonthCounter = evidenceMonthCounter + 1
+        return true
+    }
+
+    /** Gives a reserved slot back when the capture produced neither photo nor location. */
+    @Synchronized
+    fun releaseEvidenceSlot() {
+        resetMonthlyCounterIfNeeded()
+        evidenceMonthCounter = evidenceMonthCounter - 1
     }
 
     /**
-     * Reset monthly counter if a new month has started.
-     * Uses wall-clock time (not device clock dependent for security).
+     * Starts a new allowance when the calendar month changes. A clock moved back
+     * into an earlier month keeps the current count instead of handing out a
+     * fresh allowance.
      */
     private fun resetMonthlyCounterIfNeeded() {
-        val now = System.currentTimeMillis()
-        val lastReset = evidenceMonthTimestamp
-
-        // If no previous timestamp or more than 30 days have passed, reset
-        if (lastReset == 0L || (now - lastReset) > 30L * 24 * 60 * 60 * 1000) {
+        val calendar = java.util.Calendar.getInstance()
+        val currentIndex = calendar.get(java.util.Calendar.YEAR) * 12 +
+            calendar.get(java.util.Calendar.MONTH)
+        val storedIndex = evidenceMonthIndex
+        if (storedIndex == 0) {
+            // First run, or an upgrade from the old 30-day window: keep what was
+            // already spent instead of granting a fresh allowance mid-month.
+            evidenceMonthIndex = currentIndex
+            return
+        }
+        if (currentIndex > storedIndex) {
             evidenceMonthCounter = 0
-            evidenceMonthTimestamp = now
+            evidenceMonthIndex = currentIndex
         }
     }
 
@@ -1020,6 +1050,7 @@ class SecurityPrefs private constructor(private val context: Context) {
      * Get current evidence usage for display.
      * Returns Pair(current_count, monthly_limit)
      */
+    @Synchronized
     fun getEvidenceUsage(): Pair<Int, Int> {
         resetMonthlyCounterIfNeeded()
         return Pair(evidenceMonthCounter, getEvidenceMonthlyLimit())

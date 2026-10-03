@@ -314,4 +314,15 @@
     <string name="premium_unavailable">Premium は現在利用できません。後でもう一度お試しください。</string>
     <string name="premium_restore">購入を復元</string>
     <string name="premium_lifetime_text">買い切り • 生涯利用 • 広告なし</string>
+    <string name="evidence_limit_log">今月の証拠の上限（%1$d件）に達しました。この試行では写真も位置情報も取得していません。Premium にアップグレードすると上限が増えます。</string>
+    <string name="evidence_limit_notification_title">ロック解除の失敗を検出しました</string>
+    <string name="evidence_limit_notification_text">今月の証拠の上限に達したため、写真は撮影されませんでした。アプリを開いてアップグレードしてください。</string>
+    <string name="evidence_limit_email_subject">Phone Fortress：%1$s にロック解除の失敗</string>
+    <string name="evidence_limit_email_body">%1$s にロック解除の失敗を検出しました。\n\n無料プランの今月の証拠の上限（%2$d件）に達したため、今回は写真も位置情報も取得していません。引き続き証拠を記録するには、アプリで Premium にアップグレードしてください。</string>
+    <string name="premium_purchase_success">Premium が有効になりました。ありがとうございます！</string>
+    <string name="premium_purchase_pending">支払いを処理中です。Google Play で確認されると Premium が有効になります。</string>
+    <string name="premium_purchase_error">購入を完了できませんでした。もう一度お試しください。</string>
+    <string name="premium_restore_success">購入を復元しました。</string>
+    <string name="premium_restore_none">この Google アカウントでの過去の購入は見つかりませんでした。</string>
+    <string name="premium_auto_restart_locked">自動再開は Premium の機能です。</string>
 </resources>

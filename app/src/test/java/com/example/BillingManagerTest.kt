@@ -37,7 +37,7 @@ class BillingManagerTest {
     @Test
     fun `an unreachable Play keeps the last confirmed entitlement`() {
         prefs.isPremium = true
-        val manager = BillingManager(context)
+        val manager = BillingManager.createForTest(context)
 
         // No initialize(), so billingClient is null: this is the offline path.
         runBlocking { manager.queryPremiumEntitlement() }
@@ -48,7 +48,7 @@ class BillingManagerTest {
 
     @Test
     fun `no price exists before Play reports one`() {
-        val manager = BillingManager(context)
+        val manager = BillingManager.createForTest(context)
 
         runBlocking { manager.queryProductDetails() }
 
@@ -61,7 +61,7 @@ class BillingManagerTest {
     @Test
     fun `a resume with no Play connection changes nothing`() {
         prefs.isPremium = true
-        val manager = BillingManager(context)
+        val manager = BillingManager.createForTest(context)
 
         // onResume and the paywall both go through this path; with no client it must
         // neither crash nor downgrade the user nor guess a price.
