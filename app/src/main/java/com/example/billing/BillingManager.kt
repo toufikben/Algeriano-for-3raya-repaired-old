@@ -278,7 +278,7 @@ class BillingManager private constructor(private val context: Context) {
                 )
                 .build()
 
-            suspendCoroutine { continuation ->
+            suspendCoroutine<Unit> { continuation ->
                 client.queryProductDetailsAsync(params) { billingResult, result ->
                     if (billingResult.responseCode == BillingClient.BillingResponseCode.OK) {
                         // Billing 9 hands back a result wrapper, not the list: products Play
