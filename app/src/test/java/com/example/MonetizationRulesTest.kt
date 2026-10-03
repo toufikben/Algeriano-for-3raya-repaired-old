@@ -41,13 +41,11 @@ class MonetizationRulesTest {
         resetAllowance()
     }
 
-    // SecurityPrefs is a process singleton under Robolectric; start each test with
-    // an untouched allowance.
+    // SecurityPrefs is a process singleton under Robolectric that keeps the first
+    // test's SharedPreferences, so the allowance is reset through it and not through
+    // a fresh context: a leftover count would starve the distributor tests.
     private fun resetAllowance() {
-        context.getSharedPreferences("intruder_security_prefs", Context.MODE_PRIVATE).edit()
-            .remove("key_evidence_month_counter")
-            .remove("key_evidence_month_index")
-            .commit()
+        repeat(prefs.getEvidenceUsage().first) { prefs.releaseEvidenceSlot() }
     }
 
     @Test
