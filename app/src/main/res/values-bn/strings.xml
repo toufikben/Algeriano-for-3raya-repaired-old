@@ -35,7 +35,7 @@
     <string name="ui_29cc79599c5c">অ্যাপের PIN পরিবর্তন করুন</string>
     <string name="ui_c2d7f7559f21">সেটআপ নির্দেশিকা</string>
     <string name="ui_cd24acb10110">ডেভেলপারের তথ্য</string>
-    <string name="ui_9eb289360bce">ডেভেলপার ও অ্যাপ সম্পর্কে (সংস্করণ 1.1.0)</string>
+    <string name="ui_9eb289360bce">ডেভেলপার ও অ্যাপ সম্পর্কে (সংস্করণ %1$s)</string>
     <string name="ui_5bf826c5e57c">বন্ধ করুন</string>
     <string name="ui_51ae4e30735b">ফোন নিরাপত্তা কবচ</string>
     <string name="ui_6239de7ab740">সুরক্ষা সক্রিয় এবং ডিভাইস পর্যবেক্ষণ করছে</string>
@@ -156,7 +156,7 @@
     <string name="ui_a5b4472cdfcd">সেটিংস সংরক্ষণ করুন</string>
     <string name="ui_bde567ded26b">অ্যাপ ও ডেভেলপার সম্পর্কে</string>
     <string name="ui_4194b339b21b">ফোন সুরক্ষা ও অনুপ্রবেশ শনাক্তকারী অ্যাপ</string>
-    <string name="ui_ed3327bec79e">সংস্করণ: 1.1.0 (সর্বশেষ সংস্করণ)</string>
+    <string name="ui_ed3327bec79e">সংস্করণ: %1$s</string>
     <string name="ui_235dd7facf19">Device Admin অনুমতির সমাধান (Android 13 ও তার উপরে):</string>
     <string name="ui_c03a47548c0a">Device Admin চালু করতে গেলে যদি „অ্যাপকে প্রবেশাধিকার থেকে বঞ্চিত করা হয়েছে” বার্তা দেখায়:&#10;</string>
     <string name="ui_08eecf918378">১. আপনার ফোনের Settings (Settings) ⬅️ Apps (Apps) খুলুন।&#10;</string>
