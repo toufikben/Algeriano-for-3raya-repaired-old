@@ -141,7 +141,9 @@ fun PremiumScreen(
                 // an English "/mo" here would be untranslated text in 16 languages.
                 PremiumFeatureRow(
                     feature = stringResource(R.string.premium_evidence_monthly),
-                    freeValue = evidenceUsage.second.toString(),
+                    // The column is the Free tier, not the viewer's current limit: a Premium
+                    // user saw 50 here.
+                    freeValue = SecurityPrefs.FREE_EVIDENCE_MONTHLY_LIMIT.toString(),
                     premiumValue = SecurityPrefs.PREMIUM_EVIDENCE_MONTHLY_LIMIT.toString()
                 )
                 PremiumFeatureRow(
