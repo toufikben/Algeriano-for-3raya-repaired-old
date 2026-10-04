@@ -103,7 +103,8 @@ interface SecurityDao {
 @Database(
     entities = [SecurityEventEntity::class, IntruderLogEntity::class],
     version = 4,
-    exportSchema = false
+    // Exported to app/schemas (see build.gradle.kts) so each migration has a schema to test against.
+    exportSchema = true
 )
 abstract class SecurityDatabase : RoomDatabase() {
     abstract fun securityDao(): SecurityDao

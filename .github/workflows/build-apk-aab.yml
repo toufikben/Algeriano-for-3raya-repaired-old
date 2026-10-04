@@ -88,6 +88,16 @@ jobs:
       - name: Build signed release AAB
         run: ./gradlew bundleRelease --no-daemon --stacktrace
 
+      # Room exports its schema at compile time; the JSON belongs in git so migrations can be
+      # tested. CI is the only compiler, so it shows the file and fails the run when the
+      # committed copy is missing or stale.
+      - name: Check the exported Room schema is committed
+        run: |
+          set -euo pipefail
+          find app/schemas -name '*.json' -print -exec cat {} '+'
+          git status --porcelain app/schemas
+          test -z "$(git status --porcelain app/schemas)" || { echo "::error::app/schemas changed during the build; commit the files shown above" >&2; exit 1; }
+
       - name: Verify signed artifacts and package identity
         env:
           EXPECTED_PACKAGE: com.toufikbendjeddah.phonefortress

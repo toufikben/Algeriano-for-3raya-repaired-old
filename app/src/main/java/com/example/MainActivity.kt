@@ -113,6 +113,11 @@ import com.example.i18n.LanguageStore
 import com.example.i18n.isRtl
 
 class MainActivity : ComponentActivity() {
+    companion object {
+        /** Set by the "allowance spent" notification: open the paywall with its reason. */
+        const val EXTRA_OPEN_PREMIUM = "com.example.extra.OPEN_PREMIUM"
+    }
+
     private var deviceAdminRequestStarted = false
 
     private val viewModel: SecurityViewModel by viewModels()
@@ -123,6 +128,7 @@ class MainActivity : ComponentActivity() {
 
         val languageStore = LanguageStore(this)
         applyLanguage(languageStore.get())
+        openPremiumIfRequested(intent)
 
         setContent {
             MyApplicationTheme {
@@ -151,6 +157,18 @@ class MainActivity : ComponentActivity() {
                     }
                 }
             }
+        }
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        openPremiumIfRequested(intent)
+    }
+
+    private fun openPremiumIfRequested(intent: Intent?) {
+        if (intent?.getBooleanExtra(EXTRA_OPEN_PREMIUM, false) == true) {
+            intent.removeExtra(EXTRA_OPEN_PREMIUM)
+            viewModel.openPremiumForSpentAllowance()
         }
     }
 
@@ -436,6 +454,16 @@ fun SecurityMainScreen(
                     isTrackingEnabled = uiState.isTrackingEnabled,
                     attemptsCount = uiState.totalAttempts
                 )
+            }
+
+            val (usedEvidence, evidenceLimit) = uiState.evidenceUsage
+            if (!uiState.isPremium && usedEvidence >= evidenceLimit) {
+                item(key = "allowance_spent_banner") {
+                    AllowanceSpentBanner(
+                        limit = evidenceLimit,
+                        onUpgrade = { viewModel.showPremiumScreen() }
+                    )
+                }
             }
 
             item(key = "security_status_card") {
@@ -738,6 +766,42 @@ fun SecurityHeroHeader(
                     color = Color(0xFFCBD5E1),
                     fontSize = 11.sp
                 )
+            }
+        }
+    }
+}
+
+@Composable
+fun AllowanceSpentBanner(
+    limit: Int,
+    onUpgrade: () -> Unit
+) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .testTag("allowance_spent_banner"),
+        shape = RoundedCornerShape(16.dp),
+        colors = androidx.compose.material3.CardDefaults.cardColors(
+            containerColor = CyberNavySurface
+        ),
+        border = androidx.compose.foundation.BorderStroke(1.dp, CyanAccent)
+    ) {
+        Column(modifier = Modifier.padding(14.dp)) {
+            Text(
+                text = stringResource(com.example.R.string.premium_limit_reached, limit),
+                color = Color.White,
+                fontSize = 13.sp
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            androidx.compose.material3.Button(
+                onClick = onUpgrade,
+                colors = androidx.compose.material3.ButtonDefaults.buttonColors(
+                    containerColor = CyanAccent,
+                    contentColor = Color.Black
+                ),
+                shape = RoundedCornerShape(8.dp)
+            ) {
+                Text(stringResource(com.example.R.string.premium_limit_upgrade), fontWeight = FontWeight.Bold)
             }
         }
     }

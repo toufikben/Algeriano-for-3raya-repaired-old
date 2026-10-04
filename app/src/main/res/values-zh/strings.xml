@@ -325,4 +325,6 @@
     <string name="premium_restore_success">已恢复购买。</string>
     <string name="premium_restore_none">未找到此 Google 帐号的以往购买记录。</string>
     <string name="premium_auto_restart_locked">自动重启是 Premium 功能。</string>
+    <string name="premium_limit_reached">您已用完本月 %1$d 次免费证据记录。新的解锁失败仍会通过通知和邮件告知您，但不含照片和位置。</string>
+    <string name="premium_limit_upgrade">升级到 Premium</string>
 </resources>

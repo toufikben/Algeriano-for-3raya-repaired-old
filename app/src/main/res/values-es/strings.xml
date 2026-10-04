@@ -325,4 +325,6 @@
     <string name="premium_restore_success">Compra restaurada.</string>
     <string name="premium_restore_none">No se encontró ninguna compra anterior para esta cuenta de Google.</string>
     <string name="premium_auto_restart_locked">El reinicio automático es una función Premium.</string>
+    <string name="premium_limit_reached">Has usado las %1$d capturas de pruebas gratuitas de este mes. Los nuevos desbloqueos fallidos se siguen notificando por aviso y correo, pero sin foto ni ubicación.</string>
+    <string name="premium_limit_upgrade">Mejorar a Premium</string>
 </resources>

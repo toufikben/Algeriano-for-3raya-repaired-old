@@ -126,6 +126,8 @@ object EvidenceLimitNotice {
             NOTIFICATION_ID,
             Intent(context, MainActivity::class.java).apply {
                 flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                // The moment the allowance runs out is when the upgrade is relevant.
+                putExtra(MainActivity.EXTRA_OPEN_PREMIUM, true)
             },
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
