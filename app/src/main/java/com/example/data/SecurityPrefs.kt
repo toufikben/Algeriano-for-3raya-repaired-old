@@ -560,8 +560,6 @@ class SecurityPrefs private constructor(private val context: Context) {
         }
     }
 
-    /** Re-queues abandoned work after a process/device restart, with a bounded retry count. */
-    @Synchronized
     /**
      * One-time repair for installs that ran the old sweep: events finalized while they
      * were only waiting for a network (photo on disk, mail never refused by the server,
@@ -594,6 +592,8 @@ class SecurityPrefs private constructor(private val context: Context) {
         return revived
     }
 
+    /** Re-queues abandoned work after a process/device restart, with a bounded retry count. */
+    @Synchronized
     fun recoverStaleSecurityEvents(now: Long = System.currentTimeMillis()): Int {
         var recovered = 0
         updateSecurityEventsInRoom { events ->
