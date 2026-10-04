@@ -4,8 +4,8 @@ Single place to see what is proven, what is pending, and what is blocked. Update
 stage table and the ledger after every pushed stage; do not mark a stage `DONE` without
 naming the CI run that proved it.
 
-App: `com.toufikbendjeddah.phonefortress` · this branch: versionCode **28**, versionName
-**1.1.5** · minSdk 24 / targetSdk 36 · Play Billing **9.1.0** · one-time non-consumable
+App: `com.toufikbendjeddah.phonefortress` · main: versionCode **29**, versionName
+**1.1.6** · minSdk 24 / targetSdk 36 · Play Billing **9.1.0** · one-time non-consumable
 `phone_fortress_premium_lifetime`.
 
 **CI is the only compiler.** The development machine cannot build or test Android
@@ -123,6 +123,23 @@ batch pushes instead of stacking them.
   yet; this is the first thing stage 11 needs from the owner.
 - **Product icon.** Optional and left empty (a 512×512+ 32-bit PNG with no text or branding
   was never produced).
+
+## State on 2026-10-03/04
+
+- **Stage 11 done on a real device.** License tester `toufik155@gmail.com` (new email list
+  "Phone Fortress license testers"; the older list holds `www.toufik155@gmail.com`, a different
+  account) bought the product on RMX3910 / Android 16: Console order "Test: Phone Fortress
+  Premium", DZD 675.00, Processed; the app logged "Premium entitlement verified from Google
+  Play: true" with the signature check active. Restore (no purchase) and the Premium
+  auto-restart toggle were exercised too; a 1-minute countdown was started and cancelled
+  before expiry, no capture.
+- **Internal testing** carries 28 (1.1.5). **29 (1.1.6)** (version label from BuildConfig, Free
+  column fixed) is the production candidate; the owner uploads it, together with the Premium
+  store description, the privacy URL fix and Data safety, in one review submission.
+- **Next update (not in 29):** `play-services-basement` 18.4.0 still pulls
+  `androidx.fragment:fragment:1.1.0`, which Play flags as outdated (fix: declare
+  `androidx.fragment:fragment` 1.8.x explicitly); resource shrinking is off
+  (`isShrinkResources = true` with the existing R8 setup).
 
 ## Audit fixes (2026-10-03, versionCode 28)
 
