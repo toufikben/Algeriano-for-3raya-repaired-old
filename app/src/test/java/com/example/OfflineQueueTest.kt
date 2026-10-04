@@ -5,6 +5,9 @@ import androidx.test.core.app.ApplicationProvider
 import com.example.data.SecurityEventComponentState
 import com.example.data.SecurityEventStatus
 import com.example.data.SecurityPrefs
+import com.example.worker.SecurityEventDistributor
+import androidx.work.WorkManager
+import androidx.work.testing.WorkManagerTestInitHelper
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -28,6 +31,7 @@ class OfflineQueueTest {
     @Before
     fun setUp() {
         context = ApplicationProvider.getApplicationContext()
+        WorkManagerTestInitHelper.initializeTestWorkManager(context)
         prefs = SecurityPrefs.getInstance(context)
         prefs.resetFailedUnlockAttempts()
     }
@@ -65,6 +69,17 @@ class OfflineQueueTest {
         prefs.reviveEventsFinalizedWhileOffline(evenIfDone = true)
 
         assertEquals(SecurityEventStatus.SEND_PENDING, prefs.getSecurityEvent(id)?.status)
+    }
+
+    @Test
+    fun `opening the app queues waiting evidence for the send work, not the camera`() {
+        val id = capturedWaitingForNetwork()
+
+        SecurityEventDistributor.dispatchPendingFromVisibleContext(context)
+
+        val work = WorkManager.getInstance(context)
+            .getWorkInfosForUniqueWork(SecurityEventDistributor.workName(id)).get()
+        assertEquals(1, work.size)
     }
 
     @Test

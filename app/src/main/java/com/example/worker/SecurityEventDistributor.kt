@@ -143,6 +143,13 @@ object SecurityEventDistributor {
         val appContext = context.applicationContext
         val prefs = SecurityPrefs.getInstance(appContext)
         prefs.getPendingSecurityEvents().forEach { event ->
+            // Evidence already on disk only needs the mail leg: the send work handles
+            // it in-process once the internet is reachable, without contending for the
+            // camera service's single capture slot.
+            if (awaitingSend(event.status)) {
+                enqueue(appContext, event.id)
+                return@forEach
+            }
             val countdownEvent = prefs.countdownCapturePending &&
                 prefs.countdownEventId == event.id
             val intent = Intent(appContext, CameraForegroundService::class.java).apply {
