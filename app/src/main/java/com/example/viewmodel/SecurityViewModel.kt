@@ -149,6 +149,8 @@ class SecurityViewModel(application: Application) : AndroidViewModel(application
     private var countdownTickerJob: Job? = null
 
     init {
+        // Before anything is dispatched, so a repaired event goes out with the rest.
+        prefs.reviveEventsFinalizedWhileOffline()
         val recoveredEvents = prefs.recoverStaleSecurityEvents()
         CountdownScheduler.rescheduleFromPrefs(context)
         if (recoveredEvents > 0) {
