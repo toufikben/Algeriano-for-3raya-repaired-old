@@ -122,7 +122,10 @@ class SecurityPrefs private constructor(private val context: Context) {
         const val FREE_HISTORY_LIMIT = 5
         const val PREMIUM_HISTORY_LIMIT = 50
         const val FREE_EVIDENCE_MONTHLY_LIMIT = 3
-        const val PREMIUM_EVIDENCE_MONTHLY_LIMIT = 50
+        // Premium has no monthly cap: its auto-restarting countdown alone captures about a
+        // dozen times a day, so any fixed number ran out within days of "continuous
+        // protection". Storage stays bounded by photo retention and the 50-row history.
+        const val PREMIUM_EVIDENCE_MONTHLY_LIMIT = Int.MAX_VALUE
         const val FREE_PHOTO_RETENTION_DAYS = 7L
         const val PREMIUM_PHOTO_RETENTION_DAYS = 30L
         private const val EVENT_LEASE_TIMEOUT_MILLIS = 2 * 60 * 1000L
