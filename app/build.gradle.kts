@@ -18,8 +18,9 @@ android {
     // internal-testing track reports a release at 26 ("Phone Fortress 1.0.0 (26)") that
     // predates this repository's numbering. 19 would have been refused, so the billing
     // AAB goes up as 27.
-    versionCode = 30
-    versionName = "1.2.0"
+    // 30 was taken by an upload on Play that never became a release.
+    versionCode = 31
+    versionName = "1.2.1"
 
     testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
   }
