@@ -12,7 +12,11 @@ import androidx.core.content.ContextCompat
 import androidx.work.Constraints
 import androidx.work.CoroutineWorker
 import androidx.work.BackoffPolicy
+import androidx.work.ExistingPeriodicWorkPolicy
 import androidx.work.ExistingWorkPolicy
+import androidx.work.PeriodicWorkRequestBuilder
+import android.net.NetworkCapabilities
+import android.net.NetworkRequest
 import androidx.work.NetworkType
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
@@ -48,7 +52,9 @@ import java.util.concurrent.TimeUnit
 object SecurityEventDistributor {
     private const val EVENT_ID_KEY = "security_event_id"
     private const val WORK_PREFIX = "security-event-"
-    private const val RECOVERY_WORK_NAME = "security-events-recovery"
+    // New name: the old one-shot recovery work may still sit under the previous name.
+    private const val RECOVERY_WORK_NAME = "security-events-recovery-periodic"
+    private const val RECOVERY_INTERVAL_MINUTES = 15L
     private const val RECOVERY_DELAY_MINUTES = 2L
     private const val MAX_WORK_ATTEMPTS = 3
     private const val RETRY_DELAY_MINUTES = 1L
@@ -94,15 +100,12 @@ object SecurityEventDistributor {
         val request = OneTimeWorkRequestBuilder<SecurityEventWorker>()
             .setInputData(workDataOf(EVENT_ID_KEY to eventId))
             .setInitialDelay(retryDelayMinutes, TimeUnit.MINUTES)
-            .setConstraints(
-                if (sendOnly) {
-                    Constraints.Builder().setRequiredNetworkType(NetworkType.CONNECTED).build()
-                } else {
-                    Constraints.NONE
-                }
-            )
+            .setConstraints(if (sendOnly) sendConstraints() else Constraints.NONE)
+            // A send only runs once the internet is actually reachable, so its retries are
+            // real failures; linear keeps the next try minutes away, where exponential grew
+            // to hours and could hold a ready photo long after the connection came back.
             .setBackoffCriteria(
-                BackoffPolicy.EXPONENTIAL,
+                if (sendOnly) BackoffPolicy.LINEAR else BackoffPolicy.EXPONENTIAL,
                 RETRY_DELAY_MINUTES,
                 TimeUnit.MINUTES
             )
@@ -140,6 +143,13 @@ object SecurityEventDistributor {
         val appContext = context.applicationContext
         val prefs = SecurityPrefs.getInstance(appContext)
         prefs.getPendingSecurityEvents().forEach { event ->
+            // Evidence already on disk only needs the mail leg: the send work handles
+            // it in-process once the internet is reachable, without contending for the
+            // camera service's single capture slot.
+            if (awaitingSend(event.status)) {
+                enqueue(appContext, event.id)
+                return@forEach
+            }
             val countdownEvent = prefs.countdownCapturePending &&
                 prefs.countdownEventId == event.id
             val intent = Intent(appContext, CameraForegroundService::class.java).apply {
@@ -162,15 +172,44 @@ object SecurityEventDistributor {
         }
     }
 
+    /**
+     * "Connected" is satisfied by a Wi-Fi that has no internet, which let send work run,
+     * fail as offline and use up its retries during an outage. From API 28 the work waits
+     * for a network Android has validated as reaching the internet.
+     */
+    private fun sendConstraints(): Constraints {
+        val builder = Constraints.Builder()
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+            val validatedInternet = NetworkRequest.Builder()
+                .addCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
+                .addCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED)
+                .build()
+            builder.setRequiredNetworkRequest(validatedInternet, NetworkType.CONNECTED)
+        } else {
+            builder.setRequiredNetworkType(NetworkType.CONNECTED)
+        }
+        return builder.build()
+    }
+
+    /**
+     * Periodic while anything is pending, cancelled by the worker once the queue is empty.
+     * The old one-shot work re-enqueued itself with KEEP from inside its own run, which
+     * WorkManager ignores for running work, so recovery stopped after its first pass.
+     */
     fun scheduleRecovery(context: Context) {
-        val request = OneTimeWorkRequestBuilder<SecurityEventRecoveryWorker>()
-            .setInitialDelay(RECOVERY_DELAY_MINUTES, TimeUnit.MINUTES)
+        val request = PeriodicWorkRequestBuilder<SecurityEventRecoveryWorker>(
+            RECOVERY_INTERVAL_MINUTES, TimeUnit.MINUTES
+        ).setInitialDelay(RECOVERY_DELAY_MINUTES, TimeUnit.MINUTES)
             .build()
-        WorkManager.getInstance(context).enqueueUniqueWork(
+        WorkManager.getInstance(context).enqueueUniquePeriodicWork(
             RECOVERY_WORK_NAME,
-            ExistingWorkPolicy.KEEP,
+            ExistingPeriodicWorkPolicy.KEEP,
             request
         )
+    }
+
+    internal fun cancelRecovery(context: Context) {
+        WorkManager.getInstance(context).cancelUniqueWork(RECOVERY_WORK_NAME)
     }
 
     internal fun eventId(input: androidx.work.Data): String? = input.getString(EVENT_ID_KEY)
@@ -179,8 +218,6 @@ object SecurityEventDistributor {
 
     internal const val MAX_ATTEMPTS = MAX_WORK_ATTEMPTS
 
-    /** Connectivity failures re-queue without consuming a send attempt, bounded only to avoid a hot loop. */
-    internal const val MAX_OFFLINE_RETRIES = 5
 
     fun notifyDeferredCapture(context: Context, eventId: String) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
@@ -356,12 +393,9 @@ class SecurityEventWorker(
                     // the moment the connection returns.
                     prefs.updateEmailState(event.id, SecurityEventComponentState.PENDING)
                     recordWorkerSendLog(prefs, event, imageFile, false, sendResult.errorMessage)
-                    if (runAttemptCount + 1 < SecurityEventDistributor.MAX_OFFLINE_RETRIES) {
-                        Result.retry()
-                    } else {
-                        SecurityEventDistributor.scheduleRecovery(applicationContext)
-                        Result.success()
-                    }
+                    // No give-up count: the work only runs on validated internet, and
+                    // abandoning it here is what left last night's queue unsent.
+                    Result.retry()
                 }
                 sendResult.retryable && prefs.recordSendRetry(event.id) -> {
                     prefs.markSendPendingForRetry(event.id)
@@ -450,8 +484,8 @@ class SecurityEventRecoveryWorker(
         prefs.getPendingSecurityEvents()
             .filter { it.status != com.example.data.SecurityEventStatus.DEFERRED }
             .forEach { SecurityEventDistributor.enqueue(applicationContext, it.id) }
-        if (prefs.getPendingSecurityEvents().any { it.status != com.example.data.SecurityEventStatus.DEFERRED }) {
-            SecurityEventDistributor.scheduleRecovery(applicationContext)
+        if (prefs.getPendingSecurityEvents().none { it.status != com.example.data.SecurityEventStatus.DEFERRED }) {
+            SecurityEventDistributor.cancelRecovery(applicationContext)
         }
         return Result.success()
     }

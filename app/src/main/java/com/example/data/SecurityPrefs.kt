@@ -122,11 +122,16 @@ class SecurityPrefs private constructor(private val context: Context) {
         const val FREE_HISTORY_LIMIT = 5
         const val PREMIUM_HISTORY_LIMIT = 50
         const val FREE_EVIDENCE_MONTHLY_LIMIT = 3
-        const val PREMIUM_EVIDENCE_MONTHLY_LIMIT = 50
+        // Premium has no monthly cap: its auto-restarting countdown alone captures about a
+        // dozen times a day, so any fixed number ran out within days of "continuous
+        // protection". Storage stays bounded by photo retention and the 50-row history.
+        const val PREMIUM_EVIDENCE_MONTHLY_LIMIT = Int.MAX_VALUE
         const val FREE_PHOTO_RETENTION_DAYS = 7L
         const val PREMIUM_PHOTO_RETENTION_DAYS = 30L
         private const val EVENT_LEASE_TIMEOUT_MILLIS = 2 * 60 * 1000L
         private const val MAX_EVENT_RECOVERY_ATTEMPTS = 2
+        private const val KEY_OFFLINE_SWEEP_REPAIRED = "key_offline_sweep_repaired_v30"
+        private const val OFFLINE_REPAIR_MAX_AGE_MILLIS = 7L * 24 * 60 * 60 * 1000
         private const val MAX_SEND_ATTEMPTS = 3
         private const val PIN_ITERATIONS = 120_000
         private const val PIN_KEY_LENGTH = 256
@@ -558,6 +563,38 @@ class SecurityPrefs private constructor(private val context: Context) {
         }
     }
 
+    /**
+     * One-time repair for installs that ran the old sweep: events finalized while they
+     * were only waiting for a network (photo on disk, mail never refused by the server,
+     * younger than a week) go back to SEND_PENDING. A refused send leaves emailState
+     * FAILED and is not touched, so a wrong App Password is never retried this way.
+     */
+    @Synchronized
+    fun reviveEventsFinalizedWhileOffline(
+        now: Long = System.currentTimeMillis(),
+        evenIfDone: Boolean = false
+    ): Int {
+        if (!evenIfDone && prefs.getBoolean(KEY_OFFLINE_SWEEP_REPAIRED, false)) return 0
+        var revived = 0
+        updateSecurityEventsInRoom { events ->
+            events.map { event ->
+                val waitingForNetwork = event.emailState == SecurityEventComponentState.PENDING ||
+                    event.emailState == SecurityEventComponentState.DEFERRED
+                val photoOnDisk = event.photoPath?.let { File(it).exists() } == true
+                if (event.status == SecurityEventStatus.FAILED_FINAL && waitingForNetwork &&
+                    photoOnDisk && now - event.timestamp < OFFLINE_REPAIR_MAX_AGE_MILLIS
+                ) {
+                    revived += 1
+                    // Deliberately outside the state machine: FAILED_FINAL is terminal,
+                    // and this undoes a finalization that should not have happened.
+                    event.copy(status = SecurityEventStatus.SEND_PENDING, updatedAt = now)
+                } else event
+            }
+        }
+        prefs.edit().putBoolean(KEY_OFFLINE_SWEEP_REPAIRED, true).apply()
+        return revived
+    }
+
     /** Re-queues abandoned work after a process/device restart, with a bounded retry count. */
     @Synchronized
     fun recoverStaleSecurityEvents(now: Long = System.currentTimeMillis()): Int {
@@ -569,6 +606,19 @@ class SecurityPrefs private constructor(private val context: Context) {
                     event.status == SecurityEventStatus.SEND_PENDING) &&
                     now - event.updatedAt >= EVENT_LEASE_TIMEOUT_MILLIS
                 if (!stale) return@map event
+
+                // An event that already holds its evidence and is only waiting for a
+                // network to send it is not an abandoned lease: an overnight outage
+                // used to sweep it into FAILED_FINAL after two passes, so the photo was
+                // never mailed. Re-arm it for sending without spending a recovery attempt.
+                val holdsEvidence = event.photoPath != null || event.latitude != null
+                if (holdsEvidence && event.status != SecurityEventStatus.IN_PROGRESS) {
+                    if (!SecurityEventStateMachine.canTransition(event.status, SecurityEventStatus.SEND_PENDING)) {
+                        return@map event
+                    }
+                    recovered += 1
+                    return@map event.copy(status = SecurityEventStatus.SEND_PENDING, updatedAt = now)
+                }
 
                 // FIX: lease-expiry recoveries (IN_PROGRESS/CAPTURED -> PENDING)
                 // are declared legal in the state machine, and every recovery

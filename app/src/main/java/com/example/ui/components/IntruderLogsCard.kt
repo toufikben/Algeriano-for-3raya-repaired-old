@@ -295,6 +295,40 @@ fun IntruderLogsCard(
     }
 }
 
+/**
+ * The status line in the language the app shows now. The stored statusMessage was
+ * written in whatever language was active at capture time, so a later language switch
+ * left old rows in the old language; the component states carry the same facts.
+ * Rows with nothing to derive from (e.g. a spent allowance) keep their stored text.
+ */
+@Composable
+private fun localizedStatus(log: IntruderLog): String {
+    val parts = buildList {
+        when (log.photoState) {
+            SecurityEventComponentState.SUCCEEDED -> add(stringResource(com.example.R.string.ui_dd886e527edc))
+            SecurityEventComponentState.FAILED -> add(stringResource(com.example.R.string.ui_22a64e14f4b3))
+            else -> Unit
+        }
+        when (log.locationState) {
+            SecurityEventComponentState.SUCCEEDED -> add(stringResource(com.example.R.string.ui_c0a3068f31ba))
+            SecurityEventComponentState.FAILED -> add(stringResource(com.example.R.string.ui_9e2833dca3b0))
+            else -> Unit
+        }
+        when {
+            log.emailSent || log.emailState == SecurityEventComponentState.SUCCEEDED ->
+                add(stringResource(com.example.R.string.ui_fd5b9e2ff279))
+            log.emailState == SecurityEventComponentState.PENDING ||
+                log.emailState == SecurityEventComponentState.DEFERRED ->
+                add(stringResource(com.example.R.string.ui_retry_scheduled))
+            log.emailState == SecurityEventComponentState.FAILED ->
+                add(stringResource(com.example.R.string.ui_final_failure))
+            else -> Unit
+        }
+    }
+    return if (parts.isEmpty()) log.statusMessage
+    else parts.joinToString(stringResource(com.example.R.string.ui_separator))
+}
+
 @Composable
 private fun IntruderLogItem(
     log: IntruderLog,
@@ -398,7 +432,7 @@ private fun IntruderLogItem(
                     )
                     Spacer(modifier = Modifier.width(6.dp))
                     Text(
-                        text = log.statusMessage,
+                        text = localizedStatus(log),
                         fontSize = 11.sp,
                         color = when {
                             log.emailSent -> EmeraldActive

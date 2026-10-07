@@ -69,12 +69,13 @@ class MonetizationRulesTest {
     }
 
     @Test
-    fun `premium allowance is the published fifty`() {
+    fun `premium is never refused, even after a month of auto-restarted countdowns`() {
         prefs.isPremium = true
-        repeat(SecurityPrefs.PREMIUM_EVIDENCE_MONTHLY_LIMIT) {
+        // Twelve two-hour cycles a day for a month, plus failed unlocks.
+        repeat(400) {
             assertTrue(prefs.tryReserveEvidenceSlot())
         }
-        assertFalse(prefs.tryReserveEvidenceSlot())
+        assertTrue(prefs.canCreateEvidenceEvent())
     }
 
     @Test

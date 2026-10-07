@@ -325,4 +325,6 @@
     <string name="premium_restore_success">Покупка восстановлена.</string>
     <string name="premium_restore_none">Для этого аккаунта Google не найдено предыдущих покупок.</string>
     <string name="premium_auto_restart_locked">Автоматический перезапуск доступен в Premium.</string>
+    <string name="premium_limit_reached">Вы использовали %1$d бесплатных фиксаций доказательств в этом месяце. О новых неудачных разблокировках вы по-прежнему узнаете из уведомления и письма, но без фото и местоположения.</string>
+    <string name="premium_limit_upgrade">Перейти на Premium</string>
 </resources>

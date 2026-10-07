@@ -87,7 +87,7 @@ class SecurityEventDistributorTest {
         assertEquals(5, prefs.getHistoryLimit())
 
         prefs.isPremium = true
-        assertEquals(50, prefs.getEvidenceMonthlyLimit())
+        assertEquals(Int.MAX_VALUE, prefs.getEvidenceMonthlyLimit())
         assertEquals(50, prefs.getHistoryLimit())
     }
 

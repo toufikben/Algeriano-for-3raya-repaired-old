@@ -18,8 +18,9 @@ android {
     // internal-testing track reports a release at 26 ("Phone Fortress 1.0.0 (26)") that
     // predates this repository's numbering. 19 would have been refused, so the billing
     // AAB goes up as 27.
-    versionCode = 29
-    versionName = "1.1.6"
+    // 30 was taken by an upload on Play that never became a release.
+    versionCode = 31
+    versionName = "1.2.1"
 
     testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
   }
@@ -45,6 +46,8 @@ android {
     release {
       isCrunchPngs = false
       isMinifyEnabled = true
+      // Play flagged resource shrinking as off. Safe here: no resource is looked up by name.
+      isShrinkResources = true
       proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
       if (hasReleaseKeystore) {
         signingConfig = signingConfigs.getByName("release")
@@ -90,6 +93,11 @@ tasks.withType<org.gradle.api.tasks.testing.Test>().configureEach {
   }
 }
 
+// Room writes each schema version here so future migrations can be verified against it.
+ksp {
+  arg("room.schemaLocation", "${projectDir}/schemas")
+}
+
 // Configure the Secrets Gradle Plugin to use .env and .env.example files
 // to match the convention used in Web projects.
 secrets {
@@ -103,6 +111,7 @@ secrets {
 dependencies {
   implementation(platform(libs.androidx.compose.bom))
   implementation(libs.androidx.activity.compose)
+  implementation(libs.androidx.fragment)
   // implementation(libs.androidx.camera.camera2)
   // implementation(libs.androidx.camera.core)
   // implementation(libs.androidx.camera.lifecycle)

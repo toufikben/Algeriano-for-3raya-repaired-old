@@ -325,4 +325,6 @@
     <string name="premium_restore_success">Purchase restored.</string>
     <string name="premium_restore_none">No previous purchase was found for this Google account.</string>
     <string name="premium_auto_restart_locked">Automatic restart is a Premium feature.</string>
+    <string name="premium_limit_reached">You have used this month\'s %1$d free evidence captures. New failed unlocks are still reported by notification and email, but without a photo or location.</string>
+    <string name="premium_limit_upgrade">Upgrade to Premium</string>
 </resources>

@@ -341,6 +341,11 @@ class CameraForegroundService : Service() {
                 }
                 CountdownScheduler.schedulePendingRetry(applicationContext)
                 restartCycle()
+            } else if (!isTest && eventId != null) {
+                // Every other event used to be dropped here with no retry: opening the
+                // app dispatches the whole queue at once, so all but the first were lost
+                // until the next visible start. The durable queue picks them up instead.
+                com.example.worker.SecurityEventDistributor.enqueue(applicationContext, eventId)
             }
             return
         }

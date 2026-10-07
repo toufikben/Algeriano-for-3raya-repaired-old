@@ -325,4 +325,6 @@
     <string name="premium_restore_success">Pembelian dipulihkan.</string>
     <string name="premium_restore_none">Tidak ditemukan pembelian sebelumnya untuk akun Google ini.</string>
     <string name="premium_auto_restart_locked">Mulai ulang otomatis adalah fitur Premium.</string>
+    <string name="premium_limit_reached">Anda telah memakai %1$d pengambilan bukti gratis bulan ini. Upaya buka kunci gagal yang baru tetap dilaporkan lewat notifikasi dan email, tetapi tanpa foto atau lokasi.</string>
+    <string name="premium_limit_upgrade">Tingkatkan ke Premium</string>
 </resources>

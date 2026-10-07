@@ -7,7 +7,7 @@ espressoCore = "3.7.0"
 lifecycleRuntimeKtx = "2.8.7"
 lifecycleViewmodelCompose = "2.8.7"
 lifecycleRuntimeCompose = "2.8.7"
-activityCompose = "1.10.1"
+activityCompose = "1.12.4"
 kotlin = "2.2.10"
 composeBom = "2024.09.00"
 googleDevtoolsKsp = "2.3.5"
@@ -34,6 +34,8 @@ googleServices = "4.5.0"
 androidMail = "1.6.7"
 androidActivation = "1.6.7"
 workManager = "2.10.1"
+# play-services-basement pulls fragment 1.1.0, which Play flags as outdated; pinned here.
+fragment = "1.8.9"
 
 
 [libraries]
@@ -47,6 +49,7 @@ androidx-lifecycle-runtime-ktx = { group = "androidx.lifecycle", name = "lifecyc
 androidx-lifecycle-viewmodel-compose = { group = "androidx.lifecycle", name = "lifecycle-viewmodel-compose", version.ref = "lifecycleViewmodelCompose" }
 androidx-lifecycle-runtime-compose = { group = "androidx.lifecycle", name = "lifecycle-runtime-compose", version.ref = "lifecycleRuntimeCompose" }
 androidx-activity-compose = { group = "androidx.activity", name = "activity-compose", version.ref = "activityCompose" }
+androidx-fragment = { group = "androidx.fragment", name = "fragment", version.ref = "fragment" }
 androidx-compose-bom = { group = "androidx.compose", name = "compose-bom", version.ref = "composeBom" }
 androidx-compose-ui = { group = "androidx.compose.ui", name = "ui" }
 androidx-compose-ui-graphics = { group = "androidx.compose.ui", name = "ui-graphics" }

@@ -149,6 +149,8 @@ class SecurityViewModel(application: Application) : AndroidViewModel(application
     private var countdownTickerJob: Job? = null
 
     init {
+        // Before anything is dispatched, so a repaired event goes out with the rest.
+        prefs.reviveEventsFinalizedWhileOffline()
         val recoveredEvents = prefs.recoverStaleSecurityEvents()
         CountdownScheduler.rescheduleFromPrefs(context)
         if (recoveredEvents > 0) {
@@ -170,7 +172,9 @@ class SecurityViewModel(application: Application) : AndroidViewModel(application
                 _uiState.update {
                     it.copy(
                         logs = logList.take(prefs.getHistoryLimit()),
-                        totalAttempts = prefs.totalAttempts
+                        totalAttempts = prefs.totalAttempts,
+                        // A new log row usually means a capture just used a slot.
+                        evidenceUsage = prefs.getEvidenceUsage()
                     )
                 }
             }
@@ -546,6 +550,19 @@ class SecurityViewModel(application: Application) : AndroidViewModel(application
         refreshEntitlement()
     }
     
+    /** The allowance just ran out (notification tap): show the paywall with the reason. */
+    fun openPremiumForSpentAllowance() {
+        showPremiumScreen()
+        _uiState.update {
+            it.copy(
+                premiumMessage = context.getString(
+                    R.string.premium_limit_reached,
+                    prefs.getEvidenceMonthlyLimit()
+                )
+            )
+        }
+    }
+
     /** Dismiss premium screen */
     fun dismissPremiumScreen() {
         _uiState.update { it.copy(showPremiumScreen = false, premiumMessage = null) }
@@ -621,7 +638,8 @@ class SecurityViewModel(application: Application) : AndroidViewModel(application
                 hasLocationPermission = hasLocation,
                 hasNotificationPermission = hasNotifications,
                 isBatteryOptimizationIgnored = isBatteryIgnored,
-                totalAttempts = prefs.totalAttempts
+                totalAttempts = prefs.totalAttempts,
+                evidenceUsage = prefs.getEvidenceUsage()
             )
         }
         syncCountdownTicker()

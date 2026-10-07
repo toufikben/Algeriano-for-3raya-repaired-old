@@ -325,4 +325,6 @@
     <string name="premium_restore_success">تمت استعادة الشراء.</string>
     <string name="premium_restore_none">لم يُعثر على شراء سابق لحساب Google هذا.</string>
     <string name="premium_auto_restart_locked">إعادة التشغيل التلقائي ميزة في النسخة المميّزة.</string>
+    <string name="premium_limit_reached">استنفدت التقاطات الإثبات المجانية لهذا الشهر (%1$d). تبقى محاولات الفتح الخاطئة الجديدة تُبلَّغ بإشعار وبريد، لكن بدون صورة ولا موقع.</string>
+    <string name="premium_limit_upgrade">الترقية إلى Premium</string>
 </resources>

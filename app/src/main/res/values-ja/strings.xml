@@ -325,4 +325,6 @@
     <string name="premium_restore_success">購入を復元しました。</string>
     <string name="premium_restore_none">この Google アカウントでの過去の購入は見つかりませんでした。</string>
     <string name="premium_auto_restart_locked">自動再開は Premium の機能です。</string>
+    <string name="premium_limit_reached">今月の無料の証拠記録（%1$d件）を使い切りました。新しいロック解除の失敗は引き続き通知とメールでお知らせしますが、写真と位置情報は含まれません。</string>
+    <string name="premium_limit_upgrade">Premium にアップグレード</string>
 </resources>

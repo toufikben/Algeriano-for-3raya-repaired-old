@@ -18,7 +18,7 @@ non-consumable, price set by Play per country). No ads, no subscriptions.
 
 | | Free | Premium |
 | --- | --- | --- |
-| Evidence captures per calendar month | 3 | 50 |
+| Evidence captures per calendar month | 3 | unlimited |
 | Visible event history | 5 | 50 |
 | Photo retention on the device | 7 days | 30 days |
 | Countdown automatic restart (continuous protection) | no | yes |
