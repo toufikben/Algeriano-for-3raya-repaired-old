@@ -14,6 +14,8 @@ class MyDeviceAdminReceiver : DeviceAdminReceiver() {
     override fun onPasswordFailed(context: Context, intent: Intent) {
         super.onPasswordFailed(context, intent)
 
+        // The cheap part stays on the broadcast thread: these are SharedPreferences
+        // reads and writes, and dropping the callback early is the common case.
         val prefs = SecurityPrefs.getInstance(context)
         if (!prefs.isTrackingEnabled) {
             Log.d("DeviceAdminReceiver", "Password attempt ignored because protection is disabled")
@@ -26,27 +28,41 @@ class MyDeviceAdminReceiver : DeviceAdminReceiver() {
             return
         }
 
-        // Every callback becomes an independent event. The active foreground
-        // service serializes concurrent captures and the durable queue handles
-        // events that cannot be processed immediately.
-        val event = prefs.enqueueSecurityEvent()
-        val captureIntent = Intent(context, CameraForegroundService::class.java).apply {
-            action = CameraForegroundService.ACTION_CAPTURE_AND_SEND
-            putExtra(CameraForegroundService.EXTRA_SECURITY_EVENT_ID, event.id)
-        }
-        try {
-            // A plain startService() can throw IllegalStateException here on
-            // API 26+: the app is virtually never in the foreground at the
-            // moment someone else is failing to unlock the device. Route
-            // through the compat helper so this, the primary trigger for the
-            // whole app, uses the same background-start-safe path as every
-            // other dispatch site (SecurityEventDistributor, SecurityEventWorker).
-            ContextCompat.startForegroundService(context, captureIntent)
-            Log.d("DeviceAdminReceiver", "Failed-unlock capture dispatched for event ${event.id}")
-        } catch (e: Exception) {
-            Log.e("DeviceAdminReceiver", "Direct capture dispatch failed; queued for recovery", e)
-            SecurityEventDistributor.enqueue(context, event.id)
-        }
+        // enqueueSecurityEvent() writes to Room through SecurityStore.io(), which is
+        // runBlocking(Dispatchers.IO). Doing that here blocked the broadcast main
+        // thread for the duration of a disk write on the one path that must stay
+        // responsive - a failed unlock, where the device is mid-lockscreen and the
+        // ANR budget is already thin. goAsync keeps the receiver alive for the
+        // background work, the same way onDisabled already does.
+        val appContext = context.applicationContext
+        val pendingResult = goAsync()
+        Thread {
+            try {
+                // Every callback becomes an independent event. The active foreground
+                // service serializes concurrent captures and the durable queue handles
+                // events that cannot be processed immediately.
+                val event = prefs.enqueueSecurityEvent()
+                val captureIntent = Intent(appContext, CameraForegroundService::class.java).apply {
+                    action = CameraForegroundService.ACTION_CAPTURE_AND_SEND
+                    putExtra(CameraForegroundService.EXTRA_SECURITY_EVENT_ID, event.id)
+                }
+                try {
+                    // A plain startService() can throw IllegalStateException here on
+                    // API 26+: the app is virtually never in the foreground at the
+                    // moment someone else is failing to unlock the device. Route
+                    // through the compat helper so this, the primary trigger for the
+                    // whole app, uses the same background-start-safe path as every
+                    // other dispatch site (SecurityEventDistributor, SecurityEventWorker).
+                    ContextCompat.startForegroundService(appContext, captureIntent)
+                    Log.d("DeviceAdminReceiver", "Failed-unlock capture dispatched for event ${event.id}")
+                } catch (e: Exception) {
+                    Log.e("DeviceAdminReceiver", "Direct capture dispatch failed; queued for recovery", e)
+                    SecurityEventDistributor.enqueue(appContext, event.id)
+                }
+            } finally {
+                pendingResult.finish()
+            }
+        }.start()
     }
 
     override fun onPasswordSucceeded(context: Context, intent: Intent) {

@@ -318,4 +318,5 @@
     <string name="premium_photo_retention">Penyimpanan foto</string>
     <string name="premium_retention_days">%1$d hari</string>
     <string name="premium_retention_forever">Disimpan sehingga dipadam</string>
+    <string name="credentials_unreadable_warning">E-mel dan kata laluan tersimpan tidak dapat dibaca pada peranti ini. Masukkannya semula untuk menyambung makluman.</string>
 </resources>

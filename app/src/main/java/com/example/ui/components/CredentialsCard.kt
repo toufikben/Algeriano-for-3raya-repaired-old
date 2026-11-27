@@ -57,6 +57,9 @@ fun CredentialsCard(
     email: String,
     password: String,
     hasSavedPassword: Boolean,
+    // True when a stored credential exists but cannot be decrypted on this
+    // device, so the empty fields below are not "never configured".
+    credentialsUnreadable: Boolean = false,
     onEmailChange: (String) -> Unit,
     onPasswordChange: (String) -> Unit,
     // Explicit clear action: the stored password is only wiped when the user
@@ -133,6 +136,20 @@ fun CredentialsCard(
                         fontWeight = FontWeight.Medium
                     )
                 }
+            }
+
+            if (credentialsUnreadable) {
+                // The keystore key was invalidated (lock-screen change, restore
+                // to another device). The saved credential is still on disk but
+                // unreadable, so "not set up" would be a lie and the user would
+                // wonder why alerts stopped.
+                Text(
+                    text = tr(com.example.R.string.credentials_unreadable_warning),
+                    color = Color(0xFFFCA5A5),
+                    fontSize = 11.sp,
+                    lineHeight = 16.sp,
+                    modifier = Modifier.padding(top = 8.dp)
+                )
             }
 
             if (email.isBlank() || (password.isBlank() && !hasSavedPassword)) {

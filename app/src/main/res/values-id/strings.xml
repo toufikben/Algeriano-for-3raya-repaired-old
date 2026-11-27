@@ -318,4 +318,5 @@
     <string name="premium_photo_retention">Penyimpanan foto</string>
     <string name="premium_retention_days">%1$d hari</string>
     <string name="premium_retention_forever">Disimpan sampai dihapus</string>
+    <string name="credentials_unreadable_warning">Email dan kata sandi tersimpan tidak dapat dibaca di perangkat ini. Masukkan lagi untuk melanjutkan peringatan.</string>
 </resources>

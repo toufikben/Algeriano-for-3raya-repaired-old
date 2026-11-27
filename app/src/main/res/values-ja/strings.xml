@@ -318,4 +318,5 @@
     <string name="premium_photo_retention">写真の保存期間</string>
     <string name="premium_retention_days">%1$d 日</string>
     <string name="premium_retention_forever">削除するまで保存</string>
+    <string name="credentials_unreadable_warning">この端末で保存済みのメールアドレスとパスワードを読み取れませんでした。通知を再開するには再入力してください。</string>
 </resources>

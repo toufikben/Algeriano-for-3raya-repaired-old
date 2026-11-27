@@ -138,6 +138,12 @@ object SecurityEventDistributor {
     fun dispatchPendingFromVisibleContext(context: Context) {
         val appContext = context.applicationContext
         val prefs = SecurityPrefs.getInstance(appContext)
+        // A visible Activity can always start a foreground service, so the
+        // background-start failures that exhausted the countdown retry budget no
+        // longer apply. Without this, CaptureRetryWorker.enqueue() saw a spent
+        // budget and scheduled nothing, and the tap-to-complete notification
+        // opened the app to no effect.
+        prefs.resetCountdownRetryBudget()
         prefs.getPendingSecurityEvents().forEach { event ->
             // Evidence already on disk only needs the mail leg: the send work handles
             // it in-process once the internet is reachable, without contending for the
@@ -240,11 +246,27 @@ object SecurityEventDistributor {
             .setPriority(NotificationCompat.PRIORITY_HIGH)
             .build()
         runCatching {
-            NotificationManagerCompat.from(context).notify(DEFERRED_NOTIFICATION_BASE + eventId.hashCode(), notification)
+            NotificationManagerCompat.from(context).notify(deferredNotificationId(eventId), notification)
         }
     }
 
+    /**
+     * A stable id per event inside [DEFERRED_NOTIFICATION_BASE]..(+SPAN).
+     *
+     * It used to be DEFERRED_NOTIFICATION_BASE + eventId.hashCode(). hashCode() of a
+     * UUID string is a full-range Int, so roughly half of all events produced a
+     * negative id, and those landed outside the app's own notification ranges -
+     * 1001 is the camera service's ongoing notification and 2002..3002 are the
+     * alert range. A negative id could therefore replace or be replaced by a
+     * notification it has nothing to do with. Masking into a positive span keeps
+     * the per-event stability (same event, same id, so a retry updates its own
+     * row instead of stacking) without escaping the range.
+     */
+    private fun deferredNotificationId(eventId: String): Int =
+        DEFERRED_NOTIFICATION_BASE + (eventId.hashCode() and Int.MAX_VALUE) % DEFERRED_NOTIFICATION_SPAN
+
     private const val DEFERRED_NOTIFICATION_BASE = 31_000
+    private const val DEFERRED_NOTIFICATION_SPAN = 2_000
 }
 
 class SecurityEventWorker(

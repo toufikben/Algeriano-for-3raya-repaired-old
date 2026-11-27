@@ -72,8 +72,49 @@ class SecurityPrefs private constructor(private val context: Context) {
         context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
     private val store = SecurityStore(context)
 
+    private val _trackingEnabledFlow = MutableStateFlow(isTrackingEnabled)
+    val trackingEnabledFlow: StateFlow<Boolean> = _trackingEnabledFlow.asStateFlow()
+
     init {
         migrateLegacyStorageIfNeeded()
+        migratePhotoDirectoryIfNeeded()
+    }
+
+    /**
+     * One-time move of the evidence photos from getExternalFilesDir to filesDir.
+     *
+     * See PhotoStorage: the external directory is null on an unmounted or
+     * adoptable-storage volume, and a capture that cannot write its photo fails
+     * silently. Rewriting the stored paths here means the UI, the send path and
+     * the cleanup worker never have to know the old location existed.
+     */
+    private fun migratePhotoDirectoryIfNeeded() {
+        val mapping = PhotoStorage.migrateLegacyDirectory(context)
+        if (mapping.isEmpty()) return
+
+        fun remap(path: String?): String? {
+            val value = path ?: return null
+            mapping[value]?.let { return it }
+            return if (PhotoStorage.isLegacyPath(context, value)) {
+                PhotoStorage.migratedPath(context, value)
+            } else {
+                value
+            }
+        }
+
+        val events = getSecurityEventsFromRoom()
+        val remappedEvents = events.map { event ->
+            val path = remap(event.photoPath)
+            if (path == event.photoPath) event else event.copy(photoPath = path)
+        }
+        if (remappedEvents != events) store.replaceEvents(remappedEvents)
+
+        val logs = store.logs()
+        val remappedLogs = logs.map { log ->
+            val path = remap(log.photoPath)
+            if (path == log.photoPath) log else log.copy(photoPath = path)
+        }
+        if (remappedLogs != logs) store.replaceLogs(remappedLogs)
     }
 
     private val _trackingEnabledFlow = MutableStateFlow(isTrackingEnabled)
@@ -88,6 +129,7 @@ class SecurityPrefs private constructor(private val context: Context) {
         private const val KEY_PASSWORD = "key_password"
         private const val KEY_TRACKING_ENABLED = "key_tracking_enabled"
         private const val KEY_PRIVACY_DISCLOSURE_ACCEPTED = "key_privacy_disclosure_accepted"
+        private const val KEY_CREDENTIALS_UNREADABLE = "key_credentials_unreadable"
         private const val KEY_TOTAL_ATTEMPTS = "key_total_attempts"
         private const val KEY_LAST_ATTEMPT_TIME = "key_last_attempt_time"
         private const val KEY_LAST_ATTEMPT_LOCATION = "key_last_attempt_location"
@@ -179,10 +221,28 @@ class SecurityPrefs private constructor(private val context: Context) {
         return try {
             decrypt(stored.removePrefix(ENCRYPTED_PREFIX))
         } catch (e: Exception) {
+            // The keystore key can be invalidated by a lock-screen change, a
+            // restore to another device, or a cleared keystore. Returning "" and
+            // nothing else left the settings screen showing an empty email and
+            // password as if the user had never configured them, while the
+            // undecryptable ciphertext stayed in place - so every later save
+            // looked like it silently failed. Record it so the UI can say what
+            // actually happened and ask for the credential again.
             Log.e("SecurityPrefs", "Unable to decrypt stored credential: ${e.javaClass.simpleName}")
+            markCredentialsUnreadable(key)
             ""
         }
     }
+
+    private fun markCredentialsUnreadable(key: String) {
+        // Never overwrite the ciphertext here: if the key comes back (a device
+        // that was only temporarily locked), the value is still recoverable.
+        prefs.edit().putString(KEY_CREDENTIALS_UNREADABLE, key).apply()
+    }
+
+    /** True when a stored credential could not be decrypted on this device. */
+    val credentialsUnreadable: Boolean
+        get() = prefs.getString(KEY_CREDENTIALS_UNREADABLE, null) != null
 
     private fun writeSecret(key: String, value: String) {
         if (value.isBlank()) {
@@ -193,6 +253,8 @@ class SecurityPrefs private constructor(private val context: Context) {
         try {
             val encrypted = ENCRYPTED_PREFIX + encrypt(value)
             prefs.edit().putString(key, encrypted).apply()
+            // A successful write proves the keystore works again for this key.
+            prefs.edit().remove(KEY_CREDENTIALS_UNREADABLE).apply()
         } catch (e: Exception) {
             Log.e("SecurityPrefs", "Unable to encrypt credential: ${e.javaClass.simpleName}")
         }
@@ -868,6 +930,22 @@ class SecurityPrefs private constructor(private val context: Context) {
             .apply()
     }
 
+    /**
+     * Gives the countdown capture a fresh retry budget.
+     *
+     * countdownRetryCount is only reset when a cycle starts, but the retries it
+     * bounds are all background foreground-service starts - the one thing a
+     * visible app can always do. Once a cycle burned its three attempts while
+     * the app was closed, CaptureRetryWorker.enqueue() refused to schedule
+     * anything ever again for that cycle, so the pending event sat in the queue
+     * and "tap to complete" did nothing when tapped. Called from the visible
+     * dispatch path: the user is looking at the app, so the attempt is worth
+     * making again.
+     */
+    fun resetCountdownRetryBudget() {
+        if (countdownRetryCount != 0) countdownRetryCount = 0
+    }
+
     @Synchronized
     fun addLog(log: IntruderLog) {
         val currentLogs = getLogs().toMutableList()
@@ -940,8 +1018,10 @@ class SecurityPrefs private constructor(private val context: Context) {
     fun getLogs(): List<IntruderLog> = store.logs()
 
     /**
-     * History window shown to the user: 5 entries on Free, 50 on Premium.
-     * Applied at the display boundary so storage keeps the full window either way.
+     * History window shown to the user. Both tiers show the same window: a
+     * shorter Free window only hid rows the free tier was already allowed to
+     * capture, which read as data loss rather than as a paid feature. Applied at
+     * the display boundary so storage keeps the full window either way.
      */
     fun getVisibleLogs(): List<IntruderLog> = getLogs().take(getHistoryLimit())
 

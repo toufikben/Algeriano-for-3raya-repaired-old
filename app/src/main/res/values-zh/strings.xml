@@ -318,4 +318,5 @@
     <string name="premium_photo_retention">照片保留</string>
     <string name="premium_retention_days">%1$d 天</string>
     <string name="premium_retention_forever">保留至删除</string>
+    <string name="credentials_unreadable_warning">无法读取此设备上保存的邮箱和密码。请重新输入以恢复提醒。</string>
 </resources>

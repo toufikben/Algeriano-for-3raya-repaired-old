@@ -318,4 +318,5 @@
     <string name="premium_photo_retention">Fotoaufbewahrung</string>
     <string name="premium_retention_days">%1$d Tage</string>
     <string name="premium_retention_forever">Bleiben bis zum Löschen</string>
+    <string name="credentials_unreadable_warning">Die gespeicherte E-Mail-Adresse und das Passwort konnten auf diesem Gerät nicht gelesen werden. Geben Sie sie erneut ein, um die Warnungen fortzusetzen.</string>
 </resources>

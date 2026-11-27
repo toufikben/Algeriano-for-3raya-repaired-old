@@ -508,6 +508,7 @@ fun SecurityMainScreen(
                     email = uiState.email,
                     password = uiState.password,
                     hasSavedPassword = uiState.hasPassword,
+                    credentialsUnreadable = uiState.credentialsUnreadable,
                     onEmailChange = viewModel::onEmailChange,
                     onPasswordChange = viewModel::onPasswordChange,
                     onClearPassword = viewModel::requestClearSavedPassword,

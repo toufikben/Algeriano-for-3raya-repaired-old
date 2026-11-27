@@ -318,4 +318,5 @@
     <string name="premium_photo_retention">Foto saklama</string>
     <string name="premium_retention_days">%1$d gün</string>
     <string name="premium_retention_forever">Silinene kadar saklanır</string>
+    <string name="credentials_unreadable_warning">Kayıtlı e-posta ve parola bu cihazda okunamadı. Uyarıları sürdürmek için yeniden girin.</string>
 </resources>

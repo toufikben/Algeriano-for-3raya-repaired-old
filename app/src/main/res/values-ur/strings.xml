@@ -318,4 +318,5 @@
     <string name="premium_photo_retention">تصاویر کی حفاظت</string>
     <string name="premium_retention_days">%1$d دن</string>
     <string name="premium_retention_forever">حذف ہونے تک محفوظ</string>
+    <string name="credentials_unreadable_warning">اس ڈیوائس پر محفوظ ای میل اور پاس ورڈ پڑھے نہیں جا سکے۔ انتباہات دوبارہ شروع کرنے کے لیے انہیں دوبارہ درج کریں۔</string>
 </resources>

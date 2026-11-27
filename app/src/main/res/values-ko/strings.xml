@@ -318,4 +318,5 @@
     <string name="premium_photo_retention">사진 보관</string>
     <string name="premium_retention_days">%1$d일</string>
     <string name="premium_retention_forever">삭제할 때까지 보관</string>
+    <string name="credentials_unreadable_warning">이 기기에서 저장된 이메일과 비밀번호를 읽을 수 없습니다. 알림을 다시 시작하려면 다시 입력하세요.</string>
 </resources>

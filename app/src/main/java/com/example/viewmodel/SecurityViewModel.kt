@@ -42,6 +42,10 @@ data class SecurityUiState(
     // password; hasPassword signals that a password is saved.
     val password: String = "",
     val hasPassword: Boolean = false,
+    // A stored credential exists but could not be decrypted on this device (a
+    // locked-screen change or a restore invalidates the keystore key). The
+    // settings fields look empty, so the UI has to say why.
+    val credentialsUnreadable: Boolean = false,
     val isTrackingEnabled: Boolean = false,
     val isAdminActive: Boolean = false,
     val hasCameraPermission: Boolean = false,
@@ -83,6 +87,7 @@ class SecurityViewModel(application: Application) : AndroidViewModel(application
         SecurityUiState(
             email = prefs.email,
             hasPassword = prefs.password.isNotEmpty(),
+            credentialsUnreadable = prefs.credentialsUnreadable,
             isTrackingEnabled = prefs.isTrackingEnabled,
             logs = prefs.getVisibleLogs(),
             totalAttempts = prefs.totalAttempts,
@@ -301,7 +306,8 @@ class SecurityViewModel(application: Application) : AndroidViewModel(application
             _uiState.update {
                 it.copy(
                     bannerMessage = context.getString(com.example.R.string.ui_credentials_save_failed),
-                    hasPassword = prefs.password.isNotEmpty()
+                    hasPassword = prefs.password.isNotEmpty(),
+                    credentialsUnreadable = prefs.credentialsUnreadable
                 )
             }
             return false
@@ -310,7 +316,8 @@ class SecurityViewModel(application: Application) : AndroidViewModel(application
             _uiState.update {
                 it.copy(
                     bannerMessage = context.getString(com.example.R.string.ui_credentials_save_failed),
-                    hasPassword = false
+                    hasPassword = false,
+                    credentialsUnreadable = prefs.credentialsUnreadable
                 )
             }
             return false
@@ -321,7 +328,10 @@ class SecurityViewModel(application: Application) : AndroidViewModel(application
         _uiState.update {
             it.copy(
                 password = "",
-                hasPassword = prefs.password.isNotEmpty()
+                hasPassword = prefs.password.isNotEmpty(),
+                // A successful save re-encrypts with the current key, so a
+                // previous decryption failure no longer applies.
+                credentialsUnreadable = prefs.credentialsUnreadable
             )
         }
 
@@ -500,7 +510,7 @@ class SecurityViewModel(application: Application) : AndroidViewModel(application
                 }
                 .toSet()
             prefs.clearLogs()
-            context.getExternalFilesDir(null)?.resolve("intruder_photos")?.listFiles()
+            com.example.data.PhotoStorage.directory(context).listFiles()
                 ?.forEach { file ->
                     val canonical = runCatching { file.canonicalPath }.getOrNull() ?: file.absolutePath
                     if (canonical !in pendingPhotoPaths && file.absolutePath !in pendingPhotoPaths) {

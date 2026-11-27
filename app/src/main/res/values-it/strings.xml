@@ -318,4 +318,5 @@
     <string name="premium_photo_retention">Conservazione foto</string>
     <string name="premium_retention_days">%1$d giorni</string>
     <string name="premium_retention_forever">Conservate fino all\'eliminazione</string>
+    <string name="credentials_unreadable_warning">Impossibile leggere l\'e-mail e la password salvate su questo dispositivo. Reinseriscile per riprendere gli avvisi.</string>
 </resources>

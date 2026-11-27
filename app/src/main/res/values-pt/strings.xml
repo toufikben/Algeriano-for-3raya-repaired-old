@@ -318,4 +318,5 @@
     <string name="premium_photo_retention">Retenção de fotos</string>
     <string name="premium_retention_days">%1$d dias</string>
     <string name="premium_retention_forever">Mantidas até serem apagadas</string>
+    <string name="credentials_unreadable_warning">Não foi possível ler o e-mail e a palavra-passe guardados neste dispositivo. Introduza-os novamente para retomar os alertas.</string>
 </resources>

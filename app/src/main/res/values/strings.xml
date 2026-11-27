@@ -318,4 +318,5 @@
     <string name="premium_photo_retention">Photo retention</string>
     <string name="premium_retention_days">%1$d days</string>
     <string name="premium_retention_forever">Kept until deleted</string>
+    <string name="credentials_unreadable_warning">The saved email and password could not be read on this device. Enter them again to resume alerts.</string>
 </resources>

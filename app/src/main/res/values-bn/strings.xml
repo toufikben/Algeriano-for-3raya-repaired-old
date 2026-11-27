@@ -318,4 +318,5 @@
     <string name="premium_photo_retention">ফটো সংরক্ষণ</string>
     <string name="premium_retention_days">%1$d দিন</string>
     <string name="premium_retention_forever">মুছে ফেলার আগ পর্যন্ত সংরক্ষিত</string>
+    <string name="credentials_unreadable_warning">এই ডিভাইসে সংরক্ষিত ইমেল ও পাসওয়ার্ড পড়া যায়নি। সতর্কতা আবার শুরু করতে সেগুলো আবার দিন।</string>
 </resources>

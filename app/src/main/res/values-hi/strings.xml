@@ -318,4 +318,5 @@
     <string name="premium_photo_retention">फ़ोटो प्रतिधारण</string>
     <string name="premium_retention_days">%1$d दिन</string>
     <string name="premium_retention_forever">हटाने तक सुरक्षित</string>
+    <string name="credentials_unreadable_warning">इस डिवाइस पर सहेजे गए ईमेल और पासवर्ड पढ़े नहीं जा सके। अलर्ट फिर शुरू करने के लिए उन्हें दोबारा दर्ज करें।</string>
 </resources>

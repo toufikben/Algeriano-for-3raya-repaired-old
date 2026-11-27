@@ -4,6 +4,7 @@ import android.content.Context
 import android.util.Log
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
+import com.example.data.PhotoStorage
 import com.example.data.SecurityPrefs
 import java.util.concurrent.TimeUnit
 
@@ -13,8 +14,7 @@ class PhotoCleanupWorker(
     workerParams: WorkerParameters
 ) : CoroutineWorker(appContext, workerParams) {
     override suspend fun doWork(): Result {
-        val directory = applicationContext.getExternalFilesDir(null)?.resolve(PHOTO_DIRECTORY)
-            ?: return Result.success()
+        val directory = PhotoStorage.directory(applicationContext)
         if (!directory.isDirectory) return Result.success()
         val prefs = SecurityPrefs.getInstance(applicationContext)
         // Free expires a photo after a week; Premium keeps it until the user deletes
@@ -43,7 +43,6 @@ class PhotoCleanupWorker(
 
     companion object {
         const val WORK_NAME = "weekly_photo_cleanup"
-        private const val PHOTO_DIRECTORY = "intruder_photos"
         private const val TAG = "PhotoCleanupWorker"
     }
 }

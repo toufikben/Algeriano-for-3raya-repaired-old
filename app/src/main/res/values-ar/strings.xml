@@ -318,4 +318,5 @@
     <string name="premium_photo_retention">الاحتفاظ بالصور</string>
     <string name="premium_retention_days">%1$d أيام</string>
     <string name="premium_retention_forever">محفوظة حتى الحذف</string>
+    <string name="credentials_unreadable_warning">تعذّر قراءة البريد وكلمة المرور المحفوظين على هذا الجهاز. أدخلهما مجددًا لاستئناف التنبيهات.</string>
 </resources>

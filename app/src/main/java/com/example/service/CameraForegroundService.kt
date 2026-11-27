@@ -775,8 +775,7 @@ class CameraForegroundService : Service() {
                         return@setOnImageAvailableListener
                     }
 
-                    val picturesDir = File(getExternalFilesDir(null), "intruder_photos")
-                    if (!picturesDir.exists()) picturesDir.mkdirs()
+                    val picturesDir = com.example.data.PhotoStorage.directory(this@CameraForegroundService)
 
                     val fileName = "capture_${System.currentTimeMillis()}.jpg"
                     val file = File(picturesDir, fileName)
@@ -1048,12 +1047,32 @@ class CameraForegroundService : Service() {
 
         try {
             NotificationManagerCompat.from(this).notify(
-                ALERT_NOTIFICATION_ID + (System.currentTimeMillis() % ALERT_NOTIFICATION_ID_SPAN.toLong()).toInt(),
+                nextAlertNotificationId(),
                 notification
             )
         } catch (e: Exception) {
             Log.e(TAG, "Error posting alert notification", e)
         }
+    }
+
+    /**
+     * An id inside [ALERT_NOTIFICATION_ID]..(+SPAN) that does not collide with a
+     * notification still on screen.
+     *
+     * The old formula was ALERT_NOTIFICATION_ID + (now % SPAN), which repeats
+     * every SPAN milliseconds - a thousand milliseconds. Two captures in the same
+     * second, or one capture landing on the same remainder a second later, posted
+     * over each other: the user saw one alert where two events happened. Walk the
+     * range instead and take the first free slot; when all of them are taken the
+     * modulo slot is the least-bad answer, since the alternative is no alert.
+     */
+    private fun nextAlertNotificationId(): Int {
+        val manager = NotificationManagerCompat.from(this)
+        for (offset in 0 until ALERT_NOTIFICATION_ID_SPAN) {
+            val candidate = ALERT_NOTIFICATION_ID + offset
+            if (manager.activeNotifications.none { it.id == candidate }) return candidate
+        }
+        return ALERT_NOTIFICATION_ID
     }
 
     private fun acquireWakeLock(): PowerManager.WakeLock? {
