@@ -117,9 +117,6 @@ class SecurityPrefs private constructor(private val context: Context) {
         if (remappedLogs != logs) store.replaceLogs(remappedLogs)
     }
 
-    private val _trackingEnabledFlow = MutableStateFlow(isTrackingEnabled)
-    val trackingEnabledFlow: StateFlow<Boolean> = _trackingEnabledFlow.asStateFlow()
-
     private val _logsFlow = MutableStateFlow(getLogs())
     val logsFlow: StateFlow<List<IntruderLog>> = _logsFlow.asStateFlow()
 
