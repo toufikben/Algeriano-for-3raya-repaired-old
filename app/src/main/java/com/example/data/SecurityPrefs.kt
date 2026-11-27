@@ -126,6 +126,7 @@ class SecurityPrefs private constructor(private val context: Context) {
         private const val KEY_PASSWORD = "key_password"
         private const val KEY_TRACKING_ENABLED = "key_tracking_enabled"
         private const val KEY_PRIVACY_DISCLOSURE_ACCEPTED = "key_privacy_disclosure_accepted"
+        private const val KEY_HOW_IT_WORKS_DISMISSED = "key_how_it_works_dismissed"
         private const val KEY_CREDENTIALS_UNREADABLE = "key_credentials_unreadable"
         private const val KEY_TOTAL_ATTEMPTS = "key_total_attempts"
         private const val KEY_LAST_ATTEMPT_TIME = "key_last_attempt_time"
@@ -201,6 +202,17 @@ class SecurityPrefs private constructor(private val context: Context) {
     var privacyDisclosureAccepted: Boolean
         get() = prefs.getBoolean(KEY_PRIVACY_DISCLOSURE_ACCEPTED, false)
         set(value) = prefs.edit().putBoolean(KEY_PRIVACY_DISCLOSURE_ACCEPTED, value).apply()
+
+    /**
+     * Records that the three-step walkthrough was dismissed.
+     *
+     * Kept in preferences rather than in the Activity's saved state: a returning
+     * user who already read it should not be shown it again after the process is
+     * killed, and it must survive an update that changes the layout.
+     */
+    var howItWorksDismissed: Boolean
+        get() = prefs.getBoolean(KEY_HOW_IT_WORKS_DISMISSED, false)
+        set(value) = prefs.edit().putBoolean(KEY_HOW_IT_WORKS_DISMISSED, value).apply()
 
     var password: String
         get() = readSecret(KEY_PASSWORD)

@@ -319,4 +319,15 @@
     <string name="premium_retention_days">%1$d 天</string>
     <string name="premium_retention_forever">保留至删除</string>
     <string name="credentials_unreadable_warning">无法读取此设备上保存的邮箱和密码。请重新输入以恢复提醒。</string>
+    <!-- First-run walkthrough (HowItWorksCard). -->
+    <string name="onboarding_title">防护如何运作</string>
+    <string name="onboarding_subtitle">三个步骤，发送前一切都留在本机。</string>
+    <string name="onboarding_step_arm_title">开启防护</string>
+    <string name="onboarding_step_arm_body">在上方开启防护并授予设备管理员权限。没有它，应用无法报告任何解锁失败。</string>
+    <string name="onboarding_step_capture_title">下一次解锁失败会被记录</string>
+    <string name="onboarding_step_capture_body">达到错误密码次数后，前置摄像头拍照并记录位置，即使在锁屏界面也能完成。</string>
+    <string name="onboarding_step_evidence_title">证据送达你手中</string>
+    <string name="onboarding_step_evidence_body">照片、位置和时间会发送到下方填写的邮箱，每条事件都会保留在应用中。</string>
+    <string name="onboarding_dismiss">隐藏</string>
+    <string name="onboarding_see_premium">高级版增加了什么</string>
 </resources>

@@ -319,4 +319,15 @@
     <string name="premium_retention_days">%1$d أيام</string>
     <string name="premium_retention_forever">محفوظة حتى الحذف</string>
     <string name="credentials_unreadable_warning">تعذّر قراءة البريد وكلمة المرور المحفوظين على هذا الجهاز. أدخلهما مجددًا لاستئناف التنبيهات.</string>
+    <!-- First-run walkthrough (HowItWorksCard). -->
+    <string name="onboarding_title">كيف تعمل الحماية</string>
+    <string name="onboarding_subtitle">ثلاث خطوات، كلها على جهازك حتى ترسلها.</string>
+    <string name="onboarding_step_arm_title">فعّل الحماية</string>
+    <string name="onboarding_step_arm_body">شغّل «الحماية» بالأعلى وامنح صلاحية مدير الجهاز. بدونها لا يستطيع التطبيق الإبلاغ عن أي محاولة فتح فاشلة.</string>
+    <string name="onboarding_step_capture_title">تُلتقط أول محاولة فاشلة</string>
+    <string name="onboarding_step_capture_body">عند بلوغ حدّ كلمات المرور الخاطئة، تلتقط الكاميرا الأمامية صورة ويُسجَّل الموقع، حتى على شاشة القفل.</string>
+    <string name="onboarding_step_evidence_title">يصلك الدليل</string>
+    <string name="onboarding_step_evidence_body">تُرسَل الصورة والموقع والوقت إلى بريدك المسجّل أدناه، وتبقى كل حادثة مسجّلة في التطبيق.</string>
+    <string name="onboarding_dismiss">إخفاء</string>
+    <string name="onboarding_see_premium">ما يضيفه الاشتراك</string>
 </resources>

@@ -319,4 +319,15 @@
     <string name="premium_retention_days">%1$d دن</string>
     <string name="premium_retention_forever">حذف ہونے تک محفوظ</string>
     <string name="credentials_unreadable_warning">اس ڈیوائس پر محفوظ ای میل اور پاس ورڈ پڑھے نہیں جا سکے۔ انتباہات دوبارہ شروع کرنے کے لیے انہیں دوبارہ درج کریں۔</string>
+    <!-- First-run walkthrough (HowItWorksCard). -->
+    <string name="onboarding_title">حفاظت کیسے کام کرتی ہے</string>
+    <string name="onboarding_subtitle">تین مراحل، بھیجنے تک سب کچھ اسی ڈیوائس پر۔</string>
+    <string name="onboarding_step_arm_title">۱۔ حفاظت فعال کریں</string>
+    <string name="onboarding_step_arm_body">اوپر حفاظت آن کریں اور ڈیوائس ایڈمن کی اجازت دیں۔ اس کے بغیر ایپ کسی ناکام ان لاک کوشش کی اطلاع نہیں دے سکتی۔</string>
+    <string name="onboarding_step_capture_title">۲۔ اگلی ناکام کوشش قید ہوتی ہے</string>
+    <string name="onboarding_step_capture_body">غلط پاس ورڈ کی حد پوری ہوتے ہی سامنے کا کیمرہ تصویر لیتا ہے اور مقام درج ہوتا ہے — لاک اسکرین پر بھی۔</string>
+    <string name="onboarding_step_evidence_title">۳۔ ثبوت آپ تک پہنچتا ہے</string>
+    <string name="onboarding_step_evidence_body">تصویر، مقام اور وقت نیچے دیے گئے پتے پر ای میل ہوتے ہیں، اور ہر واقعہ اس ایپ میں درج رہتا ہے۔</string>
+    <string name="onboarding_dismiss">چھپائیں</string>
+    <string name="onboarding_see_premium">پریمیم کیا اضافہ کرتا ہے</string>
 </resources>

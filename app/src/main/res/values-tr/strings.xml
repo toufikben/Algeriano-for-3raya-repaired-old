@@ -319,4 +319,15 @@
     <string name="premium_retention_days">%1$d gün</string>
     <string name="premium_retention_forever">Silinene kadar saklanır</string>
     <string name="credentials_unreadable_warning">Kayıtlı e-posta ve parola bu cihazda okunamadı. Uyarıları sürdürmek için yeniden girin.</string>
+    <!-- First-run walkthrough (HowItWorksCard). -->
+    <string name="onboarding_title">Koruma nasıl çalışır</string>
+    <string name="onboarding_subtitle">Üç adım; gönderene kadar hepsi bu cihazda kalır.</string>
+    <string name="onboarding_step_arm_title">Korumayı etkinleştirin</string>
+    <string name="onboarding_step_arm_body">Yukarıdan korumayı açın ve cihaz yöneticisi iznini verin. Bu izin olmadan uygulama başarısız kilit açma denemesini bildiremez.</string>
+    <string name="onboarding_step_capture_title">Bir sonraki başarısız deneme yakalanır</string>
+    <string name="onboarding_step_capture_body">Yanlış parola sınırına ulaşıldığında ön kamera fotoğraf çeker ve konum kaydedilir; kilit ekranında bile.</string>
+    <string name="onboarding_step_evidence_title">Kanıt size ulaşır</string>
+    <string name="onboarding_step_evidence_body">Fotoğraf, konum ve saat aşağıda girdiğiniz adrese e-postayla gider ve her olay uygulamada listelenir.</string>
+    <string name="onboarding_dismiss">Gizle</string>
+    <string name="onboarding_see_premium">Premium ne ekler</string>
 </resources>

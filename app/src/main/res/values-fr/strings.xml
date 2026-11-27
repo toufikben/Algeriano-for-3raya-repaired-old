@@ -319,4 +319,15 @@
     <string name="premium_retention_days">%1$d jours</string>
     <string name="premium_retention_forever">Conservées jusqu\'à suppression</string>
     <string name="credentials_unreadable_warning">L\'e-mail et le mot de passe enregistrés n\'ont pas pu être lus sur cet appareil. Saisissez-les à nouveau pour reprendre les alertes.</string>
+    <!-- First-run walkthrough (HowItWorksCard). -->
+    <string name="onboarding_title">Comment fonctionne la protection</string>
+    <string name="onboarding_subtitle">Trois étapes, toutes sur cet appareil jusqu\'à l\'envoi.</string>
+    <string name="onboarding_step_arm_title">Activez la protection</string>
+    <string name="onboarding_step_arm_body">Activez la protection ci-dessus et accordez l\'autorisation d\'administrateur. Sans elle, l\'application ne peut signaler aucune tentative de déverrouillage ratée.</string>
+    <string name="onboarding_step_capture_title">La prochaine tentative ratée est capturée</string>
+    <string name="onboarding_step_capture_body">Une fois le seuil de mots de passe erronés atteint, la caméra frontale prend une photo et la position est enregistrée, même sur l\'écran de verrouillage.</string>
+    <string name="onboarding_step_evidence_title">La preuve vous parvient</string>
+    <string name="onboarding_step_evidence_body">La photo, la position et l\'heure sont envoyées à l\'adresse indiquée ci-dessous, et chaque événement reste listé dans l\'application.</string>
+    <string name="onboarding_dismiss">Masquer</string>
+    <string name="onboarding_see_premium">Ce qu\'apporte Premium</string>
 </resources>

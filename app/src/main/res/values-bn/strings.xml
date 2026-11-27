@@ -319,4 +319,15 @@
     <string name="premium_retention_days">%1$d দিন</string>
     <string name="premium_retention_forever">মুছে ফেলার আগ পর্যন্ত সংরক্ষিত</string>
     <string name="credentials_unreadable_warning">এই ডিভাইসে সংরক্ষিত ইমেল ও পাসওয়ার্ড পড়া যায়নি। সতর্কতা আবার শুরু করতে সেগুলো আবার দিন।</string>
+    <!-- First-run walkthrough (HowItWorksCard). -->
+    <string name="onboarding_title">সুরক্ষা কীভাবে কাজ করে</string>
+    <string name="onboarding_subtitle">তিন ধাপ, পাঠানোর আগে সবকিছু এই ডিভাইসেই থাকে।</string>
+    <string name="onboarding_step_arm_title">সুরক্ষা চালু করুন</string>
+    <string name="onboarding_step_arm_body">উপরে সুরক্ষা চালু করুন এবং ডিভাইস-অ্যাডমিন অনুমতি দিন। এটি ছাড়া অ্যাপটি কোনো ব্যর্থ আনলক চেষ্টার কথা জানাতে পারে না।</string>
+    <string name="onboarding_step_capture_title">পরের ব্যর্থ চেষ্টা ধরা পড়ে</string>
+    <string name="onboarding_step_capture_body">ভুল পাসওয়ার্ডের সীমা পূর্ণ হলে সামনের ক্যামেরা ছবি তোলে এবং অবস্থান রেকর্ড করা হয় - লক স্ক্রিনেও।</string>
+    <string name="onboarding_step_evidence_title">প্রমাণ আপনার কাছে পৌঁছায়</string>
+    <string name="onboarding_step_evidence_body">ছবি, অবস্থান ও সময় নিচে দেওয়া ঠিকানায় ইমেইল করা হয়, এবং প্রতিটি ঘটনা এই অ্যাপে তালিকাভুক্ত থাকে।</string>
+    <string name="onboarding_dismiss">লুকান</string>
+    <string name="onboarding_see_premium">প্রিমিয়াম কী যোগ করে</string>
 </resources>

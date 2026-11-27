@@ -96,6 +96,7 @@ import com.example.ui.components.AppPinGate
 import com.example.ui.components.CredentialsCard
 import com.example.ui.components.CountdownCard
 import com.example.ui.components.DeveloperInfoDialog
+import com.example.ui.components.HowItWorksCard
 import com.example.ui.components.IntruderLogsCard
 import com.example.ui.components.PermissionsStatusCard
 import com.example.ui.components.PinManagementDialog
@@ -454,6 +455,17 @@ fun SecurityMainScreen(
                     isTrackingEnabled = uiState.isTrackingEnabled,
                     attemptsCount = uiState.totalAttempts
                 )
+            }
+
+            // First-run walkthrough. Above the controls it explains, so the
+            // permission prompts below it have a reason.
+            if (uiState.showHowItWorks) {
+                item(key = "how_it_works_card") {
+                    HowItWorksCard(
+                        onDismiss = viewModel::dismissHowItWorks,
+                        onOpenPremium = viewModel::showPremiumScreen
+                    )
+                }
             }
 
             item(key = "security_status_card") {

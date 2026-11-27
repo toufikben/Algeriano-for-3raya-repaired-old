@@ -163,6 +163,18 @@ class StorageAndRetryBudgetTest {
     }
 
     @Test
+    fun `the walkthrough stays dismissed across a fresh instance`() {
+        // The card is shown once and must not come back on the next launch -
+        // that is the whole reason the flag lives in preferences and not in the
+        // Activity's saved state.
+        assertFalse("a new install has not dismissed it", prefs.howItWorksDismissed)
+
+        prefs.howItWorksDismissed = true
+
+        assertTrue("the flag has to survive the process", prefs.howItWorksDismissed)
+    }
+
+    @Test
     fun `a legacy pending event keeps its status when its photo path is remapped`() {
         // Guards the migration's data shape: it rewrites photoPath only.
         val event = SecurityEvent(

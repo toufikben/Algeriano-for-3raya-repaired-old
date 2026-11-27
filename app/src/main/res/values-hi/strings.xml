@@ -319,4 +319,15 @@
     <string name="premium_retention_days">%1$d दिन</string>
     <string name="premium_retention_forever">हटाने तक सुरक्षित</string>
     <string name="credentials_unreadable_warning">इस डिवाइस पर सहेजे गए ईमेल और पासवर्ड पढ़े नहीं जा सके। अलर्ट फिर शुरू करने के लिए उन्हें दोबारा दर्ज करें।</string>
+    <!-- First-run walkthrough (HowItWorksCard). -->
+    <string name="onboarding_title">सुरक्षा कैसे काम करती है</string>
+    <string name="onboarding_subtitle">तीन चरण, भेजने तक सब कुछ इसी डिवाइस पर।</string>
+    <string name="onboarding_step_arm_title">सुरक्षा चालू करें</string>
+    <string name="onboarding_step_arm_body">ऊपर सुरक्षा चालू करें और डिवाइस-एडमिन अनुमति दें। इसके बिना ऐप किसी भी असफल अनलॉक प्रयास की सूचना नहीं दे सकता।</string>
+    <string name="onboarding_step_capture_title">अगला असफल प्रयास कैद होता है</string>
+    <string name="onboarding_step_capture_body">गलत पासवर्ड की सीमा पूरी होते ही फ्रंट कैमरा फोटो लेता है और स्थान दर्ज होता है - लॉक स्क्रीन पर भी।</string>
+    <string name="onboarding_step_evidence_title">सबूत आप तक पहुँचता है</string>
+    <string name="onboarding_step_evidence_body">फोटो, स्थान और समय नीचे दिए गए पते पर ईमेल होते हैं, और हर घटना इस ऐप में सूचीबद्ध रहती है।</string>
+    <string name="onboarding_dismiss">छिपाएँ</string>
+    <string name="onboarding_see_premium">प्रीमियम क्या जोड़ता है</string>
 </resources>

@@ -319,4 +319,15 @@
     <string name="premium_retention_days">%1$d days</string>
     <string name="premium_retention_forever">Kept until deleted</string>
     <string name="credentials_unreadable_warning">The saved email and password could not be read on this device. Enter them again to resume alerts.</string>
+    <!-- First-run walkthrough (HowItWorksCard). -->
+    <string name="onboarding_title">How protection works</string>
+    <string name="onboarding_subtitle">Three steps, all on this device until you send.</string>
+    <string name="onboarding_step_arm_title">Arm the protection</string>
+    <string name="onboarding_step_arm_body">Turn on Protection above and grant the device-admin prompt. Without it the phone cannot report a failed unlock at all.</string>
+    <string name="onboarding_step_capture_title">The next failed unlock is caught</string>
+    <string name="onboarding_step_capture_body">Once your threshold of wrong passwords is reached, the front camera takes a photo and the location is recorded - even on the lock screen.</string>
+    <string name="onboarding_step_evidence_title">The evidence reaches you</string>
+    <string name="onboarding_step_evidence_body">Photo, location and time are emailed to the address you set below, and every event stays listed in this app.</string>
+    <string name="onboarding_dismiss">Dismiss</string>
+    <string name="onboarding_see_premium">What Premium adds</string>
 </resources>

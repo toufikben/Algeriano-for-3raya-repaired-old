@@ -319,4 +319,15 @@
     <string name="premium_retention_days">%1$d hari</string>
     <string name="premium_retention_forever">Disimpan sehingga dipadam</string>
     <string name="credentials_unreadable_warning">E-mel dan kata laluan tersimpan tidak dapat dibaca pada peranti ini. Masukkannya semula untuk menyambung makluman.</string>
+    <!-- First-run walkthrough (HowItWorksCard). -->
+    <string name="onboarding_title">Cara perlindungan berfungsi</string>
+    <string name="onboarding_subtitle">Tiga langkah, semuanya pada peranti ini sehingga anda hantar.</string>
+    <string name="onboarding_step_arm_title">Hidupkan perlindungan</string>
+    <string name="onboarding_step_arm_body">Hidupkan Perlindungan di atas dan berikan kebenaran admin peranti. Tanpanya apl tidak boleh melaporkan cubaan buka kunci yang gagal.</string>
+    <string name="onboarding_step_capture_title">Cubaan gagal seterusnya ditangkap</string>
+    <string name="onboarding_step_capture_body">Apabila had kata laluan salah dicapai, kamera hadapan mengambil foto dan lokasi direkodkan - walaupun pada skrin kunci.</string>
+    <string name="onboarding_step_evidence_title">Bukti sampai kepada anda</string>
+    <string name="onboarding_step_evidence_body">Foto, lokasi dan masa dihantar ke alamat yang anda isi di bawah, dan setiap peristiwa kekal tersenarai dalam apl ini.</string>
+    <string name="onboarding_dismiss">Sembunyikan</string>
+    <string name="onboarding_see_premium">Apa yang Premium tambah</string>
 </resources>

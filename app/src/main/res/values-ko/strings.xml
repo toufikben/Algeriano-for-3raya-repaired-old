@@ -319,4 +319,15 @@
     <string name="premium_retention_days">%1$d일</string>
     <string name="premium_retention_forever">삭제할 때까지 보관</string>
     <string name="credentials_unreadable_warning">이 기기에서 저장된 이메일과 비밀번호를 읽을 수 없습니다. 알림을 다시 시작하려면 다시 입력하세요.</string>
+    <!-- First-run walkthrough (HowItWorksCard). -->
+    <string name="onboarding_title">보호 방식</string>
+    <string name="onboarding_subtitle">세 단계, 보내기 전까지 모든 것은 이 기기에 남습니다.</string>
+    <string name="onboarding_step_arm_title">보호 켜기</string>
+    <string name="onboarding_step_arm_body">위에서 보호를 켜고 기기 관리자 권한을 허용하세요. 권한이 없으면 잠금 해제 실패를 알릴 수 없습니다.</string>
+    <string name="onboarding_step_capture_title">다음 실패 시도가 기록됩니다</string>
+    <string name="onboarding_step_capture_body">잘못된 비밀번호 횟수가 기준에 도달하면 전면 카메라가 사진을 찍고 위치를 기록합니다. 잠금 화면에서도 동작합니다.</string>
+    <string name="onboarding_step_evidence_title">증거가 도착합니다</string>
+    <string name="onboarding_step_evidence_body">사진, 위치, 시간이 아래에 입력한 주소로 전송되며 모든 이벤트는 앱에 남습니다.</string>
+    <string name="onboarding_dismiss">숨기기</string>
+    <string name="onboarding_see_premium">프리미엄 추가 기능</string>
 </resources>

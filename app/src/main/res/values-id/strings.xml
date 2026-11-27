@@ -319,4 +319,15 @@
     <string name="premium_retention_days">%1$d hari</string>
     <string name="premium_retention_forever">Disimpan sampai dihapus</string>
     <string name="credentials_unreadable_warning">Email dan kata sandi tersimpan tidak dapat dibaca di perangkat ini. Masukkan lagi untuk melanjutkan peringatan.</string>
+    <!-- First-run walkthrough (HowItWorksCard). -->
+    <string name="onboarding_title">Cara kerja perlindungan</string>
+    <string name="onboarding_subtitle">Tiga langkah, semuanya di perangkat ini sampai Anda kirim.</string>
+    <string name="onboarding_step_arm_title">Aktifkan perlindungan</string>
+    <string name="onboarding_step_arm_body">Nyalakan Perlindungan di atas dan berikan izin admin perangkat. Tanpanya aplikasi tidak dapat melaporkan upaya buka kunci yang gagal.</string>
+    <string name="onboarding_step_capture_title">Upaya gagal berikutnya tertangkap</string>
+    <string name="onboarding_step_capture_body">Setelah ambang kata sandi salah tercapai, kamera depan mengambil foto dan lokasi dicatat - bahkan di layar kunci.</string>
+    <string name="onboarding_step_evidence_title">Bukti sampai kepada Anda</string>
+    <string name="onboarding_step_evidence_body">Foto, lokasi, dan waktu dikirim ke alamat yang Anda isi di bawah, dan setiap kejadian tetap tercatat di aplikasi ini.</string>
+    <string name="onboarding_dismiss">Sembunyikan</string>
+    <string name="onboarding_see_premium">Apa yang ditambahkan Premium</string>
 </resources>

@@ -319,4 +319,15 @@
     <string name="premium_retention_days">%1$d giorni</string>
     <string name="premium_retention_forever">Conservate fino all\'eliminazione</string>
     <string name="credentials_unreadable_warning">Impossibile leggere l\'e-mail e la password salvate su questo dispositivo. Reinseriscile per riprendere gli avvisi.</string>
+    <!-- First-run walkthrough (HowItWorksCard). -->
+    <string name="onboarding_title">Come funziona la protezione</string>
+    <string name="onboarding_subtitle">Tre passaggi, tutti su questo dispositivo fino all\'invio.</string>
+    <string name="onboarding_step_arm_title">Attiva la protezione</string>
+    <string name="onboarding_step_arm_body">Attiva la protezione qui sopra e concedi l\'autorizzazione di amministratore. Senza, l\'app non può segnalare alcun tentativo di sblocco fallito.</string>
+    <string name="onboarding_step_capture_title">Il prossimo tentativo fallito viene catturato</string>
+    <string name="onboarding_step_capture_body">Raggiunta la soglia di password errate, la fotocamera frontale scatta una foto e viene registrata la posizione, anche sulla schermata di blocco.</string>
+    <string name="onboarding_step_evidence_title">La prova ti raggiunge</string>
+    <string name="onboarding_step_evidence_body">Foto, posizione e ora vengono inviate all\'indirizzo indicato sotto, e ogni evento resta elencato nell\'app.</string>
+    <string name="onboarding_dismiss">Nascondi</string>
+    <string name="onboarding_see_premium">Cosa aggiunge Premium</string>
 </resources>

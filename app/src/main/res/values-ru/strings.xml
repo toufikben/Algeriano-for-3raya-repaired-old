@@ -319,4 +319,15 @@
     <string name="premium_retention_days">%1$d дней</string>
     <string name="premium_retention_forever">Хранятся до удаления</string>
     <string name="credentials_unreadable_warning">Не удалось прочитать сохранённые адрес и пароль на этом устройстве. Введите их снова, чтобы возобновить оповещения.</string>
+    <!-- First-run walkthrough (HowItWorksCard). -->
+    <string name="onboarding_title">Как работает защита</string>
+    <string name="onboarding_subtitle">Три шага, всё на этом устройстве до отправки.</string>
+    <string name="onboarding_step_arm_title">Включите защиту</string>
+    <string name="onboarding_step_arm_body">Включите защиту выше и подтвердите права администратора устройства. Без них приложение не сможет сообщить о неудачной попытке разблокировки.</string>
+    <string name="onboarding_step_capture_title">Следующая неудачная попытка фиксируется</string>
+    <string name="onboarding_step_capture_body">Когда достигнут заданный порог неверных паролей, фронтальная камера делает снимок и записывается местоположение — даже на экране блокировки.</string>
+    <string name="onboarding_step_evidence_title">Доказательство приходит к вам</string>
+    <string name="onboarding_step_evidence_body">Снимок, местоположение и время отправляются на указанный ниже адрес, а каждое событие остаётся в списке приложения.</string>
+    <string name="onboarding_dismiss">Скрыть</string>
+    <string name="onboarding_see_premium">Что добавляет Premium</string>
 </resources>

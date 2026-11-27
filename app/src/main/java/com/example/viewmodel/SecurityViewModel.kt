@@ -67,7 +67,10 @@ data class SecurityUiState(
     val localizedPrice: String? = null,
     val showPremiumScreen: Boolean = false,
     // Shown inside the paywall dialog, which would otherwise cover the snackbar.
-    val premiumMessage: String? = null
+    val premiumMessage: String? = null,
+    // The one-time walkthrough. Dismissal is persisted, so this is false for
+    // anyone who has already closed it.
+    val showHowItWorks: Boolean = false
 )
 
 class SecurityViewModel(application: Application) : AndroidViewModel(application) {
@@ -96,7 +99,8 @@ class SecurityViewModel(application: Application) : AndroidViewModel(application
             countdownDurationMillis = prefs.countdownDurationMillis,
             countdownRemainingMillis = remainingCountdownMillis(),
             countdownAutoRestart = prefs.countdownAutoRestart,
-            isPremium = prefs.isPremium
+            isPremium = prefs.isPremium,
+            showHowItWorks = !prefs.howItWorksDismissed
         )
     )
     val uiState: StateFlow<SecurityUiState> = _uiState.asStateFlow()
@@ -537,6 +541,12 @@ class SecurityViewModel(application: Application) : AndroidViewModel(application
 
     fun dismissBanner() {
         _uiState.update { it.copy(bannerMessage = null) }
+    }
+
+    /** One-time walkthrough: closing it is permanent, so it never reappears. */
+    fun dismissHowItWorks() {
+        prefs.howItWorksDismissed = true
+        _uiState.update { it.copy(showHowItWorks = false) }
     }
     
     // ==================== PREMIUM / MONETIZATION METHODS ====================

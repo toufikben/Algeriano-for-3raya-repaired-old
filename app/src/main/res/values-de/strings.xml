@@ -319,4 +319,15 @@
     <string name="premium_retention_days">%1$d Tage</string>
     <string name="premium_retention_forever">Bleiben bis zum Löschen</string>
     <string name="credentials_unreadable_warning">Die gespeicherte E-Mail-Adresse und das Passwort konnten auf diesem Gerät nicht gelesen werden. Geben Sie sie erneut ein, um die Warnungen fortzusetzen.</string>
+    <!-- First-run walkthrough (HowItWorksCard). -->
+    <string name="onboarding_title">So funktioniert der Schutz</string>
+    <string name="onboarding_subtitle">Drei Schritte, alle auf diesem Gerät bis zum Versand.</string>
+    <string name="onboarding_step_arm_title">Schutz aktivieren</string>
+    <string name="onboarding_step_arm_body">Aktivieren Sie oben den Schutz und bestätigen Sie die Geräteadministrator-Abfrage. Ohne sie kann die App keinen fehlgeschlagenen Entsperrversuch melden.</string>
+    <string name="onboarding_step_capture_title">Der nächste Fehlversuch wird erfasst</string>
+    <string name="onboarding_step_capture_body">Ist die eingestellte Zahl falscher Passwörter erreicht, nimmt die Frontkamera ein Foto auf und der Standort wird gespeichert - auch auf dem Sperrbildschirm.</string>
+    <string name="onboarding_step_evidence_title">Der Nachweis erreicht Sie</string>
+    <string name="onboarding_step_evidence_body">Foto, Standort und Uhrzeit gehen per E-Mail an die unten angegebene Adresse, und jedes Ereignis bleibt in der App aufgelistet.</string>
+    <string name="onboarding_dismiss">Ausblenden</string>
+    <string name="onboarding_see_premium">Was Premium bietet</string>
 </resources>

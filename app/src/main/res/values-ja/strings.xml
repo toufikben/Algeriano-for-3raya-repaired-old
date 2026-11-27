@@ -319,4 +319,15 @@
     <string name="premium_retention_days">%1$d 日</string>
     <string name="premium_retention_forever">削除するまで保存</string>
     <string name="credentials_unreadable_warning">この端末で保存済みのメールアドレスとパスワードを読み取れませんでした。通知を再開するには再入力してください。</string>
+    <!-- First-run walkthrough (HowItWorksCard). -->
+    <string name="onboarding_title">保護の仕組み</string>
+    <string name="onboarding_subtitle">3つのステップ。送信するまで、すべてこの端末内で完結します。</string>
+    <string name="onboarding_step_arm_title">保護を有効にする</string>
+    <string name="onboarding_step_arm_body">上の「保護」をオンにし、デバイス管理者の許可を与えてください。これがないと、アプリは解除の失敗を報告できません。</string>
+    <string name="onboarding_step_capture_title">次の解除失敗を記録します</string>
+    <string name="onboarding_step_capture_body">誤ったパスワードが設定した回数に達すると、前面カメラが写真を撮り、位置情報を記録します。ロック画面でも動作します。</string>
+    <string name="onboarding_step_evidence_title">証拠が届きます</string>
+    <string name="onboarding_step_evidence_body">写真・位置・時刻は下で設定したメールアドレスに送信され、各イベントはアプリ内に一覧で残ります。</string>
+    <string name="onboarding_dismiss">非表示</string>
+    <string name="onboarding_see_premium">プレミアムで増える機能</string>
 </resources>
