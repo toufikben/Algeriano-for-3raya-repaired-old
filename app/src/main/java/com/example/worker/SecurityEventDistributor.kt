@@ -283,12 +283,13 @@ class SecurityEventWorker(
             return Result.retry()
         }
 
-        // FIX: the service intentionally skips startForeground() on the
-        // ACTION_SEND_PENDING mail-only path, so calling
-        // ContextCompat.startForegroundService() for it from this background
-        // worker can crash with "Context.startForegroundService() did not
-        // then call Service.startForeground()". Perform the mail-only resend
-        // in-process instead, mirroring the service's status handling.
+        // Mail-only work must never be handed to the service: there is no
+        // foregroundServiceType it could legally claim for a send (camera and
+        // location both require while-in-use access a send does not use), and a
+        // startForegroundService() with no matching startForeground() kills the
+        // app after five seconds. Perform the resend in-process instead,
+        // mirroring the service's status handling. The service's own
+        // ACTION_SEND_PENDING branch now routes back here for the same reason.
         if (SecurityEventDistributor.awaitingSend(event.status)) {
             return sendPendingEventFromWorker(prefs, event)
         }
