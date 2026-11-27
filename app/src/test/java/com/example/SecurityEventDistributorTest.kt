@@ -82,13 +82,15 @@ class SecurityEventDistributorTest {
 
     @Test
     fun `tier limits match the numbers published on the store listing`() {
+        // Capture is uncapped and history is the same window on both tiers, so
+        // the store listing can only promise what these two constants say.
         prefs.isPremium = false
-        assertEquals(3, prefs.getEvidenceMonthlyLimit())
-        assertEquals(5, prefs.getHistoryLimit())
+        assertEquals(Int.MAX_VALUE, prefs.getEvidenceMonthlyLimit())
+        assertEquals(SecurityPrefs.FREE_HISTORY_LIMIT, prefs.getHistoryLimit())
 
         prefs.isPremium = true
         assertEquals(Int.MAX_VALUE, prefs.getEvidenceMonthlyLimit())
-        assertEquals(50, prefs.getHistoryLimit())
+        assertEquals(SecurityPrefs.PREMIUM_HISTORY_LIMIT, prefs.getHistoryLimit())
     }
 
     @Test

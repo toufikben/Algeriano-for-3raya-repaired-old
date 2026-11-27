@@ -5,10 +5,7 @@ import android.util.Base64
 import androidx.test.core.app.ApplicationProvider
 import androidx.work.testing.WorkManagerTestInitHelper
 import com.example.billing.PurchaseVerifier
-import com.example.data.SecurityEventStatus
 import com.example.data.SecurityPrefs
-import com.example.worker.EvidenceLimitNotice
-import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -20,6 +17,16 @@ import org.robolectric.annotation.Config
 import java.security.KeyPairGenerator
 import java.security.Signature
 
+/**
+ * Pins what Free and Premium actually sell after the Plan A repricing.
+ *
+ * The old contract charged capture by the month: three free captures, then no
+ * photo and no location until the calendar turned over. That is what this test
+ * used to assert. Capture is now free and uncapped on both tiers, and Premium
+ * sells retention plus the auto-restarting countdown, so the assertions follow
+ * the money: nothing may be refused for a capture, and the two tiers must stay
+ * ordered (a paid tier narrower than the free one is a refund waiting to happen).
+ */
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [36])
 class MonetizationRulesTest {
@@ -32,71 +39,64 @@ class MonetizationRulesTest {
         WorkManagerTestInitHelper.initializeTestWorkManager(context)
         prefs = SecurityPrefs.getInstance(context)
         prefs.isPremium = false
-        resetAllowance()
-    }
-
-    @After
-    fun tearDown() {
-        prefs.isPremium = false
-        resetAllowance()
-    }
-
-    // SecurityPrefs is a process singleton under Robolectric that keeps the first
-    // test's SharedPreferences, so the allowance is reset through it and not through
-    // a fresh context: a leftover count would starve the distributor tests.
-    private fun resetAllowance() {
-        repeat(prefs.getEvidenceUsage().first) { prefs.releaseEvidenceSlot() }
     }
 
     @Test
-    fun `free allowance stops at three reserved captures`() {
-        repeat(SecurityPrefs.FREE_EVIDENCE_MONTHLY_LIMIT) {
-            assertTrue(prefs.tryReserveEvidenceSlot())
+    fun `free capture is never refused, however many attempts arrive`() {
+        // Well past any number the old monthly cap allowed.
+        repeat(500) {
+            assertTrue("free capture must never be refused", prefs.tryReserveEvidenceSlot())
         }
-        assertFalse("a fourth capture must be refused", prefs.tryReserveEvidenceSlot())
-        assertEquals(3 to 3, prefs.getEvidenceUsage())
+        assertTrue(prefs.canCreateEvidenceEvent())
+        assertEquals(Int.MAX_VALUE, prefs.getEvidenceMonthlyLimit())
     }
 
     @Test
-    fun `a capture that produced nothing gives its slot back`() {
-        assertTrue(prefs.tryReserveEvidenceSlot())
-        prefs.releaseEvidenceSlot()
-        assertEquals(0, prefs.getEvidenceUsage().first)
-
-        // Never below zero, even if released twice.
-        prefs.releaseEvidenceSlot()
-        assertEquals(0, prefs.getEvidenceUsage().first)
-    }
-
-    @Test
-    fun `premium is never refused, even after a month of auto-restarted countdowns`() {
+    fun `premium capture is never refused either`() {
         prefs.isPremium = true
-        // Twelve two-hour cycles a day for a month, plus failed unlocks.
-        repeat(400) {
+        repeat(500) {
             assertTrue(prefs.tryReserveEvidenceSlot())
         }
         assertTrue(prefs.canCreateEvidenceEvent())
+        assertEquals(Int.MAX_VALUE, prefs.getEvidenceMonthlyLimit())
     }
 
     @Test
-    fun `extended retention is what premium buys`() {
+    fun `reserving and releasing a slot has no effect on the reported usage`() {
+        // Both are kept as no-ops so the capture path needs no tier branch. A
+        // no-op that started reporting a count again would put a usage meter back
+        // on the paywall against a limit that does not exist.
+        assertTrue(prefs.tryReserveEvidenceSlot())
+        prefs.releaseEvidenceSlot()
+        prefs.releaseEvidenceSlot()
+        assertEquals(0, prefs.getEvidenceUsage().first)
+    }
+
+    @Test
+    fun `retention is what premium buys, and premium is never shorter`() {
         prefs.isPremium = false
-        assertEquals(7L, prefs.getPhotoRetentionDays())
+        assertEquals(SecurityPrefs.FREE_PHOTO_RETENTION_DAYS, prefs.getPhotoRetentionDays())
+        assertFalse(prefs.keepsPhotosForever())
+
         prefs.isPremium = true
-        assertEquals(30L, prefs.getPhotoRetentionDays())
+        assertEquals(SecurityPrefs.PREMIUM_PHOTO_RETENTION_DAYS, prefs.getPhotoRetentionDays())
+        assertTrue(prefs.keepsPhotosForever())
+        assertTrue(
+            "premium retention must never be shorter than free",
+            SecurityPrefs.PREMIUM_PHOTO_RETENTION_DAYS >= SecurityPrefs.FREE_PHOTO_RETENTION_DAYS
+        )
     }
 
     @Test
-    fun `a spent allowance still reports the attempt exactly once`() {
-        val event = prefs.enqueueSecurityEvent()
-        val logsBefore = prefs.getLogs().size
-
-        assertTrue(EvidenceLimitNotice.handleExhausted(context, event.id))
-        assertFalse("a second caller must not notify again", EvidenceLimitNotice.handleExhausted(context, event.id))
-
-        assertEquals(SecurityEventStatus.FAILED, prefs.getSecurityEvent(event.id)?.status)
-        assertEquals("the attempt is logged, not dropped", logsBefore + 1, prefs.getLogs().size)
-        assertFalse(prefs.getLogs().first().photoCaptured)
+    fun `an uncapped retention sentinel is never converted to a delete-everything cutoff`() {
+        // PhotoCleanupWorker returns early on Long.MAX_VALUE because
+        // TimeUnit.DAYS.toMillis(Long.MAX_VALUE) overflows to a negative number,
+        // which would turn the cutoff into a future timestamp and expire every
+        // photo on the device. This asserts the sentinel is still what the tier
+        // reports, so that early return stays reachable.
+        prefs.isPremium = true
+        assertEquals(Long.MAX_VALUE, prefs.getPhotoRetentionDays())
+        assertTrue(java.util.concurrent.TimeUnit.DAYS.toMillis(Long.MAX_VALUE) < 0)
     }
 
     @Test

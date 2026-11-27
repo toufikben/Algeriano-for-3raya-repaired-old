@@ -299,7 +299,8 @@ fun IntruderLogsCard(
  * The status line in the language the app shows now. The stored statusMessage was
  * written in whatever language was active at capture time, so a later language switch
  * left old rows in the old language; the component states carry the same facts.
- * Rows with nothing to derive from (e.g. a spent allowance) keep their stored text.
+ * Rows with nothing to derive from (e.g. an attempt logged before any capture
+ * component reported a state) keep their stored text.
  */
 @Composable
 private fun localizedStatus(log: IntruderLog): String {

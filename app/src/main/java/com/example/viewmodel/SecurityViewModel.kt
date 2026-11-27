@@ -60,7 +60,6 @@ data class SecurityUiState(
     val countdownAutoRestart: Boolean = false,
     // Premium / Monetization fields
     val isPremium: Boolean = false,
-    val evidenceUsage: Pair<Int, Int> = Pair(0, 3), // (current, limit)
     val localizedPrice: String? = null,
     val showPremiumScreen: Boolean = false,
     // Shown inside the paywall dialog, which would otherwise cover the snackbar.
@@ -92,8 +91,7 @@ class SecurityViewModel(application: Application) : AndroidViewModel(application
             countdownDurationMillis = prefs.countdownDurationMillis,
             countdownRemainingMillis = remainingCountdownMillis(),
             countdownAutoRestart = prefs.countdownAutoRestart,
-            isPremium = prefs.isPremium,
-            evidenceUsage = prefs.getEvidenceUsage()
+            isPremium = prefs.isPremium
         )
     )
     val uiState: StateFlow<SecurityUiState> = _uiState.asStateFlow()
@@ -108,11 +106,10 @@ class SecurityViewModel(application: Application) : AndroidViewModel(application
                 billingManager.isPremium.collect { isPremium ->
                     // UI mirror only: BillingManager owns the cached entitlement, so
                     // writing prefs here would overwrite it with an unverified value.
-                    // The tier also re-bounds the visible history and the quota row.
+                    // The tier also re-bounds the visible history.
                     _uiState.update {
                         it.copy(
                             isPremium = isPremium,
-                            evidenceUsage = prefs.getEvidenceUsage(),
                             logs = prefs.getVisibleLogs()
                         )
                     }
@@ -172,9 +169,7 @@ class SecurityViewModel(application: Application) : AndroidViewModel(application
                 _uiState.update {
                     it.copy(
                         logs = logList.take(prefs.getHistoryLimit()),
-                        totalAttempts = prefs.totalAttempts,
-                        // A new log row usually means a capture just used a slot.
-                        evidenceUsage = prefs.getEvidenceUsage()
+                        totalAttempts = prefs.totalAttempts
                     )
                 }
             }
@@ -541,8 +536,7 @@ class SecurityViewModel(application: Application) : AndroidViewModel(application
         _uiState.update { 
             it.copy(
                 showPremiumScreen = true,
-                premiumMessage = null,
-                evidenceUsage = prefs.getEvidenceUsage()
+                premiumMessage = null
             )
         }
         // The unlock button stays disabled without a price from Play, so the screen that
@@ -550,19 +544,6 @@ class SecurityViewModel(application: Application) : AndroidViewModel(application
         refreshEntitlement()
     }
     
-    /** The allowance just ran out (notification tap): show the paywall with the reason. */
-    fun openPremiumForSpentAllowance() {
-        showPremiumScreen()
-        _uiState.update {
-            it.copy(
-                premiumMessage = context.getString(
-                    R.string.premium_limit_reached,
-                    prefs.getEvidenceMonthlyLimit()
-                )
-            )
-        }
-    }
-
     /** Dismiss premium screen */
     fun dismissPremiumScreen() {
         _uiState.update { it.copy(showPremiumScreen = false, premiumMessage = null) }
@@ -638,8 +619,7 @@ class SecurityViewModel(application: Application) : AndroidViewModel(application
                 hasLocationPermission = hasLocation,
                 hasNotificationPermission = hasNotifications,
                 isBatteryOptimizationIgnored = isBatteryIgnored,
-                totalAttempts = prefs.totalAttempts,
-                evidenceUsage = prefs.getEvidenceUsage()
+                totalAttempts = prefs.totalAttempts
             )
         }
         syncCountdownTicker()

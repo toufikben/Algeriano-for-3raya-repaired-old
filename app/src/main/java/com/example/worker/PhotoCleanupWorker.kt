@@ -17,8 +17,14 @@ class PhotoCleanupWorker(
             ?: return Result.success()
         if (!directory.isDirectory) return Result.success()
         val prefs = SecurityPrefs.getInstance(applicationContext)
-        // Premium's "extended retention" is this window: 7 days on Free, 30 on Premium.
-        val cutoff = System.currentTimeMillis() - TimeUnit.DAYS.toMillis(prefs.getPhotoRetentionDays())
+        // Free expires a photo after a week; Premium keeps it until the user deletes
+        // it, and reports Long.MAX_VALUE as the sentinel for that. Converting the
+        // sentinel with TimeUnit.DAYS.toMillis would overflow into a negative
+        // number, which turns the cutoff into a future timestamp and deletes
+        // everything - so the unbounded case returns before any arithmetic.
+        val retentionDays = prefs.getPhotoRetentionDays()
+        if (retentionDays == Long.MAX_VALUE) return Result.success()
+        val cutoff = System.currentTimeMillis() - TimeUnit.DAYS.toMillis(retentionDays)
         var failures = 0
         directory.listFiles()?.forEach { file ->
             if (!file.isFile || file.lastModified() >= cutoff) return@forEach

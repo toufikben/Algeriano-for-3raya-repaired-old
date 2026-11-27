@@ -5,6 +5,7 @@ import androidx.test.core.app.ApplicationProvider
 import androidx.work.testing.WorkManagerTestInitHelper
 import com.example.data.SecurityPrefs
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
@@ -21,6 +22,9 @@ import org.robolectric.annotation.Config
  * were sold a feature the app then withheld, which is a Play misrepresentation
  * risk, not just a copy bug. PremiumScreen now reads these constants directly,
  * so the invariant is: whatever the constants say, both tiers stay coherent.
+ *
+ * After the Plan A repricing the only things left to sell are retention and the
+ * auto-restarting countdown, so this file pins those two.
  */
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [36])
@@ -35,9 +39,6 @@ class PremiumTierContractTest {
         WorkManagerTestInitHelper.initializeTestWorkManager(context)
         prefs = SecurityPrefs.getInstance(context)
         prefs.isPremium = false
-        // SecurityPrefs is a process singleton under Robolectric; a leftover
-        // count from another test class would skew the limit assertions.
-        repeat(prefs.getEvidenceUsage().first) { prefs.releaseEvidenceSlot() }
     }
 
     @Test
@@ -64,9 +65,8 @@ class PremiumTierContractTest {
 
     @Test
     fun `the limit the paywall prints is the limit the enforcement path applies`() {
-        // PremiumScreen renders SecurityPrefs.FREE_EVIDENCE_MONTHLY_LIMIT in the
-        // Free column and PREMIUM_EVIDENCE_MONTHLY_LIMIT in the Premium column.
-        // These two assertions are what make that rendering truthful.
+        // PremiumScreen renders these constants in the retention row and the
+        // capture rows, so these assertions are what make that rendering truthful.
         prefs.isPremium = false
         assertEquals(
             SecurityPrefs.FREE_EVIDENCE_MONTHLY_LIMIT,
@@ -75,6 +75,10 @@ class PremiumTierContractTest {
         assertEquals(
             SecurityPrefs.FREE_HISTORY_LIMIT,
             prefs.getHistoryLimit()
+        )
+        assertEquals(
+            SecurityPrefs.FREE_PHOTO_RETENTION_DAYS,
+            prefs.getPhotoRetentionDays()
         )
 
         prefs.isPremium = true
@@ -93,13 +97,36 @@ class PremiumTierContractTest {
     }
 
     @Test
-    fun `an uncapped tier still reports a usable pair for the usage bar`() {
-        // PremiumScreen hides the progress card when the limit is Int.MAX_VALUE,
-        // because a bar against that number reads as permanently empty. The pair
-        // must still be returned intact for the callers that do show it.
+    fun `no tier caps capture, so the paywall cannot claim it does`() {
+        // Both tiers report Int.MAX_VALUE. The paywall's capture rows are ticks on
+        // both columns, which is only honest while this holds.
+        prefs.isPremium = false
+        assertEquals(Int.MAX_VALUE, prefs.getEvidenceMonthlyLimit())
+        assertTrue(prefs.canCreateEvidenceEvent())
+        assertTrue(prefs.tryReserveEvidenceSlot())
+
         prefs.isPremium = true
+        assertEquals(Int.MAX_VALUE, prefs.getEvidenceMonthlyLimit())
+        assertTrue(prefs.canCreateEvidenceEvent())
+        assertTrue(prefs.tryReserveEvidenceSlot())
+    }
+
+    @Test
+    fun `the usage meter is unreachable because both tiers are uncapped`() {
+        // PremiumScreen hides the progress card when the limit is Int.MAX_VALUE.
+        // If a tier ever regained a finite cap, the card would come back - so this
+        // test documents which state we are in rather than guessing.
+        prefs.isPremium = false
         val (used, limit) = prefs.getEvidenceUsage()
         assertTrue("used count must never be negative", used >= 0)
         assertEquals(Int.MAX_VALUE, limit)
+    }
+
+    @Test
+    fun `premium is the only tier that keeps photos forever`() {
+        prefs.isPremium = false
+        assertFalse(prefs.keepsPhotosForever())
+        prefs.isPremium = true
+        assertTrue(prefs.keepsPhotosForever())
     }
 }

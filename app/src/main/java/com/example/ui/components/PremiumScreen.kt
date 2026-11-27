@@ -25,7 +25,6 @@ import com.example.data.SecurityPrefs
 fun PremiumScreen(
     isPremium: Boolean,
     localizedPrice: String?,
-    evidenceUsage: Pair<Int, Int>, // (current, limit)
     message: String? = null,
     onUnlockPremium: () -> Unit,
     onRestorePurchase: () -> Unit,
@@ -37,19 +36,27 @@ fun PremiumScreen(
     // here. The previous copy hard-coded "3" and "5" while the enforcement code
     // read its own constants, so the two drifted and the paywall could promise
     // something the app refused to deliver.
-    val freeEvidenceValue = if (SecurityPrefs.FREE_EVIDENCE_MONTHLY_LIMIT == Int.MAX_VALUE) {
-        "∞"
+    //
+    // Plan A split: capture (photo, location, email) is free and uncapped, so the
+    // paywall cannot sell it any more. What Premium sells is *keeping* the
+    // evidence - retention and an auto-restarting countdown - and both of those
+    // are stated from the same constants the cleanup worker and the scheduler use.
+    val freeRetentionValue = if (SecurityPrefs.FREE_PHOTO_RETENTION_DAYS == Long.MAX_VALUE) {
+        stringResource(R.string.premium_retention_forever)
     } else {
-        SecurityPrefs.FREE_EVIDENCE_MONTHLY_LIMIT.toString()
+        stringResource(
+            R.string.premium_retention_days,
+            SecurityPrefs.FREE_PHOTO_RETENTION_DAYS.toInt()
+        )
     }
-    val premiumEvidenceValue = if (SecurityPrefs.PREMIUM_EVIDENCE_MONTHLY_LIMIT == Int.MAX_VALUE) {
-        "∞"
+    val premiumRetentionValue = if (SecurityPrefs.PREMIUM_PHOTO_RETENTION_DAYS == Long.MAX_VALUE) {
+        stringResource(R.string.premium_retention_forever)
     } else {
-        SecurityPrefs.PREMIUM_EVIDENCE_MONTHLY_LIMIT.toString()
+        stringResource(
+            R.string.premium_retention_days,
+            SecurityPrefs.PREMIUM_PHOTO_RETENTION_DAYS.toInt()
+        )
     }
-    // A finite free cap has to be stated as a cap, not implied by a bare number
-    // sitting under a "Photo evidence" label that already shows a tick.
-    val freeCapIsFinite = SecurityPrefs.FREE_EVIDENCE_MONTHLY_LIMIT != Int.MAX_VALUE
 
     // The paywall is shown in a full-width Dialog, which draws no background of its
     // own: without this surface the main screen showed through the table and buttons.
@@ -134,32 +141,22 @@ fun PremiumScreen(
 
                 HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
 
-                // Feature rows
+                // Feature rows. Every capture feature is free and uncapped on both
+                // tiers now, so these are honest ticks rather than a paid upsell:
+                // the difference between the tiers lives in the last two rows.
                 PremiumFeatureRow(
                     feature = stringResource(R.string.premium_core_protection),
                     freeValue = "✓",
                     premiumValue = "✓"
                 )
-                // Photo and location are marked "limited" rather than ticked on the
-                // Free column whenever a monthly cap exists, because the enforcement
-                // path stops producing them once the allowance is spent. A tick there
-                // was the single most misleading line in the app.
                 PremiumFeatureRow(
                     feature = stringResource(R.string.premium_photo_evidence),
-                    freeValue = if (freeCapIsFinite) {
-                        stringResource(R.string.premium_limited)
-                    } else {
-                        "✓"
-                    },
+                    freeValue = "✓",
                     premiumValue = "✓"
                 )
                 PremiumFeatureRow(
                     feature = stringResource(R.string.premium_location_evidence),
-                    freeValue = if (freeCapIsFinite) {
-                        stringResource(R.string.premium_limited)
-                    } else {
-                        "✓"
-                    },
+                    freeValue = "✓",
                     premiumValue = "✓"
                 )
                 PremiumFeatureRow(
@@ -167,28 +164,14 @@ fun PremiumScreen(
                     freeValue = "✓",
                     premiumValue = "✓"
                 )
-                // Plain numbers: the row label already says "monthly" in every locale, so
-                // an English "/mo" here would be untranslated text in 16 languages.
                 PremiumFeatureRow(
-                    feature = stringResource(R.string.premium_evidence_monthly),
-                    // The column is the Free tier, not the viewer's current limit: a Premium
-                    // user saw 50 here.
-                    freeValue = freeEvidenceValue,
-                    premiumValue = premiumEvidenceValue
-                )
-                PremiumFeatureRow(
-                    feature = stringResource(R.string.premium_event_history),
-                    freeValue = SecurityPrefs.FREE_HISTORY_LIMIT.toString(),
-                    premiumValue = SecurityPrefs.PREMIUM_HISTORY_LIMIT.toString()
-                )
-                PremiumFeatureRow(
-                    feature = stringResource(R.string.premium_continuous_protection),
-                    freeValue = "✗",
-                    premiumValue = "✓",
+                    feature = stringResource(R.string.premium_photo_retention),
+                    freeValue = freeRetentionValue,
+                    premiumValue = premiumRetentionValue,
                     highlight = true
                 )
                 PremiumFeatureRow(
-                    feature = stringResource(R.string.premium_extended_retention),
+                    feature = stringResource(R.string.premium_continuous_protection),
                     freeValue = "✗",
                     premiumValue = "✓",
                     highlight = true
@@ -197,37 +180,6 @@ fun PremiumScreen(
         }
 
         Spacer(modifier = Modifier.height(24.dp))
-
-        // Current usage indicator
-        // Hidden once the free tier is uncapped: a progress bar against Int.MAX_VALUE
-        // reads as "0% used" forever and tells the user nothing.
-        if (!isPremium && evidenceUsage.second != Int.MAX_VALUE) {
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceVariant
-                )
-            ) {
-                Column(modifier = Modifier.padding(16.dp)) {
-                    Text(
-                        text = stringResource(R.string.premium_current_usage),
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 16.sp
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
-                    LinearProgressIndicator(
-                        progress = (evidenceUsage.first.toFloat() / evidenceUsage.second.coerceAtLeast(1)).coerceIn(0f, 1f),
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Text(
-                        text = "${evidenceUsage.first} / ${evidenceUsage.second} ${stringResource(R.string.premium_events_this_month)}",
-                        fontSize = 12.sp
-                    )
-                }
-            }
-            Spacer(modifier = Modifier.height(16.dp))
-        }
 
         // Purchase / restore outcome, or why the paywall opened.
         if (message != null) {

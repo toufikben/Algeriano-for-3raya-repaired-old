@@ -109,8 +109,6 @@ class SecurityPrefs private constructor(private val context: Context) {
         private const val KEY_PIN_BLOCKED_UNTIL_REALTIME = "key_pin_blocked_until_realtime"
         private const val KEY_SECURITY_EVENTS_JSON = "key_security_events_json"
         private const val KEY_PREMIUM_ENTITLEMENT = "key_premium_entitlement"
-        private const val KEY_EVIDENCE_MONTH_COUNTER = "key_evidence_month_counter"
-        private const val KEY_EVIDENCE_MONTH_INDEX = "key_evidence_month_index"
         private const val KEYSTORE_ALIAS = "intruder_security_credentials"
         private const val ENCRYPTED_PREFIX = "v1:"
         private const val GCM_TAG_LENGTH_BITS = 128
@@ -119,15 +117,20 @@ class SecurityPrefs private constructor(private val context: Context) {
 
         // The published tier numbers. Public because the paywall has to show the same
         // figures the enforcement paths apply, and two copies drift apart.
-        const val FREE_HISTORY_LIMIT = 5
+        //
+        // Free is deliberately uncapped for capture: photo, location and email are the
+        // reason the app exists, and a monthly cap meant the user spent the allowance
+        // in one day and then received nothing for the rest of the month. What Premium
+        // sells instead is keeping the evidence: retention and an auto-restarting
+        // countdown. History is the same window on both tiers for the same reason -
+        // a shorter one only hid rows the free tier was already allowed to capture.
+        const val FREE_HISTORY_LIMIT = 50
         const val PREMIUM_HISTORY_LIMIT = 50
-        const val FREE_EVIDENCE_MONTHLY_LIMIT = 3
-        // Premium has no monthly cap: its auto-restarting countdown alone captures about a
-        // dozen times a day, so any fixed number ran out within days of "continuous
-        // protection". Storage stays bounded by photo retention and the 50-row history.
+        const val FREE_EVIDENCE_MONTHLY_LIMIT = Int.MAX_VALUE
         const val PREMIUM_EVIDENCE_MONTHLY_LIMIT = Int.MAX_VALUE
+        /** Free keeps photos for a week; Premium keeps them for as long as the user does. */
         const val FREE_PHOTO_RETENTION_DAYS = 7L
-        const val PREMIUM_PHOTO_RETENTION_DAYS = 30L
+        const val PREMIUM_PHOTO_RETENTION_DAYS = Long.MAX_VALUE
         private const val EVENT_LEASE_TIMEOUT_MILLIS = 2 * 60 * 1000L
         private const val MAX_EVENT_RECOVERY_ATTEMPTS = 2
         private const val KEY_OFFLINE_SWEEP_REPAIRED = "key_offline_sweep_repaired_v30"
@@ -877,7 +880,7 @@ class SecurityPrefs private constructor(private val context: Context) {
         } else {
             currentLogs[existingIndex] = log.copy(id = currentLogs[existingIndex].id)
         }
-        // Storage always keeps the premium-sized window so a refund cannot wipe history
+        // Storage keeps the full history window so a refund cannot wipe history
         // that was never the paying tier's to delete; the tier only bounds what is shown.
         val trimmed = if (currentLogs.size > PREMIUM_HISTORY_LIMIT) {
             currentLogs.take(PREMIUM_HISTORY_LIMIT)
@@ -1009,101 +1012,54 @@ class SecurityPrefs private constructor(private val context: Context) {
         set(value) = prefs.edit().putBoolean(KEY_PREMIUM_ENTITLEMENT, value).apply()
 
     /**
-     * Evidence captured in the current calendar month. A slot is reserved before
-     * the camera opens and refunded when the capture produced nothing, so the
-     * published allowance counts evidence the user actually received.
-     */
-    private var evidenceMonthCounter: Int
-        get() = prefs.getInt(KEY_EVIDENCE_MONTH_COUNTER, 0)
-        set(value) = prefs.edit().putInt(KEY_EVIDENCE_MONTH_COUNTER, value.coerceAtLeast(0)).apply()
-
-    /** Calendar month the counter belongs to, as year * 12 + month (0 = not set yet). */
-    private var evidenceMonthIndex: Int
-        get() = prefs.getInt(KEY_EVIDENCE_MONTH_INDEX, 0)
-        set(value) = prefs.edit().putInt(KEY_EVIDENCE_MONTH_INDEX, value).apply()
-
-    /**
      * Get evidence monthly limit based on premium status.
-     * FREE: 3 events/month
-     * PREMIUM: 50 events/month
+     *
+     * Both tiers are uncapped. Capture is the reason the app exists, so charging
+     * for it by the month meant a user could spend the allowance in a day and then
+     * receive nothing for weeks. The method stays because the paywall and the
+     * status surfaces still ask for a limit; it now always reports "unlimited".
      */
-    fun getEvidenceMonthlyLimit(): Int {
-        return if (isPremium) PREMIUM_EVIDENCE_MONTHLY_LIMIT else FREE_EVIDENCE_MONTHLY_LIMIT
-    }
+    fun getEvidenceMonthlyLimit(): Int = Int.MAX_VALUE
 
     /**
      * Get history limit based on premium status.
-     * FREE: 5 events
-     * PREMIUM: 50 events
+     * Both tiers show the same window: a shorter Free window only hid rows the
+     * Free tier was already allowed to capture.
      */
-    fun getHistoryLimit(): Int {
-        return if (isPremium) PREMIUM_HISTORY_LIMIT else FREE_HISTORY_LIMIT
-    }
+    fun getHistoryLimit(): Int = PREMIUM_HISTORY_LIMIT
 
-    /** Days an evidence photo stays on the device before the weekly cleanup removes it. */
+    /**
+     * Days an evidence photo stays on the device before the weekly cleanup removes it.
+     * Free keeps a week. Premium keeps everything, and [Long.MAX_VALUE] is the
+     * sentinel PhotoCleanupWorker reads as "do not delete anything".
+     */
     fun getPhotoRetentionDays(): Long {
         return if (isPremium) PREMIUM_PHOTO_RETENTION_DAYS else FREE_PHOTO_RETENTION_DAYS
     }
 
+    /** True when this tier never expires evidence. */
+    fun keepsPhotosForever(): Boolean = isPremium
+
     /**
      * Read-only check for callers that do not start a capture themselves (the
-     * durable queue). The capture itself goes through [tryReserveEvidenceSlot].
+     * durable queue). Always true: capture is uncapped on both tiers.
      */
-    @Synchronized
-    fun canCreateEvidenceEvent(): Boolean {
-        resetMonthlyCounterIfNeeded()
-        return evidenceMonthCounter < getEvidenceMonthlyLimit()
-    }
+    fun canCreateEvidenceEvent(): Boolean = true
 
     /**
-     * Checks the allowance and takes one slot in a single step: two failed unlocks
-     * a second apart must not both pass a separate check-then-increment.
+     * Kept so the capture path needs no branch of its own. Nothing is ever
+     * reserved, so this always succeeds.
      */
-    @Synchronized
-    fun tryReserveEvidenceSlot(): Boolean {
-        resetMonthlyCounterIfNeeded()
-        if (evidenceMonthCounter >= getEvidenceMonthlyLimit()) return false
-        evidenceMonthCounter = evidenceMonthCounter + 1
-        return true
-    }
+    fun tryReserveEvidenceSlot(): Boolean = true
 
-    /** Gives a reserved slot back when the capture produced neither photo nor location. */
-    @Synchronized
-    fun releaseEvidenceSlot() {
-        resetMonthlyCounterIfNeeded()
-        evidenceMonthCounter = evidenceMonthCounter - 1
-    }
-
-    /**
-     * Starts a new allowance when the calendar month changes. A clock moved back
-     * into an earlier month keeps the current count instead of handing out a
-     * fresh allowance.
-     */
-    private fun resetMonthlyCounterIfNeeded() {
-        val calendar = java.util.Calendar.getInstance()
-        val currentIndex = calendar.get(java.util.Calendar.YEAR) * 12 +
-            calendar.get(java.util.Calendar.MONTH)
-        val storedIndex = evidenceMonthIndex
-        if (storedIndex == 0) {
-            // First run, or an upgrade from the old 30-day window: keep what was
-            // already spent instead of granting a fresh allowance mid-month.
-            evidenceMonthIndex = currentIndex
-            return
-        }
-        if (currentIndex > storedIndex) {
-            evidenceMonthCounter = 0
-            evidenceMonthIndex = currentIndex
-        }
-    }
+    /** No-op: no slot is ever taken, so there is nothing to give back. */
+    fun releaseEvidenceSlot() = Unit
 
     /**
      * Get current evidence usage for display.
-     * Returns Pair(current_count, monthly_limit)
+     * Returns Pair(current_count, monthly_limit); the limit is Int.MAX_VALUE on
+     * both tiers, which the UI reads as "no usage meter to show".
      */
-    @Synchronized
-    fun getEvidenceUsage(): Pair<Int, Int> {
-        resetMonthlyCounterIfNeeded()
-        return Pair(evidenceMonthCounter, getEvidenceMonthlyLimit())
-    }
+    fun getEvidenceUsage(): Pair<Int, Int> = Pair(0, Int.MAX_VALUE)
 
 }

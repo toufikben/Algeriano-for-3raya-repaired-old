@@ -68,8 +68,9 @@ object SecurityEventDistributor {
             status == SecurityEventStatus.FAILED_RETRYABLE
 
     /**
-     * Statuses whose evidence has already been captured, so the monthly allowance
-     * for that event is already spent: re-delivering one must not re-pay for it.
+     * Statuses whose evidence has already been captured. Retained because the
+     * retry paths use it to tell "finish a send" from "take a photo"; capture is
+     * uncapped on both tiers, so it no longer gates anything.
      */
     internal fun evidenceAlreadyCaptured(status: SecurityEventStatus): Boolean =
         status == SecurityEventStatus.CAPTURED || awaitingSend(status)
@@ -78,14 +79,9 @@ object SecurityEventDistributor {
         val prefs = SecurityPrefs.getInstance(context)
         val event = prefs.getPendingSecurityEvents().firstOrNull { it.id == eventId } ?: return
 
-        // The allowance is only charged to a capture that has not happened yet.
-        // Gating an event that already holds its photo would discard evidence the
-        // user already paid for with their quota, and would make every retry after
-        // the limit is reached fatal.
-        if (!evidenceAlreadyCaptured(event.status) && !prefs.canCreateEvidenceEvent()) {
-            EvidenceLimitNotice.handleExhausted(context, eventId)
-            return
-        }
+        // No allowance gate here any more: photo, location and email are free and
+        // uncapped on both tiers. Premium sells retention and the auto-restarting
+        // countdown, so there is no monthly counter left to consult.
 
         // An event that already holds its evidence only needs the network to
         // finish, so it waits for connectivity instead of burning send attempts
