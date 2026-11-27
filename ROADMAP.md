@@ -4,9 +4,9 @@ Single place to see what is proven, what is pending, and what is blocked. Update
 stage table and the ledger after every pushed stage; do not mark a stage `DONE` without
 naming the CI run that proved it.
 
-App: `com.toufikbendjeddah.phonefortress` · main: versionCode **29**, versionName
-**1.1.6** · minSdk 24 / targetSdk 36 · Play Billing **9.1.0** · one-time non-consumable
-`phone_fortress_premium_lifetime`.
+App: `com.toufikbendjeddah.phonefortress` · versionCode **31 + CI run number** (local
+builds stay at 31), versionName **1.2.2** · minSdk 24 / targetSdk 36 · Play Billing
+**9.1.0** · one-time non-consumable `phone_fortress_premium_lifetime`.
 
 **CI is the only compiler.** The development machine cannot build or test Android
 (no network to `dl.google.com`), so `.github/workflows/build-apk-aab.yml` is the sole
@@ -140,6 +140,59 @@ batch pushes instead of stacking them.
   `androidx.fragment:fragment:1.1.0`, which Play flags as outdated (fix: declare
   `androidx.fragment:fragment` 1.8.x explicitly); resource shrinking is off
   (`isShrinkResources = true` with the existing R8 setup).
+
+## Audit fixes (2026-11-27, versionCode 31 base)
+
+Six waves, each pushed with a green CI run. This section supersedes the earlier
+audit-fix notes where they disagree — in particular the pricing table below is the
+old per-month model and no longer describes the app.
+
+**Wave 1 — hardening.** The notification icon was a 445 KB alpha-less JPEG; every
+`setSmallIcon` call now uses a 24 dp white vector (`ic_stat_security`). A launcher
+monochrome icon was added and both `mipmap-anydpi-v26` descriptors repointed.
+`promoteToForeground()` returns `false` when the service has no
+`foregroundServiceType` instead of calling `startForeground` and being killed for it,
+and `ACTION_SEND_PENDING` is routed to `SecurityEventDistributor.enqueue()` with
+`stopSelf(startId)` rather than into the camera path. `FLAG_SECURE` is set before the
+content is attached, so the app can no longer be screenshotted from Recents.
+
+**Wave 2 — Plan A repricing.** Capture is free and uncapped on both tiers; the monthly
+quota is gone entirely. `FREE_EVIDENCE_MONTHLY_LIMIT` and the two counter keys were
+deleted along with `EvidenceLimitNotice`, `EvidenceLimitMailWorker`, the
+`AllowanceSpentBanner` and `openPremiumForSpentAllowance()`. Premium now sells the
+permanently-retained photos (`PREMIUM_PHOTO_RETENTION_DAYS = Long.MAX_VALUE`, which
+`PhotoCleanupWorker` treats as an early return) and the auto-restarting countdown. The
+paywall derives every figure from the `SecurityPrefs` constants, so it can no longer
+drift from what the app enforces.
+
+**Wave 3 — locales.** `values/` is now English and Arabic moved to `values-ar/`; the
+duplicate `values-en/` was deleted. 17 resource sets, 330 keys each. New
+`res/xml/locales_config.xml` plus `android:localeConfig` makes the in-app language
+picker follow the app instead of the whole system.
+
+**Wave 4 — correctness.** Photos moved from `getExternalFilesDir` to `filesDir` through
+a new `PhotoStorage` that owns the path and migrates the old one, because
+`getExternalFilesDir(null)` returns null on an unmounted or adoptable-storage volume and
+the photo leg of every alert failed silently there. A credential that cannot be
+decrypted is now reported to the UI instead of looking like "never configured".
+`onPasswordFailed` does its Room write on a worker thread via `goAsync()` instead of
+`runBlocking` on the broadcast thread. The countdown retry budget is reset from a
+visible session. Notification ids no longer collide: the alert id walks the range for a
+free slot instead of `now % 1000`, and the deferred id is masked into a positive span
+instead of being `BASE + hashCode()`.
+
+**Wave 5 — CI.** `cancel-in-progress` is off on `main` (a cancel between the release
+creation and the asset upload left a published release with no binaries). The four
+Gradle invocations are one `test lint assembleRelease bundleRelease --continue`. The
+`versionCode` derives from `GITHUB_RUN_NUMBER` on a base of 31. The 4.4 MB APK and
+6.3 MB AAB committed under `device-test/` are gone from the index and ignored.
+
+**Wave 6 — onboarding and metadata.** `HowItWorksCard` states the mechanism in three
+numbered steps above the controls it explains, dismissed permanently through
+`SecurityPrefs.howItWorksDismissed`. README rewritten (it still sold the removed monthly
+quota), the repository description corrected (it said "Old version before monetization
+(archived)" on a live repo), topics added, and the `www.` typo in the privacy-policy
+contact address fixed.
 
 ## Audit fixes (2026-10-03, versionCode 28)
 
