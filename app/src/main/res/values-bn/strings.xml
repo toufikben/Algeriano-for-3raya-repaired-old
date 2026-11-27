@@ -327,4 +327,5 @@
     <string name="premium_auto_restart_locked">স্বয়ংক্রিয় পুনরায় চালু একটি Premium বৈশিষ্ট্য।</string>
     <string name="premium_limit_reached">আপনি এই মাসের %1$dটি বিনামূল্যের প্রমাণ সংগ্রহ ব্যবহার করে ফেলেছেন। নতুন ব্যর্থ আনলকের খবর এখনও নোটিফিকেশন ও ইমেলে পাবেন, তবে ছবি ও অবস্থান ছাড়া।</string>
     <string name="premium_limit_upgrade">Premium-এ আপগ্রেড করুন</string>
+    <string name="premium_limited">সীমিত</string>
 </resources>

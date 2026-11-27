@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Monochrome layer for themed app icons (Android 13+).
+
+    The system ignores this drawable's colours: it uses the alpha channel as a
+    mask and paints the user's wallpaper-derived tint through it. Both launcher
+    XMLs previously pointed this slot at @drawable/ic_launcher_foreground, which
+    is a layer-list wrapping a full-colour PNG - so the themed icon inherited the
+    PNG's alpha, i.e. a rounded square, and every themed launcher showed a blob.
+
+    Keep this a single filled silhouette with no strokes and no interior holes:
+    a hole needs evenOdd, and a thin stroke disappears once the launcher scales
+    the 108dp canvas down to a 48dp icon.
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <!-- Shield, drawn inside the central 72dp safe zone of the 108dp canvas. -->
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M54,26L30,36v16c0,14.4 10.2,27.9 24,31.5 13.8,-3.6 24,-17.1 24,-31.5V36L54,26z" />
+</vector>

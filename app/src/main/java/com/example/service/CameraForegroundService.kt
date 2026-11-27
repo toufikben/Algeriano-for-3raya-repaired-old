@@ -98,9 +98,13 @@ class CameraForegroundService : Service() {
          * A background caller may hand an event to that instance; starting a new
          * camera-type foreground service from the background is rejected on
          * Android 12+ (and as a SecurityException on Android 14+ while-in-use).
+         *
+         * Every promotion this service performs is for a capture, so a promoted
+         * instance is by definition camera-capable; mail-only work never gets
+         * promoted (see promoteToForeground) and runs as WorkManager work.
          */
         val isCameraChannelOpen: Boolean
-            get() = liveInstance?.let { it.foregroundTypeStarted && it.foregroundNeedsCamera } ?: false
+            get() = liveInstance?.foregroundTypeStarted ?: false
     }
 
     private val serviceScope = CoroutineScope(Dispatchers.IO + Job())
@@ -110,11 +114,8 @@ class CameraForegroundService : Service() {
     private var imageReader: ImageReader? = null
     private var backgroundThread: HandlerThread? = null
     private var backgroundHandler: Handler? = null
-    private var foregroundStarted = false
     @Volatile
     private var foregroundTypeStarted = false
-    @Volatile
-    private var foregroundNeedsCamera = true
     private var countdownArmJob: Job? = null
 
     override fun onCreate() {
@@ -127,8 +128,25 @@ class CameraForegroundService : Service() {
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         val action = intent?.action ?: ACTION_CAPTURE_AND_SEND
-        foregroundNeedsCamera = action != ACTION_SEND_PENDING
         Log.d(TAG, "onStartCommand action: $action")
+
+        // Mail-only sends are deliberately never promoted: there is no
+        // foregroundServiceType we could legally claim for them (camera and
+        // location both require while-in-use access we are not using), and a
+        // startForegroundService() with no matching startForeground() kills the
+        // app after five seconds. Hand the event to the durable worker, which
+        // sends in-process. See promoteToForeground.
+        if (action == ACTION_SEND_PENDING) {
+            val pendingId = intent?.getStringExtra(EXTRA_SECURITY_EVENT_ID)
+            if (!pendingId.isNullOrBlank()) {
+                com.example.worker.SecurityEventDistributor.enqueue(applicationContext, pendingId)
+            }
+            // Only stop when this call did not land on a live, promoted instance:
+            // stopSelf(startId) here would tear down camera monitoring just
+            // because a mail-only request arrived.
+            if (!foregroundTypeStarted) stopSelf(startId)
+            return START_NOT_STICKY
+        }
 
         if (action == ACTION_STOP_MONITORING) {
             // FIX: alert ids vary across ALERT_NOTIFICATION_ID..(+SPAN), so
@@ -138,7 +156,6 @@ class CameraForegroundService : Service() {
                 manager.cancel(id)
             }
             ServiceCompat.stopForeground(this, ServiceCompat.STOP_FOREGROUND_REMOVE)
-            foregroundStarted = false
             foregroundTypeStarted = false
             stopSelf()
             return START_NOT_STICKY
@@ -149,14 +166,14 @@ class CameraForegroundService : Service() {
                 stopSelf(startId)
                 return START_NOT_STICKY
             }
-            foregroundStarted = true
             armCountdownCapture()
             return START_STICKY
         }
 
-        // Re-promote when a camera-capable request arrives while the service is
-        // only running unpromoted (send-only path never called startForeground).
-        if (!foregroundTypeStarted && (foregroundNeedsCamera || !foregroundStarted)) {
+        // Anything that reaches here is a capture request, so it needs the camera
+        // or location while-in-use grant and must be promoted. If promotion fails
+        // the event is deferred rather than dropped.
+        if (!foregroundTypeStarted) {
             if (!promoteToForeground(buildForegroundNotification())) {
                 val prefs = SecurityPrefs.getInstance(applicationContext)
                 if (action == ACTION_COUNTDOWN_EXPIRED) {
@@ -175,7 +192,6 @@ class CameraForegroundService : Service() {
                 stopSelf(startId)
                 return START_NOT_STICKY
             }
-            foregroundStarted = true
         }
 
         if (action == ACTION_START_MONITORING) {
@@ -183,7 +199,7 @@ class CameraForegroundService : Service() {
         }
 
         when (action) {
-            ACTION_CAPTURE_AND_SEND, ACTION_SEND_PENDING, ACTION_COUNTDOWN_EXPIRED, ACTION_TEST_CAPTURE -> {
+            ACTION_CAPTURE_AND_SEND, ACTION_COUNTDOWN_EXPIRED, ACTION_TEST_CAPTURE -> {
                 val isTest = action == ACTION_TEST_CAPTURE
                 val eventId = intent?.getStringExtra(EXTRA_SECURITY_EVENT_ID)
                 processIntruderCapture(isTest, action == ACTION_COUNTDOWN_EXPIRED, eventId)
@@ -214,7 +230,7 @@ class CameraForegroundService : Service() {
         ) == PackageManager.PERMISSION_GRANTED
 
         val foregroundServiceType = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            (if (hasCameraPermission && foregroundNeedsCamera) ServiceInfo.FOREGROUND_SERVICE_TYPE_CAMERA else 0) or
+            (if (hasCameraPermission) ServiceInfo.FOREGROUND_SERVICE_TYPE_CAMERA else 0) or
                 if (hasLocationPermission) {
                     ServiceInfo.FOREGROUND_SERVICE_TYPE_LOCATION
                 } else {
@@ -224,16 +240,23 @@ class CameraForegroundService : Service() {
             0
         }
 
-        // FIX: on Android 10+ startForeground(type=0) throws for a manifest
-        // camera|location service. Mail-only sends need no while-in-use access,
-        // so run them unpromoted; monitoring without any suitable permission
-        // fails gracefully (caller defers the event and stops the service).
+        // On Android 10+ startForeground(type=0) throws for a service that
+        // declares camera|location in the manifest. That only happens when the
+        // user granted neither CAMERA nor LOCATION, and there is no other type we
+        // could legally claim, so this method reports failure and the caller
+        // defers the event instead of dropping it.
+        //
+        // FIX: it used to `return true` for send-only requests without ever
+        // calling startForeground. The caller then recorded the service as
+        // promoted, and because it had been launched with startForegroundService()
+        // Android killed the app with ForegroundServiceDidNotStartInTimeException
+        // five seconds later. Mail-only work belongs on the WorkManager path
+        // (SecurityEventWorker sends in-process); onStartCommand routes it there.
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q && foregroundServiceType == 0) {
-            if (!foregroundNeedsCamera) {
-                Log.w(TAG, "Send-only request proceeding without foreground promotion")
-                return true
-            }
-            Log.e(TAG, "No camera or location permission; cannot promote with a compliant foreground type")
+            Log.w(
+                TAG,
+                "Neither CAMERA nor LOCATION is granted; cannot promote with a compliant foreground type"
+            )
             return false
         }
 
@@ -275,7 +298,7 @@ class CameraForegroundService : Service() {
         return NotificationCompat.Builder(this, SecurityApp.CHANNEL_ID_SERVICE)
             .setContentTitle(l10n.getString(R.string.notification_title))
             .setContentText(l10n.getString(R.string.notification_text))
-            .setSmallIcon(R.drawable.ic_launcher_foreground_img_1787338860864)
+            .setSmallIcon(R.drawable.ic_stat_security)
             .setContentIntent(pendingIntent)
             .setPriority(NotificationCompat.PRIORITY_LOW)
             .setOngoing(true)
@@ -1027,7 +1050,7 @@ class CameraForegroundService : Service() {
             .setContentText(text)
             .setVisibility(NotificationCompat.VISIBILITY_PRIVATE)
             .setStyle(NotificationCompat.BigTextStyle().bigText(text))
-            .setSmallIcon(R.drawable.ic_launcher_foreground_img_1787338860864)
+            .setSmallIcon(R.drawable.ic_stat_security)
             .setContentIntent(pendingIntent)
             .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setAutoCancel(true)
@@ -1108,7 +1131,6 @@ class CameraForegroundService : Service() {
             CountdownScheduler.rescheduleFromPrefs(applicationContext)
         }
         serviceScope.cancel()
-        foregroundStarted = false
         super.onDestroy()
         closeCamera()
         stopBackgroundThread()

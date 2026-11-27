@@ -327,4 +327,5 @@
     <string name="premium_auto_restart_locked">خودکار دوبارہ آغاز ایک Premium خصوصیت ہے۔</string>
     <string name="premium_limit_reached">آپ اس مہینے کی %1$d مفت ثبوت گرفتیں استعمال کر چکے ہیں۔ نئی ناکام اَن لاک کوششوں کی اطلاع اب بھی نوٹیفکیشن اور ای میل سے ملے گی، لیکن تصویر اور مقام کے بغیر۔</string>
     <string name="premium_limit_upgrade">Premium پر اپ گریڈ کریں</string>
+    <string name="premium_limited">محدود</string>
 </resources>

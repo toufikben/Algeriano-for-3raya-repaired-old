@@ -327,4 +327,5 @@
     <string name="premium_auto_restart_locked">Mula semula automatik ialah ciri Premium.</string>
     <string name="premium_limit_reached">Anda telah menggunakan %1$d tangkapan bukti percuma bulan ini. Cubaan buka kunci gagal yang baharu masih dilaporkan melalui pemberitahuan dan e-mel, tetapi tanpa foto atau lokasi.</string>
     <string name="premium_limit_upgrade">Naik taraf ke Premium</string>
+    <string name="premium_limited">Terhad</string>
 </resources>

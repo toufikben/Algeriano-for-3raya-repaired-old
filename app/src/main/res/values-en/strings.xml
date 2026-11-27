@@ -327,4 +327,5 @@
     <string name="premium_auto_restart_locked">Automatic restart is a Premium feature.</string>
     <string name="premium_limit_reached">You have used this month\'s %1$d free evidence captures. New failed unlocks are still reported by notification and email, but without a photo or location.</string>
     <string name="premium_limit_upgrade">Upgrade to Premium</string>
+    <string name="premium_limited">Limited</string>
 </resources>

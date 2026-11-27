@@ -327,4 +327,5 @@
     <string name="premium_auto_restart_locked">Der automatische Neustart ist eine Premium-Funktion.</string>
     <string name="premium_limit_reached">Sie haben die %1$d kostenlosen Beweisaufnahmen dieses Monats verbraucht. Neue fehlgeschlagene Entsperrungen werden weiterhin per Benachrichtigung und E-Mail gemeldet, aber ohne Foto und Standort.</string>
     <string name="premium_limit_upgrade">Auf Premium upgraden</string>
+    <string name="premium_limited">Begrenzt</string>
 </resources>

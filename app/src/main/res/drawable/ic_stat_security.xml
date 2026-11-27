@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Status-bar icon for every notification this app posts.
+
+    Android renders a small icon as an alpha-only silhouette: it keeps the shape
+    and throws the colour away. The previous drawable was a 445 KB JPEG with no
+    alpha channel at all, so the system had nothing to silhouette and every
+    alert appeared as a solid grey/white square in the status bar.
+
+    Rules any replacement must keep:
+      - vector, never a bitmap, so it stays crisp at every density;
+      - one solid white colour, no gradients, no tints, no shadows;
+      - 24dp, artwork inside the central 22dp safe zone (the bar crops edges);
+      - no android:fillType, so it renders identically on every API level this
+        app supports (minSdk 24) without an evenOdd/subpath interaction to get
+        wrong. The shield is a stroke, the keyhole is two filled subpaths, and
+        they do not depend on each other to read correctly.
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+
+    <!-- Shield outline: the app's whole promise in one glyph. -->
+    <path
+        android:pathData="M12,2.6L4.2,6v5.1c0,4.6 3.2,8.9 7.8,10.3 4.6,-1.4 7.8,-5.7 7.8,-10.3V6L12,2.6z"
+        android:strokeColor="#FFFFFFFF"
+        android:strokeWidth="1.9"
+        android:strokeLineJoin="round"
+        android:strokeLineCap="round" />
+
+    <!-- Keyhole: head plus stem, both filled. -->
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M12,7.6m-1.5,0a1.5,1.5 0,1 1,3 0a1.5,1.5 0,1 1,-3 0M11.2,8.9h1.6v5.1h-1.6z" />
+</vector>

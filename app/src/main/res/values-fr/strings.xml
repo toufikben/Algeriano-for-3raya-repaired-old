@@ -327,4 +327,5 @@
     <string name="premium_auto_restart_locked">Le redémarrage automatique est une fonctionnalité Premium.</string>
     <string name="premium_limit_reached">Vous avez utilisé les %1$d captures de preuves gratuites de ce mois. Les nouveaux échecs de déverrouillage restent signalés par notification et e-mail, mais sans photo ni position.</string>
     <string name="premium_limit_upgrade">Passer à Premium</string>
+    <string name="premium_limited">Limité</string>
 </resources>

@@ -327,4 +327,5 @@
     <string name="premium_auto_restart_locked">O reinício automático é um recurso Premium.</string>
     <string name="premium_limit_reached">Você usou as %1$d capturas de provas gratuitas deste mês. Novos desbloqueios com falha continuam sendo avisados por notificação e e-mail, mas sem foto nem localização.</string>
     <string name="premium_limit_upgrade">Fazer upgrade para Premium</string>
+    <string name="premium_limited">Limitado</string>
 </resources>

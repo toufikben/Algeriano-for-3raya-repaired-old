@@ -9,6 +9,7 @@ import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
+import android.view.WindowManager
 import android.widget.Toast
 import android.content.res.Configuration
 import java.util.Locale
@@ -124,6 +125,18 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        // The app shows an app PIN, the owner's Gmail address, and intruder
+        // photos with coordinates. Every one of those must be blocked from the
+        // recents thumbnail and from screen capture - CredentialsCard already
+        // refuses a reveal toggle for exactly this reason, but without FLAG_SECURE
+        // the whole screen was still capturable and mirrored in Recents.
+        // Set before setContent so the very first frame is already protected.
+        window.setFlags(
+            WindowManager.LayoutParams.FLAG_SECURE,
+            WindowManager.LayoutParams.FLAG_SECURE
+        )
+
         enableEdgeToEdge()
 
         val languageStore = LanguageStore(this)

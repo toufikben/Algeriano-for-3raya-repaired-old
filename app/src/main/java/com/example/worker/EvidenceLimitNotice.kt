@@ -137,7 +137,7 @@ object EvidenceLimitNotice {
             .setContentText(text)
             .setStyle(NotificationCompat.BigTextStyle().bigText(text))
             .setVisibility(NotificationCompat.VISIBILITY_PRIVATE)
-            .setSmallIcon(R.drawable.ic_launcher_foreground_img_1787338860864)
+            .setSmallIcon(R.drawable.ic_stat_security)
             .setContentIntent(pendingIntent)
             .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setAutoCancel(true)

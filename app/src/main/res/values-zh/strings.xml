@@ -327,4 +327,5 @@
     <string name="premium_auto_restart_locked">自动重启是 Premium 功能。</string>
     <string name="premium_limit_reached">您已用完本月 %1$d 次免费证据记录。新的解锁失败仍会通过通知和邮件告知您，但不含照片和位置。</string>
     <string name="premium_limit_upgrade">升级到 Premium</string>
+    <string name="premium_limited">有限</string>
 </resources>

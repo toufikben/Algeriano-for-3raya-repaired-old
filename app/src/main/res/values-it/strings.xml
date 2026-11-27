@@ -327,4 +327,5 @@
     <string name="premium_auto_restart_locked">Il riavvio automatico è una funzione Premium.</string>
     <string name="premium_limit_reached">Hai usato le %1$d acquisizioni di prove gratuite di questo mese. I nuovi sblocchi non riusciti vengono comunque segnalati con notifica ed e-mail, ma senza foto né posizione.</string>
     <string name="premium_limit_upgrade">Passa a Premium</string>
+    <string name="premium_limited">Limitato</string>
 </resources>

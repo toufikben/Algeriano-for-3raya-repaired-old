@@ -327,4 +327,5 @@
     <string name="premium_auto_restart_locked">Otomatik yeniden başlatma bir Premium özelliğidir.</string>
     <string name="premium_limit_reached">Bu ayın %1$d ücretsiz kanıt kaydını kullandınız. Yeni başarısız kilit açma denemeleri yine bildirim ve e-postayla bildirilir, ancak fotoğraf ve konum olmadan.</string>
     <string name="premium_limit_upgrade">Premium\'a yükselt</string>
+    <string name="premium_limited">Sınırlı</string>
 </resources>

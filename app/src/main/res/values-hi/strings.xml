@@ -327,4 +327,5 @@
     <string name="premium_auto_restart_locked">स्वचालित पुनः आरंभ एक Premium सुविधा है।</string>
     <string name="premium_limit_reached">आपने इस महीने के %1$d मुफ़्त साक्ष्य कैप्चर इस्तेमाल कर लिए हैं। नए असफल अनलॉक की सूचना अब भी नोटिफ़िकेशन और ईमेल से मिलेगी, लेकिन फ़ोटो और लोकेशन के बिना।</string>
     <string name="premium_limit_upgrade">Premium पर अपग्रेड करें</string>
+    <string name="premium_limited">सीमित</string>
 </resources>

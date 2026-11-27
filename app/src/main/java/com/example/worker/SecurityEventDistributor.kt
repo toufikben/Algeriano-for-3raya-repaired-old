@@ -235,7 +235,7 @@ object SecurityEventDistributor {
         )
         val l10n = context.localizedForAppLanguage()
         val notification = NotificationCompat.Builder(context, SecurityApp.CHANNEL_ID_ALERTS)
-            .setSmallIcon(R.drawable.ic_launcher_foreground_img_1787338860864)
+            .setSmallIcon(R.drawable.ic_stat_security)
             .setContentTitle(l10n.getString(R.string.notification_deferred_title))
             .setContentText(l10n.getString(R.string.notification_deferred_text))
             .setStyle(NotificationCompat.BigTextStyle().bigText(l10n.getString(R.string.notification_deferred_text)))
