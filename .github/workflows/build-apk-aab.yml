@@ -7,7 +7,12 @@ on:
 
 concurrency:
   group: android-release-${{ github.ref }}
-  cancel-in-progress: true
+  # Never cancel a release build on main. This job does not just compile: it
+  # creates a GitHub Release and then uploads the assets to it, so a cancel
+  # between those two steps leaves a published release with no binaries, and the
+  # tag is keyed to the commit, so the re-run has to clean up after it. Feature
+  # branches keep the old behaviour: only their latest commit matters.
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 
 permissions:
   contents: write
@@ -76,17 +81,13 @@ jobs:
             echo "EOF_KEY_PASSWORD"
           } >> "$GITHUB_ENV"
 
-      - name: Run unit tests
-        run: ./gradlew test --no-daemon --stacktrace
-
-      - name: Run Android lint
-        run: ./gradlew lint --no-daemon --stacktrace
-
-      - name: Build signed release APK
-        run: ./gradlew assembleRelease --no-daemon --stacktrace
-
-      - name: Build signed release AAB
-        run: ./gradlew bundleRelease --no-daemon --stacktrace
+      # One Gradle invocation instead of four. Each ./gradlew start pays a fresh
+      # configuration pass (~30-40 s on this project) and re-walks the same model,
+      # so four steps meant paying that four times for no extra coverage.
+      # --continue keeps the diagnostics the separate steps had: every task still
+      # runs and reports, and the step fails at the end with all failures listed.
+      - name: Unit tests, lint, and release builds
+        run: ./gradlew test lint assembleRelease bundleRelease --continue --no-daemon --stacktrace
 
       # Room exports its schema at compile time; the JSON belongs in git so migrations can be
       # tested. CI is the only compiler, so it shows the file and fails the run when the

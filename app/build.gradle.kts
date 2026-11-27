@@ -14,13 +14,17 @@ android {
     applicationId = "com.toufikbendjeddah.phonefortress"
     minSdk = 24
     targetSdk = 36
-    // Play keeps the highest versionCode ever uploaded for this package, and Console's
-    // internal-testing track reports a release at 26 ("Phone Fortress 1.0.0 (26)") that
-    // predates this repository's numbering. 19 would have been refused, so the billing
-    // AAB goes up as 27.
-    // 30 was taken by an upload on Play that never became a release.
-    versionCode = 31
-    versionName = "1.2.1"
+    // Play refuses a versionCode it has already accepted, and both uploads that
+    // were refused here were a forgotten manual bump - 19 collided with an
+    // internal-testing release at 26, and 30 had been uploaded on Play without
+    // ever becoming a release. CI now derives the code from the run number on top
+    // of a base that is above everything Play has seen, so a CI artifact is
+    // always unique and increasing without anybody editing this file. A local
+    // build keeps the base, so local output stays reproducible.
+    val baseVersionCode = 31
+    val ciRunNumber = System.getenv("GITHUB_RUN_NUMBER")?.toIntOrNull() ?: 0
+    versionCode = baseVersionCode + ciRunNumber
+    versionName = "1.2.2"
 
     testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
   }
