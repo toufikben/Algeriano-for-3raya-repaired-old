@@ -317,5 +317,5 @@
     <string name="premium_auto_restart_locked">Il riavvio automatico è una funzione Premium.</string>
     <string name="premium_photo_retention">Conservazione foto</string>
     <string name="premium_retention_days">%1$d giorni</string>
-    <string name="premium_retention_forever">Conservate fino all'eliminazione</string>
+    <string name="premium_retention_forever">Conservate fino all\'eliminazione</string>
 </resources>

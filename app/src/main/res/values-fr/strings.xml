@@ -317,5 +317,5 @@
     <string name="premium_auto_restart_locked">Le redémarrage automatique est une fonctionnalité Premium.</string>
     <string name="premium_photo_retention">Conservation des photos</string>
     <string name="premium_retention_days">%1$d jours</string>
-    <string name="premium_retention_forever">Conservées jusqu'à suppression</string>
+    <string name="premium_retention_forever">Conservées jusqu\'à suppression</string>
 </resources>
