@@ -88,15 +88,22 @@ class MonetizationRulesTest {
     }
 
     @Test
-    fun `an uncapped retention sentinel is never converted to a delete-everything cutoff`() {
-        // PhotoCleanupWorker returns early on Long.MAX_VALUE because
-        // TimeUnit.DAYS.toMillis(Long.MAX_VALUE) overflows to a negative number,
-        // which would turn the cutoff into a future timestamp and expire every
-        // photo on the device. This asserts the sentinel is still what the tier
-        // reports, so that early return stays reachable.
+    fun `an uncapped retention sentinel is never fed into the cleanup arithmetic`() {
+        // PhotoCleanupWorker returns early on Long.MAX_VALUE. Measured behaviour,
+        // not assumed: TimeUnit.DAYS.toMillis saturates at Long.MAX_VALUE, and
+        // subtracting that from the current time wraps to a large negative cutoff
+        // (so every photo compares as newer and nothing is deleted). The early
+        // return is what makes the intent explicit instead of relying on signed
+        // overflow to land on the right answer.
         prefs.isPremium = true
         assertEquals(Long.MAX_VALUE, prefs.getPhotoRetentionDays())
-        assertTrue(java.util.concurrent.TimeUnit.DAYS.toMillis(Long.MAX_VALUE) < 0)
+
+        val millis = java.util.concurrent.TimeUnit.DAYS.toMillis(Long.MAX_VALUE)
+        assertEquals("toMillis saturates rather than overflowing", Long.MAX_VALUE, millis)
+        assertTrue(
+            "the wrapped cutoff is negative, which is why the early return exists",
+            System.currentTimeMillis() - millis < 0
+        )
     }
 
     @Test

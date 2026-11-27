@@ -18,10 +18,13 @@ class PhotoCleanupWorker(
         if (!directory.isDirectory) return Result.success()
         val prefs = SecurityPrefs.getInstance(applicationContext)
         // Free expires a photo after a week; Premium keeps it until the user deletes
-        // it, and reports Long.MAX_VALUE as the sentinel for that. Converting the
-        // sentinel with TimeUnit.DAYS.toMillis would overflow into a negative
-        // number, which turns the cutoff into a future timestamp and deletes
-        // everything - so the unbounded case returns before any arithmetic.
+        // it and reports Long.MAX_VALUE as the sentinel for that. The arithmetic
+        // would not do what it looks like: TimeUnit.DAYS.toMillis saturates at
+        // Long.MAX_VALUE, and subtracting that from the current time wraps to a
+        // large negative cutoff, so every file would compare as "newer than the
+        // cutoff" and nothing would be deleted. That happens to be the intended
+        // outcome, but reaching it through signed overflow is not something to
+        // leave load-bearing - state it.
         val retentionDays = prefs.getPhotoRetentionDays()
         if (retentionDays == Long.MAX_VALUE) return Result.success()
         val cutoff = System.currentTimeMillis() - TimeUnit.DAYS.toMillis(retentionDays)
