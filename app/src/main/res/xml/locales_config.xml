@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    The languages this app actually ships translations for.
+
+    Android 13+ shows a per-app language picker in system Settings, and Play
+    uses this list to decide which store listings are offered. Without it the
+    system only knew the device locale, so a French user on an English phone had
+    no way to reach the French strings except through the in-app picker.
+
+    Keep this in sync with com.example.i18n.AppLanguage: a locale listed here
+    with no values-<code>/strings.xml would show the English base strings under a
+    native-language label, which is worse than not offering it.
+-->
+<locale-config xmlns:android="http://schemas.android.com/apk/res/android">
+    <locale android:name="ar" />
+    <locale android:name="bn" />
+    <locale android:name="de" />
+    <locale android:name="en" />
+    <locale android:name="es" />
+    <locale android:name="fr" />
+    <locale android:name="hi" />
+    <locale android:name="id" />
+    <locale android:name="it" />
+    <locale android:name="ja" />
+    <locale android:name="ko" />
+    <locale android:name="ms" />
+    <locale android:name="pt" />
+    <locale android:name="ru" />
+    <locale android:name="tr" />
+    <locale android:name="ur" />
+    <locale android:name="zh" />
+</locale-config>
