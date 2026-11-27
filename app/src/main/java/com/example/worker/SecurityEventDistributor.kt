@@ -214,6 +214,10 @@ object SecurityEventDistributor {
         WorkManager.getInstance(context).cancelUniqueWork(RECOVERY_WORK_NAME)
     }
 
+    internal fun cancelProtectionWatchdog(context: Context) {
+        WorkManager.getInstance(context).cancelUniqueWork(ProtectionWatchdogWorker.WORK_NAME)
+    }
+
     internal fun eventId(input: androidx.work.Data): String? = input.getString(EVENT_ID_KEY)
 
     internal fun workName(eventId: String): String = WORK_PREFIX + eventId

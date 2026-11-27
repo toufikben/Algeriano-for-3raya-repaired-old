@@ -45,8 +45,16 @@ class BootReceiver : BroadcastReceiver() {
                             val needsVisibleCapture = prefs.getPendingSecurityEvents().any {
                                 it.status == SecurityEventStatus.PENDING || it.status == SecurityEventStatus.DEFERRED
                             }
-                            Log.w("BootReceiver", "Protection requires a visible app start after boot")
-                            if (needsVisibleCapture) postResumeNotification(appContext)
+                            Log.w(
+                                "BootReceiver",
+                                "Protection requires a visible app start after boot (pending=$needsVisibleCapture)"
+                            )
+                            // FIX: the prompt was posted only when an event was
+                            // pending. With an empty queue the service stayed
+                            // down and the user was never told, so protection
+                            // was silently off after every reboot. The prompt is
+                            // about re-arming the service, not about the queue.
+                            postResumeNotification(appContext)
                         } else {
                             SecurityEventDistributor.enqueuePending(appContext)
                             Log.d("BootReceiver", "Pending events will resume from a visible app session")
@@ -65,34 +73,61 @@ class BootReceiver : BroadcastReceiver() {
     }
 
     private fun postResumeNotification(context: Context) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
-            context.checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED
-        ) return
-        if (!NotificationManagerCompat.from(context).areNotificationsEnabled()) return
-        val openIntent = PendingIntent.getActivity(
-            context,
-            RESUME_REQUEST_CODE,
-            Intent(context, MainActivity::class.java).apply {
-                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
-            },
-            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-        )
-        val l10n = context.localizedForAppLanguage()
-        val message = l10n.getString(R.string.notification_boot_text)
-        val notification = NotificationCompat.Builder(context, SecurityApp.CHANNEL_ID_ALERTS)
-            .setSmallIcon(R.drawable.ic_stat_security)
-            .setContentTitle(l10n.getString(R.string.notification_boot_title))
-            .setContentText(message)
-            .setStyle(NotificationCompat.BigTextStyle().bigText(message))
-            .setContentIntent(openIntent)
-            .setAutoCancel(true)
-            .setPriority(NotificationCompat.PRIORITY_HIGH)
-            .build()
-        NotificationManagerCompat.from(context).notify(RESUME_NOTIFICATION_ID, notification)
+        postResumeNotificationInternal(context)
     }
 
-    private companion object {
+    companion object {
+        /**
+         * Posted when protection cannot be re-armed after a reboot (Android 12+
+         * forbids a camera foreground-service start from BOOT_COMPLETED) and
+         * again if the running service disappears while protection is on. It is
+         * an instruction to the user, so it must disappear the moment the
+         * instruction has been obeyed.
+         */
         const val RESUME_NOTIFICATION_ID = 4201
-        const val RESUME_REQUEST_CODE = 4202
+        private const val RESUME_REQUEST_CODE = 4202
+
+        /**
+         * Clears the "open the app to resume protection" prompt. Call this as
+         * soon as protection has actually been re-armed from a visible
+         * Activity; leaving it up told the user to do something they had
+         * already done.
+         */
+        fun cancelResumeNotification(context: Context) {
+            runCatching {
+                NotificationManagerCompat.from(context).cancel(RESUME_NOTIFICATION_ID)
+            }
+        }
+
+        /**
+         * Shows the resume prompt. Shared by the boot receiver and the watchdog
+         * so both paths speak with one voice and one notification id.
+         */
+        fun postResumeNotificationInternal(context: Context) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+                context.checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED
+            ) return
+            if (!NotificationManagerCompat.from(context).areNotificationsEnabled()) return
+            val openIntent = PendingIntent.getActivity(
+                context,
+                RESUME_REQUEST_CODE,
+                Intent(context, MainActivity::class.java).apply {
+                    flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+                },
+                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+            )
+            val l10n = context.localizedForAppLanguage()
+            val message = l10n.getString(R.string.notification_boot_text)
+            val notification = NotificationCompat.Builder(context, SecurityApp.CHANNEL_ID_ALERTS)
+                .setSmallIcon(R.drawable.ic_stat_security)
+                .setContentTitle(l10n.getString(R.string.notification_boot_title))
+                .setContentText(message)
+                .setStyle(NotificationCompat.BigTextStyle().bigText(message))
+                .setContentIntent(openIntent)
+                .setAutoCancel(true)
+                .setPriority(NotificationCompat.PRIORITY_HIGH)
+                .build()
+            NotificationManagerCompat.from(context).notify(RESUME_NOTIFICATION_ID, notification)
+        }
     }
 }

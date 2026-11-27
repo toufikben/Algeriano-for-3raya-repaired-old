@@ -53,6 +53,9 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.supervisorScope
 import kotlinx.coroutines.withContext
@@ -103,8 +106,28 @@ class CameraForegroundService : Service() {
          * instance is by definition camera-capable; mail-only work never gets
          * promoted (see promoteToForeground) and runs as WorkManager work.
          */
-        val isCameraChannelOpen: Boolean
+        /**
+         * True while a promoted instance is alive. The status card reads this so
+         * it cannot claim "protection active" from a stored preference after the
+         * OS or an OEM battery manager has killed the service.
+         */
+        val isRunning: Boolean
             get() = liveInstance?.foregroundTypeStarted ?: false
+
+        val isCameraChannelOpen: Boolean
+            get() = isRunning
+
+        /**
+         * Observable mirror of [isRunning]. A static getter is not enough: the
+         * status card is recomposed from state, so a dead service has to push a
+         * new value or the UI keeps rendering the last green snapshot.
+         */
+        private val _runningState = MutableStateFlow(false)
+        val runningState: StateFlow<Boolean> = _runningState.asStateFlow()
+
+        private fun publishRunning(running: Boolean) {
+            _runningState.value = running
+        }
     }
 
     private val serviceScope = CoroutineScope(Dispatchers.IO + Job())
@@ -157,6 +180,7 @@ class CameraForegroundService : Service() {
             }
             ServiceCompat.stopForeground(this, ServiceCompat.STOP_FOREGROUND_REMOVE)
             foregroundTypeStarted = false
+            publishRunning(false)
             stopSelf()
             return START_NOT_STICKY
         }
@@ -268,6 +292,7 @@ class CameraForegroundService : Service() {
                 foregroundServiceType
             )
             foregroundTypeStarted = true
+            publishRunning(true)
             true
         } catch (e: Exception) {
             when {
@@ -1123,6 +1148,7 @@ class CameraForegroundService : Service() {
     override fun onDestroy() {
         if (liveInstance === this) liveInstance = null
         foregroundTypeStarted = false
+        publishRunning(false)
         val prefs = SecurityPrefs.getInstance(applicationContext)
         // A normal user stop clears countdownEnabled first. This recovery path
         // is therefore reserved for unexpected service destruction.

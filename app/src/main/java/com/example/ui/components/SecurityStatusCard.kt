@@ -27,6 +27,7 @@ import com.example.ui.theme.EmeraldActive
 @Composable
 fun SecurityStatusCard(
     isTrackingEnabled: Boolean,
+    isServiceRunning: Boolean,
     isAdminActive: Boolean,
     hasCameraPermission: Boolean,
     hasLocationPermission: Boolean,
@@ -41,7 +42,10 @@ fun SecurityStatusCard(
         if (!hasNotificationPermission) add(tr(com.example.R.string.ui_569c6f29ee1a))
         if (!emailConfigured) add(tr(com.example.R.string.ui_8ccd3c5fd924))
     }
-    val healthy = isTrackingEnabled && issues.isEmpty()
+    // A green "everything is ready" line is only truthful when the service that
+    // does the work is actually alive. isTrackingEnabled is a stored preference;
+    // the OS or an OEM battery manager can kill the service while it stays true.
+    val healthy = isTrackingEnabled && isServiceRunning && issues.isEmpty()
 
     Card(
         modifier = modifier.fillMaxWidth(),
@@ -62,6 +66,10 @@ fun SecurityStatusCard(
                 text = when {
                     healthy -> tr(com.example.R.string.ui_625d96b54288)
                     !isTrackingEnabled -> tr(com.example.R.string.ui_f8395ec2db0e)
+                    // Enabled but the service is not alive: the user must act,
+                    // so say exactly that instead of listing missing permissions
+                    // that are already granted.
+                    !isServiceRunning -> tr(com.example.R.string.ui_66c3afea06a2)
                     else -> issues.joinToString("\n") { "• $it" }
                 },
                 color = if (healthy) EmeraldActive else Color(0xFFFCD34D),

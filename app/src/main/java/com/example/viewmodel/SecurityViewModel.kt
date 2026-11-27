@@ -24,8 +24,10 @@ import com.example.billing.PurchaseEvent
 import java.io.File
 import com.example.receiver.CountdownScheduler
 import com.example.receiver.MyDeviceAdminReceiver
+import com.example.receiver.BootReceiver
 import com.example.service.CameraForegroundService
 import com.example.worker.SecurityEventDistributor
+import com.example.worker.ProtectionWatchdogWorker
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -226,6 +228,7 @@ class SecurityViewModel(application: Application) : AndroidViewModel(application
     fun resumeProtectionFromVisibleActivity() {
         refreshCredentials()
         if (!prefs.isTrackingEnabled) return
+        var started = false
         runCatching {
             val serviceIntent = Intent(context, CameraForegroundService::class.java).apply {
                 action = CameraForegroundService.ACTION_START_MONITORING
@@ -235,9 +238,15 @@ class SecurityViewModel(application: Application) : AndroidViewModel(application
             } else {
                 context.startService(serviceIntent)
             }
+            started = true
         }
         CountdownScheduler.rescheduleFromPrefs(context)
         SecurityEventDistributor.dispatchPendingFromVisibleContext(context)
+        ProtectionWatchdogWorker.schedule(context)
+        // The boot prompt exists only to bring the user here. Once the restart
+        // request has been accepted it is stale, and leaving it up told the user
+        // to do something they had already done.
+        if (started) BootReceiver.cancelResumeNotification(context)
     }
 
     fun refreshCredentials() {
@@ -360,7 +369,6 @@ class SecurityViewModel(application: Application) : AndroidViewModel(application
             CountdownScheduler.cancel(context)
         }
         _uiState.update { it.copy(isTrackingEnabled = enabled) }
-
         if (enabled) {
             // Start the foreground service while the activity is visible. This
             // lets DeviceAdminReceiver deliver a failed-unlock event to an
@@ -377,6 +385,10 @@ class SecurityViewModel(application: Application) : AndroidViewModel(application
                 }
             }
             SecurityEventDistributor.dispatchPendingFromVisibleContext(context)
+            // Watch for the service being killed later by the system or an OEM
+            // battery manager; without this the UI kept claiming protection was
+            // active with nothing running.
+            ProtectionWatchdogWorker.schedule(context)
         } else {
             // Letting the service stop itself also clears the whole alert
             // notification range, which a bare stopService() left behind. A
@@ -388,6 +400,10 @@ class SecurityViewModel(application: Application) : AndroidViewModel(application
             runCatching { context.startService(stopIntent) }.onFailure {
                 context.stopService(Intent(context, CameraForegroundService::class.java))
             }
+            // Protection is off on purpose; a "resume protection" prompt would
+            // contradict the switch the user just moved.
+            BootReceiver.cancelResumeNotification(context)
+            SecurityEventDistributor.cancelProtectionWatchdog(context)
         }
     }
 

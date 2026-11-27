@@ -91,6 +91,7 @@ import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import coil.compose.AsyncImage
 import com.example.receiver.MyDeviceAdminReceiver
+import com.example.service.CameraForegroundService
 import com.example.ui.components.AppPasswordGuideDialog
 import com.example.ui.components.AppPinGate
 import com.example.ui.components.CredentialsCard
@@ -252,6 +253,9 @@ fun SecurityMainScreen(
 ) {
     val context = LocalContext.current
     val uiState by viewModel.uiState.collectAsState()
+    // Live service state, not the stored preference: the status card must not
+    // claim "protection active" while the foreground service is dead.
+    val isServiceRunning by CameraForegroundService.runningState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
 
     var showDeveloperInfo by remember { mutableStateOf(false) }
@@ -471,6 +475,7 @@ fun SecurityMainScreen(
             item(key = "security_status_card") {
                 SecurityStatusCard(
                     isTrackingEnabled = uiState.isTrackingEnabled,
+                    isServiceRunning = isServiceRunning,
                     isAdminActive = uiState.isAdminActive,
                     hasCameraPermission = uiState.hasCameraPermission,
                     hasLocationPermission = uiState.hasLocationPermission,
