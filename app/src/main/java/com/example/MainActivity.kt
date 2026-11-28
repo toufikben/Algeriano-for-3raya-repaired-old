@@ -720,7 +720,10 @@ private fun LanguagePickerDialog(
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         Text(
-                            text = context.getString(option.displayNameRes),
+                            // The endonym, not a translated label: someone looking
+                            // for their own language recognises "العربية" whether
+                            // the surrounding UI is English or Arabic.
+                            text = option.nativeName,
                             modifier = Modifier.fillMaxWidth(),
                             color = if (option == language) CyanAccent else MaterialTheme.colorScheme.onSurface,
                             fontWeight = if (option == language) FontWeight.Bold else FontWeight.Normal

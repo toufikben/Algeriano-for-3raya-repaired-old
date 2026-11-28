@@ -2,32 +2,47 @@ package com.example.i18n
 
 import android.content.Context
 import android.content.res.Configuration
-import androidx.annotation.StringRes
-import com.example.R
 import java.util.Locale
 
-/** Supported app languages. The selected value is persisted in app-private preferences. */
-enum class AppLanguage(val code: String, @StringRes val displayNameRes: Int) {
-    ARABIC("ar", R.string.language_arabic),
-    ENGLISH("en", R.string.language_english),
-    FRENCH("fr", R.string.language_french),
-    SPANISH("es", R.string.language_spanish),
-    GERMAN("de", R.string.language_german),
-    ITALIAN("it", R.string.language_italian),
-    PORTUGUESE("pt", R.string.language_portuguese),
-    TURKISH("tr", R.string.language_turkish),
-    RUSSIAN("ru", R.string.language_russian),
-    HINDI("hi", R.string.language_hindi),
-    BENGALI("bn", R.string.language_bengali),
-    INDONESIAN("id", R.string.language_indonesian),
-    MALAY("ms", R.string.language_malay),
-    URDU("ur", R.string.language_urdu),
-    CHINESE("zh", R.string.language_chinese),
-    JAPANESE("ja", R.string.language_japanese),
-    KOREAN("ko", R.string.language_korean);
+/**
+ * Supported app languages. The selected value is persisted in app-private preferences.
+ *
+ * [nativeName] is the endonym — the language's own name for itself — and is what
+ * the picker shows. Rendering it from a string resource meant an English-speaking
+ * user saw "Arabic" spelled in Arabic once the UI was Arabic, and an Arabic
+ * speaker hunting for their language in an English UI saw "Arabic" in Latin
+ * script. An endonym is readable to the person looking for it in either case.
+ */
+enum class AppLanguage(val code: String, val nativeName: String) {
+    ARABIC("ar", "العربية"),
+    ENGLISH("en", "English"),
+    FRENCH("fr", "Français"),
+    SPANISH("es", "Español"),
+    GERMAN("de", "Deutsch"),
+    ITALIAN("it", "Italiano"),
+    PORTUGUESE("pt", "Português"),
+    TURKISH("tr", "Türkçe"),
+    RUSSIAN("ru", "Русский"),
+    HINDI("hi", "हिन्दी"),
+    BENGALI("bn", "বাংলা"),
+    INDONESIAN("id", "Bahasa Indonesia"),
+    MALAY("ms", "Bahasa Melayu"),
+    URDU("ur", "اردو"),
+    CHINESE("zh", "中文"),
+    JAPANESE("ja", "日本語"),
+    KOREAN("ko", "한국어");
 
     companion object {
-        fun fromCode(code: String?): AppLanguage = entries.firstOrNull { it.code == code } ?: ARABIC
+        fun fromCode(code: String?): AppLanguage =
+            entries.firstOrNull { it.code.equals(code, ignoreCase = true) } ?: ENGLISH
+
+        /**
+         * First-run default: the device language when the app is translated into
+         * it, English otherwise. Defaulting to Arabic regardless — which is what
+         * happened before — showed an English phone an Arabic UI on first launch.
+         */
+        fun fromDeviceLocale(locale: Locale): AppLanguage =
+            entries.firstOrNull { it.code.equals(locale.language, ignoreCase = true) } ?: ENGLISH
     }
 }
 
@@ -35,7 +50,14 @@ class LanguageStore(context: Context) {
     private val storageContext = context.applicationContext ?: context
     private val prefs = storageContext.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
 
-    fun get(): AppLanguage = AppLanguage.fromCode(prefs.getString(KEY_LANGUAGE, AppLanguage.ARABIC.code))
+    fun get(): AppLanguage {
+        val stored = prefs.getString(KEY_LANGUAGE, null)
+        return if (stored != null) {
+            AppLanguage.fromCode(stored)
+        } else {
+            AppLanguage.fromDeviceLocale(Locale.getDefault())
+        }
+    }
 
     fun set(language: AppLanguage) {
         prefs.edit().putString(KEY_LANGUAGE, language.code).apply()

@@ -88,6 +88,19 @@ android {
     includeInApk = false
     includeInBundle = true
   }
+
+  // The app ships its own language picker and 17 translations, and Android 13+
+  // exposes that picker in system Settings through res/xml/locales_config.xml.
+  // Play's default language splitting broke both: a phone whose system language
+  // is English received only split_config.en.apk, so the Arabic strings were
+  // physically absent from the device and the in-app picker could not show them
+  // no matter what the code did. Disabling the split keeps every translation in
+  // the base APK, which is what an app with a built-in picker needs.
+  bundle {
+    language {
+      enableSplit = false
+    }
+  }
 }
 
 // Unit tests only ever run in CI here, so failure output has to be readable from the log.

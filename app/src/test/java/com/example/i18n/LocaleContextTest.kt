@@ -12,6 +12,7 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.RuntimeEnvironment
 import org.robolectric.annotation.Config
+import java.io.File
 import java.util.Locale
 
 /**
@@ -78,6 +79,22 @@ class LocaleContextTest {
             "Expected Arabic glyphs in: $arabic",
             arabic.any { it.code in 0x0600..0x06FF }
         )
+    }
+
+    @Test
+    fun `every advertised language ships its own values folder`() {
+        // res/xml/locales_config.xml advertises these languages to Android 13+'s
+        // per-app language picker. If a language is advertised without a
+        // values-<code>/strings.xml, the picker offers a language that renders
+        // English — worse than not offering it at all.
+        val missing = AppLanguage.entries
+            .filter { it.code != "en" }
+            .filter { code ->
+                val dir = File("src/main/res/values-${code.code}")
+                !File(dir, "strings.xml").isFile
+            }
+            .map { it.code }
+        assertEquals("Advertised languages without translations: $missing", emptyList<String>(), missing)
     }
 
     @Test
