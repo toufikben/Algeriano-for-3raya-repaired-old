@@ -113,6 +113,8 @@ import com.example.viewmodel.SecurityViewModel
 import com.example.data.SecurityPrefs
 import com.example.i18n.AppLanguage
 import com.example.i18n.LanguageStore
+import com.example.i18n.LocaleContext
+import com.example.i18n.findActivity
 import com.example.i18n.isRtl
 
 class MainActivity : ComponentActivity() {
@@ -120,6 +122,22 @@ class MainActivity : ComponentActivity() {
     private var deviceAdminRequestStarted = false
 
     private val viewModel: SecurityViewModel by viewModels()
+
+    /**
+     * The Activity's resources come from the system configuration, not from the
+     * Application's base context, so wrapping there was not enough. Without this
+     * override every [stringResource] resolved against the device locale and the
+     * in-app language picker appeared to do nothing on Android 12+.
+     */
+    override fun attachBaseContext(newBase: Context) {
+        val language = LanguageStore(newBase).get()
+        val locale = Locale.forLanguageTag(language.code)
+        Locale.setDefault(locale)
+        val configuration = Configuration(newBase.resources.configuration).apply {
+            setLocale(locale)
+        }
+        super.attachBaseContext(newBase.createConfigurationContext(configuration))
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -143,8 +161,20 @@ class MainActivity : ComponentActivity() {
         setContent {
             MyApplicationTheme {
                 var selectedLanguage by remember { mutableStateOf(languageStore.get()) }
+                // stringResource() resolves through LocalContext.resources, so the
+                // context handed to the composition has to carry the chosen
+                // locale. resources.updateConfiguration() is deprecated and
+                // silently ignored on Android 12+, which is exactly why picking
+                // a language changed nothing on a modern device.
+                val localizedContext = remember(selectedLanguage) {
+                    LocaleContext(
+                        this@MainActivity,
+                        Locale.forLanguageTag(selectedLanguage.code)
+                    )
+                }
                 CompositionLocalProvider(
-                    LocalLayoutDirection provides if (selectedLanguage.isRtl()) LayoutDirection.Rtl else LayoutDirection.Ltr
+                    LocalLayoutDirection provides if (selectedLanguage.isRtl()) LayoutDirection.Rtl else LayoutDirection.Ltr,
+                    LocalContext provides localizedContext
                 ) {
                     AppPinGate(SecurityPrefs.getInstance(this@MainActivity)) {
                         // Recomposing with the language as key re-reads every string
@@ -192,12 +222,14 @@ class MainActivity : ComponentActivity() {
         viewModel.resumeProtectionFromVisibleActivity()
     }
 
+    /**
+     * Persisted-language path. The visible strings are driven by the localized
+     * LocalContext supplied in setContent; this only keeps the process-wide
+     * default in step for framework widgets and for code that calls
+     * Context.getString without a configuration context.
+     */
     private fun applyLanguage(language: AppLanguage) {
-        val locale = Locale.forLanguageTag(language.code)
-        Locale.setDefault(locale)
-        val configuration = Configuration(resources.configuration)
-        configuration.setLocale(locale)
-        resources.updateConfiguration(configuration, resources.displayMetrics)
+        Locale.setDefault(Locale.forLanguageTag(language.code))
     }
 
     private fun requestDeviceAdmin() {
@@ -656,7 +688,12 @@ fun SecurityMainScreen(
                 localizedPrice = uiState.localizedPrice,
                 message = uiState.premiumMessage,
                 onUnlockPremium = {
-                    (context as? ComponentActivity)?.let { viewModel.launchPurchase(it) }
+                    // The composition context is now a LocaleContext wrapper, so a
+                    // plain cast to ComponentActivity would fail and silently do
+                    // nothing when the user tapped purchase.
+                    context.findActivity()?.let { activity ->
+                        (activity as? ComponentActivity)?.let { viewModel.launchPurchase(it) }
+                    }
                 },
                 onRestorePurchase = { viewModel.restorePurchases() },
                 onDismiss = { viewModel.dismissPremiumScreen() }

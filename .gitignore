@@ -26,3 +26,6 @@ debug.keystore
 *.apk
 *.aab
 /device-test/
+
+shots/
+store1080/
