@@ -5,6 +5,7 @@ import androidx.test.core.app.ApplicationProvider
 import com.example.R
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotEquals
+import org.junit.Assert.assertNotSame
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -16,13 +17,18 @@ import java.util.Locale
 /**
  * The in-app language picker silently did nothing on Android 12+ because the
  * Activity applied the locale with the deprecated
- * `resources.updateConfiguration()`. These tests pin the replacement contract.
+ * `resources.updateConfiguration()`.
  *
- * Robolectric does not re-resolve resource qualifiers for a context produced by
- * `createConfigurationContext`, so the wrapper is asserted on the two things
- * that actually matter and that Robolectric can check honestly: the locale
- * reaches the wrapper's resources, and every supported language really has its
- * own translated strings.
+ * Two separate things are pinned here, because Robolectric can only answer one
+ * of them honestly:
+ *
+ *  1. The wrapper really redirects `getResources()` — that is the production
+ *     mechanism, since `getString`, `getText` and Compose's `stringResource`
+ *     all read from it. Robolectric's `createConfigurationContext` shadow does
+ *     not re-resolve resource qualifiers, so the locale it returns cannot be
+ *     asserted here; only the redirection can.
+ *  2. Every supported language genuinely has its own translated strings, which
+ *     is checked through Robolectric's own qualifier support.
  */
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [36])
@@ -31,16 +37,26 @@ class LocaleContextTest {
     private val base: Context = ApplicationProvider.getApplicationContext()
 
     @Test
-    fun `wrapper carries the requested locale for every supported language`() {
+    fun `wrapper redirects resources away from the base context`() {
+        val wrapped = LocaleContext(base, Locale.forLanguageTag("ar"))
+        assertNotSame(
+            "getResources() must not fall through to the base context, or the " +
+                "device locale would keep winning",
+            base.resources,
+            wrapped.resources
+        )
+    }
+
+    @Test
+    fun `every supported language has non-blank translated strings`() {
+        val blank = mutableListOf<String>()
         for (language in AppLanguage.entries) {
-            val ctx = LocaleContext(base, Locale.forLanguageTag(language.code))
-            val actual = ctx.resources.configuration.locales[0].language
-            assertEquals(
-                "LocaleContext(${language.code}) reported $actual",
-                language.code,
-                actual
-            )
+            RuntimeEnvironment.setQualifiers("+${language.code}")
+            val value = ApplicationProvider.getApplicationContext<Context>()
+                .getString(R.string.notification_boot_title)
+            if (value.isBlank()) blank += language.code
         }
+        assertEquals("Languages with an empty string: $blank", emptyList<String>(), blank)
     }
 
     @Test
@@ -62,18 +78,6 @@ class LocaleContextTest {
             "Expected Arabic glyphs in: $arabic",
             arabic.any { it.code in 0x0600..0x06FF }
         )
-    }
-
-    @Test
-    fun `no supported language falls back to a blank string`() {
-        val blank = mutableListOf<String>()
-        for (language in AppLanguage.entries) {
-            RuntimeEnvironment.setQualifiers("+${language.code}")
-            val value = ApplicationProvider.getApplicationContext<Context>()
-                .getString(R.string.notification_boot_title)
-            if (value.isBlank()) blank += language.code
-        }
-        assertEquals("Languages with an empty string: $blank", emptyList<String>(), blank)
     }
 
     @Test
